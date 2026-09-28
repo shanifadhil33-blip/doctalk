@@ -1,4 +1,4 @@
-import { UserButton } from "@clerk/nextjs";
+import { Show, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 
 export default function AppHeader() {
@@ -20,7 +20,14 @@ export default function AppHeader() {
               Upload
             </Link>
           </nav>
-          <UserButton />
+          <Show when="signed-in">
+            <UserButton />
+          </Show>
+          <Show when="signed-out">
+            <Link href="/sign-in" className="text-sm font-medium text-slate-900">
+              Sign in
+            </Link>
+          </Show>
         </div>
       </div>
     </header>

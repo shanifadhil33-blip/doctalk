@@ -1,7 +1,11 @@
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
 import { desc } from "drizzle-orm";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { documents } from "@/db/schema";
+import { visibleDocumentsWhere } from "@/lib/documents/visibility";
+
+export const dynamic = "force-dynamic";
 
 function formatUploadDate(date: Date) {
   return new Intl.DateTimeFormat("en-US", {
@@ -12,9 +16,11 @@ function formatUploadDate(date: Date) {
 }
 
 export default async function DashboardPage() {
-  const docs = await db
+  const { userId } = await auth();
+  const docs = await getDb()
     .select()
     .from(documents)
+    .where(visibleDocumentsWhere(userId))
     .orderBy(desc(documents.createdAt));
 
   return (
