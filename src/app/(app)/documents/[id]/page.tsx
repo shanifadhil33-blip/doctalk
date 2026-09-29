@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
+import { notFound, redirect } from "next/navigation";
+import { auth } from "@/auth";
+import { AccountMenu } from "@/components/AccountMenu";
 import { DocumentWorkspace } from "@/components/workspace/DocumentWorkspace";
+import { decideDocumentAccess, safeCallbackPath } from "@/lib/auth/access";
+import { userIdFromTokenSub } from "@/lib/auth/user-id";
 import { getDemoDocument } from "@/lib/demo-documents";
+import { lookupDocument } from "@/lib/documents/lookup";
 
 type DocumentPageProps = {
   params: Promise<{ id: string }>;
@@ -11,10 +17,21 @@ export async function generateMetadata({
   params,
 }: DocumentPageProps): Promise<Metadata> {
   const { id } = await params;
-  const document = getDemoDocument(id);
-  return {
-    title: `${document ? document.title : "Document"} | DocTalk`,
-  };
+  const demo = getDemoDocument(id);
+  if (demo) {
+    return { title: `${demo.title} | DocTalk` };
+  }
+
+  if (!process.env.DATABASE_URL) {
+    return { title: "Document | DocTalk" };
+  }
+
+  const lookup = await lookupDocument(id);
+  if (lookup.status === "found") {
+    return { title: `${lookup.document.fileName} | DocTalk` };
+  }
+
+  return { title: "Document | DocTalk" };
 }
 
 export default async function DocumentPage({
@@ -24,13 +41,43 @@ export default async function DocumentPage({
   const { id } = await params;
   const { page } = await searchParams;
   const parsed = page ? Number.parseInt(page, 10) : undefined;
+  const headerAccount = (
+    <AccountMenu variant="text" redirectTo={`/documents/${id}`} />
+  );
+
+  if (!process.env.DATABASE_URL) {
+    return (
+      <DocumentWorkspace
+        document={getDemoDocument(id) ?? null}
+        documentId={id}
+        initialPage={parsed}
+        headerAccount={headerAccount}
+      />
+    );
+  }
+
+  const session = await auth();
+  const viewerUserId = userIdFromTokenSub(session?.user?.id);
+  const lookup = await lookupDocument(id);
+  const decision = decideDocumentAccess(viewerUserId, lookup);
+
+  if (decision === "sign-in") {
+    redirect(
+      `/sign-in?callbackUrl=${encodeURIComponent(safeCallbackPath(`/documents/${id}`))}`,
+    );
+  }
+
+  if (decision !== "allow" || lookup.status !== "found") {
+    notFound();
+  }
 
   return (
     <DocumentWorkspace
       document={getDemoDocument(id) ?? null}
       documentId={id}
       initialPage={parsed}
-      signInHref="/sign-in"
+      headerAccount={headerAccount}
+      fileName={lookup.document.fileName}
     />
   );
 }

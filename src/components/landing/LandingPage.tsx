@@ -1,5 +1,5 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
-import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { MessageGlyph, SearchGlyph, UploadGlyph } from "@/components/icons";
 import { Logo } from "@/components/Logo";
 import { primaryButtonClass } from "@/components/button-styles";
@@ -26,11 +26,13 @@ const features = [
 ] as const;
 
 export function LandingPage({
-  signInHref,
   demoHref,
+  headerAccount,
+  heroAccount,
 }: {
-  signInHref: string;
   demoHref: string;
+  headerAccount: ReactNode;
+  heroAccount?: ReactNode;
 }) {
   return (
     <div className="min-h-screen bg-[#eceef2] sm:p-4 md:p-6">
@@ -39,7 +41,7 @@ export function LandingPage({
         <header className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-8">
           <Logo />
           <div className="flex items-center gap-1 sm:gap-2">
-            <GoogleSignInButton href={signInHref} variant="text" />
+            {headerAccount}
             <Link href={demoHref} className={primaryButtonClass}>
               Try the demo
             </Link>
@@ -59,7 +61,7 @@ export function LandingPage({
                 <Link href={demoHref} className={primaryButtonClass}>
                   Try the demo
                 </Link>
-                <GoogleSignInButton href={signInHref} />
+                {heroAccount}
               </div>
             </div>
             <ProductPreview demoHref={`${demoHref}/master-services-agreement?page=3`} />

@@ -1,16 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { GridGlyph, ListGlyph, SearchGlyph, UploadGlyph } from "@/components/icons";
 import { primaryButtonClass } from "@/components/button-styles";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
 import { TopBar } from "@/components/TopBar";
-import { DocumentCard, type DocumentCardModel } from "@/components/documents/DocumentCard";
+import { DocumentCard } from "@/components/documents/DocumentCard";
 import { UploadDialog } from "@/components/documents/UploadDialog";
-import type { DemoDocument } from "@/lib/document-types";
+import type { ListedDocument } from "@/lib/document-types";
 import {
   readSessionUploads,
   rememberUploadFile,
@@ -23,11 +22,17 @@ type SortKey = "recent" | "name" | "pages";
 
 export function DocumentsDashboard({
   documents,
-  signInHref,
+  source,
+  signedIn,
+  headerAccount,
+  bannerAccount,
   initialUploadOpen = false,
 }: {
-  documents: DemoDocument[];
-  signInHref: string;
+  documents: ListedDocument[];
+  source: "demo" | "library";
+  signedIn: boolean;
+  headerAccount: ReactNode;
+  bannerAccount?: ReactNode;
   initialUploadOpen?: boolean;
 }) {
   const router = useRouter();
@@ -42,21 +47,9 @@ export function DocumentsDashboard({
   }, []);
 
   const cards = useMemo(() => {
-    const samples: Array<DocumentCardModel & { addedOn: string; pageCount: number }> =
-      documents.map((document) => ({
-        id: document.id,
-        title: document.title,
-        counterparty: document.counterparty,
-        kindLabel: document.kindLabel,
-        meta: `${document.pageCount} pages · Added ${document.addedLabel}`,
-        status: "Sample",
-        preview: document.preview,
-        fileName: document.fileName,
-        addedOn: document.addedOn,
-        pageCount: document.pageCount,
-      }));
+    const samples = documents;
 
-    const local: Array<DocumentCardModel & { addedOn: string; pageCount: number }> =
+    const local: ListedDocument[] =
       uploads.map((upload) => ({
         id: upload.id,
         title: upload.fileName.replace(/\.pdf$/i, ""),
@@ -118,7 +111,7 @@ export function DocumentsDashboard({
       <TopBar
         actions={
           <>
-            <GoogleSignInButton href={signInHref} variant="text" />
+            {headerAccount}
             <button
               type="button"
               className={primaryButtonClass}
@@ -130,15 +123,21 @@ export function DocumentsDashboard({
           </>
         }
       />
-      <div className="border-b border-[#f0e2b4] bg-[#fff8e6] px-4 py-3 text-sm text-[#5c4816] sm:px-6">
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-[#d6a326]" aria-hidden="true" />
-            You&apos;re viewing demo documents. Sign in to upload your own.
-          </p>
-          <GoogleSignInButton href={signInHref} variant="text" />
+      {source === "demo" || !signedIn ? (
+        <div className="border-b border-[#f0e2b4] bg-[#fff8e6] px-4 py-3 text-sm text-[#5c4816] sm:px-6">
+          <div className="mx-auto flex max-w-6xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p>
+              <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-[#d6a326]" aria-hidden="true" />
+              {source === "demo"
+                ? signedIn
+                  ? "You're viewing demo documents."
+                  : "You're viewing demo documents. Sign in to upload your own."
+                : "Sign in to see documents you add."}
+            </p>
+            {bannerAccount}
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
         <h1 className="text-3xl font-semibold tracking-tight text-slate-950">Documents</h1>

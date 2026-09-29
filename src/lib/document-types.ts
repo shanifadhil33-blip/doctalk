@@ -29,6 +29,19 @@ export type StoredAnswer = {
   citations: Citation[];
 };
 
+export type ListedDocument = {
+  id: string;
+  title: string;
+  counterparty: string;
+  kindLabel: string;
+  meta: string;
+  status: string;
+  preview: "invoice" | "statement" | "contract" | "file";
+  fileName: string;
+  addedOn: string;
+  pageCount: number;
+};
+
 export type DemoDocument = {
   id: string;
   fileName: string;

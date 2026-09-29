@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+import "@/test/setup";
 import type { AnchorHTMLAttributes, ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -29,11 +31,13 @@ describe("DocumentWorkspace citations", () => {
       <DocumentWorkspace
         document={document}
         documentId={document.id}
-        signInHref="/sign-in"
+        headerAccount={<a href="/sign-in">Sign in</a>}
       />,
     );
 
     expect(screen.getByText("3 / 11")).toBeInTheDocument();
+    expect(screen.getByText("11 pages")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Export" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Show source on page 7" }));
     expect(screen.getByText("7 / 11")).toBeInTheDocument();
     expect(screen.getByRole("article", { name: "Page 7" })).toHaveTextContent(

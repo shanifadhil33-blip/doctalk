@@ -4,6 +4,7 @@ import { GoogleMark } from "@/components/icons";
 type GoogleSignInButtonProps = {
   href?: string;
   onClick?: () => void;
+  type?: "button" | "submit";
   variant?: "google" | "text";
   className?: string;
   children?: ReactNode;
@@ -18,6 +19,7 @@ const textClass =
 export function GoogleSignInButton({
   href,
   onClick,
+  type = "button",
   variant = "google",
   className,
   children,
@@ -43,7 +45,7 @@ export function GoogleSignInButton({
   }
 
   return (
-    <button type="button" onClick={onClick} className={classNames}>
+    <button type={type} onClick={onClick} className={classNames}>
       {content}
     </button>
   );

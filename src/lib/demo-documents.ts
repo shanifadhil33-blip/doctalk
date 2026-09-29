@@ -397,3 +397,8 @@ export const demoDocuments: DemoDocument[] = [
 export function getDemoDocument(id: string): DemoDocument | undefined {
   return demoDocuments.find((document) => document.id === id);
 }
+
+/** Sample slugs and in-browser uploads, used only when no database is configured. */
+export function isOfflineSampleId(id: string): boolean {
+  return id.startsWith("local-") || getDemoDocument(id) !== undefined;
+}

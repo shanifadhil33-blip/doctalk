@@ -2,8 +2,7 @@
 
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
-import { GoogleSignInButton } from "@/components/GoogleSignInButton";
-import { DownloadGlyph, UploadGlyph } from "@/components/icons";
+import { UploadGlyph } from "@/components/icons";
 import { primaryButtonClass, secondaryButtonClass } from "@/components/button-styles";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
@@ -22,34 +21,40 @@ export function DocumentWorkspace({
   document,
   documentId,
   initialPage,
-  signInHref,
+  headerAccount,
+  fileName,
 }: {
   document: DemoDocument | null;
   documentId: string;
   initialPage?: number;
-  signInHref: string;
+  headerAccount: ReactNode;
+  fileName?: string;
 }) {
   if (document) {
     return (
       <IndexedWorkspace
         document={document}
         initialPage={initialPage}
-        signInHref={signInHref}
+        headerAccount={headerAccount}
       />
     );
   }
 
-  return <UnindexedWorkspace documentId={documentId} signInHref={signInHref} />;
+  if (fileName) {
+    return <StoredDocumentShell fileName={fileName} headerAccount={headerAccount} />;
+  }
+
+  return <UnindexedWorkspace documentId={documentId} headerAccount={headerAccount} />;
 }
 
 function IndexedWorkspace({
   document,
   initialPage,
-  signInHref,
+  headerAccount,
 }: {
   document: DemoDocument;
   initialPage?: number;
-  signInHref: string;
+  headerAccount: ReactNode;
 }) {
   const startingPage = clampPage(initialPage, document.pageCount) ?? document.intro.citations[0]?.page ?? 1;
   const startingPassage =
@@ -71,12 +76,6 @@ function IndexedWorkspace({
   const [draft, setDraft] = useState("");
   const [liveStatus, setLiveStatus] = useState("");
   const [nextId, setNextId] = useState(1);
-
-  const citationCount = new Set(
-    messages.flatMap((message) =>
-      message.role === "assistant" ? message.citations.map((citation) => citation.passageId) : [],
-    ),
-  ).size;
 
   function showCitation(citation: Citation) {
     setPage(citation.page);
@@ -115,28 +114,11 @@ function IndexedWorkspace({
     if (first) showCitation(first);
   }
 
-  function exportNotes() {
-    const lines = [document.title, ""];
-    for (const message of messages) {
-      if (message.role === "user") {
-        lines.push(`Question: ${message.text}`, "");
-      } else {
-        lines.push(`Answer: ${message.text}`);
-        for (const citation of message.citations) {
-          lines.push(`Source p. ${citation.page}`, citation.quote);
-        }
-        lines.push("");
-      }
-    }
-    downloadText(`${document.fileName.replace(/\.pdf$/i, "")}-notes.txt`, lines.join("\n"));
-  }
-
   return (
     <WorkspaceFrame
       title={`${document.title} (${document.counterparty})`}
       pageCountLabel={`${document.pageCount} pages · PDF`}
-      signInHref={signInHref}
-      onExport={exportNotes}
+      headerAccount={headerAccount}
     >
       <PdfPageViewer
         fileName={document.fileName}
@@ -149,7 +131,6 @@ function IndexedWorkspace({
         }}
       />
       <ChatColumn
-        citationCount={citationCount}
         messages={messages}
         activePassageId={activePassageId}
         draft={draft}
@@ -165,10 +146,10 @@ function IndexedWorkspace({
 
 function UnindexedWorkspace({
   documentId,
-  signInHref,
+  headerAccount,
 }: {
   documentId: string;
-  signInHref: string;
+  headerAccount: ReactNode;
 }) {
   const [upload, setUpload] = useState<SessionUpload | null | undefined>(undefined);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
@@ -187,7 +168,7 @@ function UnindexedWorkspace({
     return (
       <div className="min-h-screen bg-[#f5f6f8] p-6" aria-busy="true" aria-live="polite">
         <p className="sr-only">Loading document</p>
-        <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="grid w-full gap-4 lg:grid-cols-[minmax(0,1fr)_420px]">
           <div className="h-[70vh] animate-pulse rounded-xl bg-white" />
           <div className="h-80 animate-pulse rounded-xl bg-white" />
         </div>
@@ -199,7 +180,7 @@ function UnindexedWorkspace({
     return (
       <div className="flex min-h-screen flex-col bg-[#f5f6f8]">
         <SkipLink />
-        <TopBar actions={<GoogleSignInButton href={signInHref} variant="text" />} />
+        <TopBar actions={headerAccount} />
         <main id="main" className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-4 py-16 text-center">
           <h1 className="text-2xl font-semibold text-slate-950">Document not found</h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-600">
@@ -218,15 +199,9 @@ function UnindexedWorkspace({
     <WorkspaceFrame
       title={upload.fileName}
       pageCountLabel="PDF"
-      signInHref={signInHref}
-      onExport={() =>
-        downloadText(
-          `${upload.fileName.replace(/\.pdf$/i, "")}-notes.txt`,
-          `${upload.fileName}\n\nThis file is not indexed, so there are no cited answers to export.`,
-        )
-      }
+      headerAccount={headerAccount}
     >
-      <div className="flex min-h-[70vh] flex-col bg-[#eef0f3] lg:min-h-0 lg:flex-1">
+      <div className="flex min-h-[70vh] w-full min-w-0 flex-1 flex-col bg-[#eef0f3] lg:min-h-0">
         {fileUrl ? (
           <iframe title={upload.fileName} src={fileUrl} className="min-h-[70vh] w-full flex-1 bg-white" />
         ) : (
@@ -238,7 +213,7 @@ function UnindexedWorkspace({
           </div>
         )}
       </div>
-      <aside className="flex flex-col border-t border-slate-200 bg-white lg:w-[400px] lg:border-l lg:border-t-0">
+      <aside className="flex w-full shrink-0 flex-col border-t border-slate-200 bg-white lg:w-[420px] lg:border-l lg:border-t-0">
         <div className="border-b border-slate-200 px-5 py-4">
           <h2 className="text-base font-semibold text-slate-950">Ask this document</h2>
           <p className="mt-1 text-sm text-slate-500">Not indexed yet</p>
@@ -256,17 +231,45 @@ function UnindexedWorkspace({
   );
 }
 
+function StoredDocumentShell({
+  fileName,
+  headerAccount,
+}: {
+  fileName: string;
+  headerAccount: ReactNode;
+}) {
+  return (
+    <WorkspaceFrame title={fileName} pageCountLabel="PDF" headerAccount={headerAccount}>
+      <div className="flex min-h-[70vh] w-full min-w-0 flex-1 flex-col items-center justify-center bg-[#eef0f3] px-6 text-center lg:min-h-0">
+        <h2 className="text-base font-semibold text-slate-950">{fileName}</h2>
+        <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-600">
+          This document is in your library. Page text is not available in this view yet.
+        </p>
+      </div>
+      <aside className="flex w-full shrink-0 flex-col border-t border-slate-200 bg-white lg:w-[420px] lg:border-l lg:border-t-0">
+        <div className="border-b border-slate-200 px-5 py-4">
+          <h2 className="text-base font-semibold text-slate-950">Ask this document</h2>
+          <p className="mt-1 text-sm text-slate-500">Not indexed yet</p>
+        </div>
+        <div className="flex-1 px-5 py-6">
+          <p className="text-sm leading-relaxed text-slate-600">
+            Answers from a stored document are not available in this view yet.
+          </p>
+        </div>
+      </aside>
+    </WorkspaceFrame>
+  );
+}
+
 function WorkspaceFrame({
   title,
   pageCountLabel,
-  signInHref,
-  onExport,
+  headerAccount,
   children,
 }: {
   title: string;
   pageCountLabel: string;
-  signInHref: string;
-  onExport: () => void;
+  headerAccount: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -290,15 +293,11 @@ function WorkspaceFrame({
               <UploadGlyph />
               <span className="hidden sm:inline">Upload PDF</span>
             </Link>
-            <button type="button" className={secondaryButtonClass} onClick={onExport}>
-              <DownloadGlyph />
-              <span className="hidden sm:inline">Export</span>
-            </button>
-            <GoogleSignInButton href={signInHref} variant="text" />
+            {headerAccount}
           </>
         }
       />
-      <main id="main" className="flex flex-1 flex-col lg:min-h-0 lg:flex-row">
+      <main id="main" className="flex w-full min-w-0 flex-1 flex-col lg:min-h-0 lg:flex-row">
         {children}
       </main>
       <SiteFooter />
@@ -307,7 +306,6 @@ function WorkspaceFrame({
 }
 
 function ChatColumn({
-  citationCount,
   messages,
   activePassageId,
   draft,
@@ -317,7 +315,6 @@ function ChatColumn({
   onSubmit,
   onSelectCitation,
 }: {
-  citationCount: number;
   messages: ThreadMessage[];
   activePassageId: string | null;
   draft: string;
@@ -328,12 +325,10 @@ function ChatColumn({
   onSelectCitation: (citation: Citation) => void;
 }) {
   return (
-    <aside className="flex min-h-[28rem] flex-col border-t border-slate-200 bg-white lg:min-h-0 lg:w-[400px] lg:border-l lg:border-t-0">
+    <aside className="flex min-h-[28rem] w-full shrink-0 flex-col border-t border-slate-200 bg-white lg:min-h-0 lg:w-[420px] lg:border-l lg:border-t-0">
       <div className="border-b border-slate-200 px-5 py-4">
         <h2 className="text-base font-semibold text-slate-950">Ask this document</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          {citationCount} {citationCount === 1 ? "citation" : "citations"} indexed
-        </p>
+        <p className="mt-1 text-sm text-slate-500">{pageCount} pages</p>
       </div>
       <div className="flex-1 space-y-4 overflow-auto px-4 py-4">
         <p className="sr-only" aria-live="polite">
@@ -399,10 +394,7 @@ function ChatColumn({
             Send
           </button>
         </div>
-        <div className="mt-2 flex items-center justify-between gap-3 text-xs text-slate-500">
-          <p>Press Enter to send</p>
-          <p>{pageCount} pages indexed</p>
-        </div>
+        <p className="mt-2 text-xs text-slate-500">Press Enter to send</p>
       </form>
     </aside>
   );
@@ -424,14 +416,4 @@ function clampPage(page: number | undefined, pageCount: number): number | undefi
   if (!page || !Number.isFinite(page)) return undefined;
   if (page < 1 || page > pageCount) return undefined;
   return page;
-}
-
-function downloadText(filename: string, contents: string) {
-  const blob = new Blob([contents], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  URL.revokeObjectURL(url);
 }
