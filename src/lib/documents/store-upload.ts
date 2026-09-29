@@ -1,24 +1,42 @@
-import { del, put } from "@vercel/blob";
-import { and, count, eq } from "drizzle-orm";
+import { del, get } from "@vercel/blob";
+import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { chunks, documents } from "@/db/schema";
 import { demoLimitMessage } from "@/lib/ai/limits";
+import {
+  blobBelongsToUpload,
+  isRemoteBlobUrl,
+  isUploadId,
+  isUuid,
+} from "@/lib/documents/blob-url";
 import { embedWithClient, IngestError, prepareDocumentChunks } from "@/lib/documents/ingest";
+import {
+  deleteOwnedDocumentRow,
+  releasePendingUpload,
+} from "@/lib/documents/reserve-slot";
+import { hasPdfMagic } from "@/lib/documents/upload-policy";
 import { createGeminiEmbeddingClient } from "@/lib/embeddings/gemini";
+import { pendingFileUrl } from "@/lib/limits/atomic-count";
+import { MAX_PDF_BYTES } from "@/lib/upload-validation";
 
-export async function countOwnedDocuments(userId: string): Promise<number> {
-  const [row] = await getDb()
-    .select({ value: count() })
-    .from(documents)
-    .where(and(eq(documents.userId, userId), eq(documents.isDemo, false)));
-  const value = Number(row?.value ?? 0);
-  return Number.isFinite(value) ? value : 0;
-}
+type StoredDocument = {
+  id: string;
+  fileName: string;
+  status: "ready" | "processing" | "failed";
+};
+
+type SaveResult =
+  | { ok: true; document: StoredDocument }
+  | { ok: false; status: number; error: string; documentId?: string };
 
 export async function removeOwnedDocument(
   userId: string,
   documentId: string,
 ): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+  if (!isUuid(documentId)) {
+    return { ok: false, status: 404, error: "Document not found" };
+  }
+
   const rows = await getDb()
     .select({
       id: documents.id,
@@ -34,27 +52,40 @@ export async function removeOwnedDocument(
     return { ok: false, status: 404, error: "Document not found" };
   }
 
-  if (row.fileUrl.startsWith("https://")) {
-    const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
-    if (!token) {
-      return { ok: false, status: 503, error: "File storage is not configured." };
-    }
-    await del(row.fileUrl, { token });
+  if (isRemoteBlobUrl(row.fileUrl)) {
+    const deleted = await deleteBlob(row.fileUrl);
+    if (!deleted.ok) return deleted;
   }
 
-  await getDb().delete(documents).where(eq(documents.id, documentId));
+  const removed = await deleteOwnedDocumentRow(userId, documentId);
+  if (!removed) {
+    return { ok: false, status: 404, error: "Document not found" };
+  }
   return { ok: true };
 }
 
-export async function saveUploadedPdf(input: {
+export async function cancelPendingUpload(
+  userId: string,
+  uploadId: string,
+): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+  if (!isUploadId(uploadId)) {
+    return { ok: false, status: 400, error: "Invalid request" };
+  }
+  await releasePendingUpload(userId, uploadId);
+  return { ok: true };
+}
+
+export async function finishUploadedPdf(input: {
   userId: string;
-  fileName: string;
-  bytes: Uint8Array;
-}): Promise<
-  | { ok: true; document: { id: string; fileName: string; status: "ready" } }
-  | { ok: false; status: number; error: string; documentId?: string }
-> {
-  const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
+  uploadId: string;
+  url: string;
+  pathname: string;
+}): Promise<SaveResult> {
+  if (!isUploadId(input.uploadId) || !blobBelongsToUpload(input)) {
+    return { ok: false, status: 400, error: "Invalid request" };
+  }
+
+  const token = blobToken();
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!token) {
     return { ok: false, status: 503, error: "File storage is not configured." };
@@ -63,44 +94,38 @@ export async function saveUploadedPdf(input: {
     return { ok: false, status: 503, error: "Embeddings are not configured." };
   }
 
-  const safeUser = input.userId.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 80) || "user";
-  const blob = await put(
-    `uploads/${safeUser}/${crypto.randomUUID()}.pdf`,
-    Buffer.from(input.bytes),
-    {
-      access: "public",
-      token,
-      contentType: "application/pdf",
-      addRandomSuffix: true,
-    },
-  );
-
+  const pendingUrl = pendingFileUrl(input.uploadId);
   const db = getDb();
-  const inserted = await db
-    .insert(documents)
-    .values({
-      userId: input.userId,
-      fileName: input.fileName,
-      fileUrl: blob.url,
-      isDemo: false,
-      status: "processing",
-    })
-    .returning({ id: documents.id });
-  const document = inserted[0];
-  if (!document) {
-    await del(blob.url, { token });
-    return { ok: false, status: 500, error: "Upload failed. Try again later." };
+  const claimed = await db
+    .update(documents)
+    .set({ fileUrl: input.url })
+    .where(
+      and(
+        eq(documents.userId, input.userId),
+        eq(documents.fileUrl, pendingUrl),
+        eq(documents.isDemo, false),
+        eq(documents.status, "processing"),
+      ),
+    )
+    .returning({ id: documents.id, fileName: documents.fileName });
+
+  const claimedRow = claimed[0];
+  if (!claimedRow) {
+    return existingUploadResult(input.userId, input.url);
   }
 
   try {
+    const bytes = await readPrivatePdf(input.url, token);
+    if (!hasPdfMagic(bytes)) {
+      await discardUpload(input.userId, claimedRow.id, input.url, token);
+      return { ok: false, status: 400, error: "That file is not a PDF." };
+    }
+
     const client = createGeminiEmbeddingClient({ apiKey });
-    const prepared = await prepareDocumentChunks(
-      input.bytes,
-      embedWithClient(client, process.env),
-    );
+    const prepared = await prepareDocumentChunks(bytes, embedWithClient(client, process.env));
     await db.insert(chunks).values(
       prepared.map((piece) => ({
-        documentId: document.id,
+        documentId: claimedRow.id,
         content: piece.content,
         embedding: piece.embedding,
         chunkIndex: piece.chunkIndex,
@@ -111,26 +136,32 @@ export async function saveUploadedPdf(input: {
     await db
       .update(documents)
       .set({ status: "ready" })
-      .where(eq(documents.id, document.id));
+      .where(eq(documents.id, claimedRow.id));
     return {
       ok: true,
-      document: { id: document.id, fileName: input.fileName, status: "ready" },
+      document: {
+        id: claimedRow.id,
+        fileName: claimedRow.fileName,
+        status: "ready",
+      },
     };
   } catch (error) {
-    if (demoLimitMessage(error)) {
-      await db.delete(documents).where(eq(documents.id, document.id));
-      await del(blob.url, { token });
-      return {
-        ok: false,
-        status: 429,
-        error: "Demo limit reached, try again later",
-      };
+    if (demoLimitMessage(error) || (error instanceof IngestError && error.message === "PDF must be 10 MB or smaller.")) {
+      await discardUpload(input.userId, claimedRow.id, input.url, token);
+      if (demoLimitMessage(error)) {
+        return {
+          ok: false,
+          status: 429,
+          error: "Demo limit reached, try again later",
+        };
+      }
+      return { ok: false, status: 400, error: "PDF must be 10 MB or smaller." };
     }
 
     await db
       .update(documents)
       .set({ status: "failed" })
-      .where(eq(documents.id, document.id));
+      .where(eq(documents.id, claimedRow.id));
     const message =
       error instanceof IngestError
         ? error.message
@@ -140,7 +171,115 @@ export async function saveUploadedPdf(input: {
       ok: false,
       status: 422,
       error: message,
-      documentId: document.id,
+      documentId: claimedRow.id,
     };
   }
+}
+
+async function existingUploadResult(userId: string, fileUrl: string): Promise<SaveResult> {
+  const rows = await getDb()
+    .select({
+      id: documents.id,
+      fileName: documents.fileName,
+      status: documents.status,
+    })
+    .from(documents)
+    .where(
+      and(
+        eq(documents.userId, userId),
+        eq(documents.fileUrl, fileUrl),
+        eq(documents.isDemo, false),
+      ),
+    )
+    .limit(1);
+  const row = rows[0];
+  if (!row) {
+    return { ok: false, status: 404, error: "Document not found" };
+  }
+  if (row.status === "ready") {
+    return {
+      ok: true,
+      document: { id: row.id, fileName: row.fileName, status: "ready" },
+    };
+  }
+  if (row.status === "failed") {
+    return {
+      ok: false,
+      status: 422,
+      error: "This document could not be processed.",
+      documentId: row.id,
+    };
+  }
+  return { ok: false, status: 409, error: "This document is still processing." };
+}
+
+async function discardUpload(
+  userId: string,
+  documentId: string,
+  fileUrl: string,
+  token: string,
+): Promise<void> {
+  await del(fileUrl, { token }).catch(() => {
+    console.error("Blob delete failed");
+  });
+  await deleteOwnedDocumentRow(userId, documentId);
+}
+
+async function deleteBlob(
+  fileUrl: string,
+): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+  const token = blobToken();
+  if (!token) {
+    return { ok: false, status: 503, error: "File storage is not configured." };
+  }
+  await del(fileUrl, { token });
+  return { ok: true };
+}
+
+export async function readPrivatePdf(url: string, token: string): Promise<Uint8Array> {
+  const result = await get(url, { access: "private", token });
+  if (!result || result.statusCode !== 200 || !result.stream) {
+    throw new IngestError("This document could not be processed.");
+  }
+  if (typeof result.blob.size === "number" && result.blob.size > MAX_PDF_BYTES) {
+    await result.stream.cancel().catch(() => undefined);
+    throw new IngestError("PDF must be 10 MB or smaller.");
+  }
+  return readLimitedStream(result.stream, MAX_PDF_BYTES);
+}
+
+async function readLimitedStream(
+  stream: ReadableStream<Uint8Array>,
+  maxBytes: number,
+): Promise<Uint8Array> {
+  const reader = stream.getReader();
+  const parts: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!value) continue;
+      total += value.byteLength;
+      if (total > maxBytes) {
+        throw new IngestError("PDF must be 10 MB or smaller.");
+      }
+      parts.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const part of parts) {
+    bytes.set(part, offset);
+    offset += part.byteLength;
+  }
+  return bytes;
+}
+
+function blobToken(): string | null {
+  const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
+  return token ? token : null;
 }

@@ -1,3 +1,4 @@
+import { classifyStoredFileUrl } from "@/lib/documents/blob-url";
 import { MAX_PDF_BYTES, validatePdfFile } from "@/lib/upload-validation";
 
 export const MAX_DOCUMENTS_PER_USER = 5;
@@ -51,6 +52,10 @@ export function pdfSrcFor(
   fileUrl: string | undefined,
 ): string | undefined {
   if (!fileUrl) return undefined;
-  if (fileUrl.startsWith("/") && !fileUrl.startsWith("//")) return fileUrl;
-  return `/api/documents/${documentId}/file`;
+  const kind = classifyStoredFileUrl(fileUrl);
+  if (kind === "local") return fileUrl;
+  if (kind === "private-blob" || kind === "public-blob") {
+    return `/api/documents/${documentId}/file`;
+  }
+  return undefined;
 }

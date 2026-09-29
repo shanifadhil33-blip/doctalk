@@ -23,3 +23,5 @@ Requires Node 22.
 1. Copy `.env.example` to `.env.local` and fill it in.
 2. `npm install`
 3. `npm run dev`
+
+Go-live steps for a new Neon database are in [docs/DEPLOY.md](docs/DEPLOY.md).

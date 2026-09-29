@@ -1,16 +1,7 @@
 import { auth } from "@/auth";
 import { userIdFromTokenSub } from "@/lib/auth/user-id";
 import { loadVisibleDocuments } from "@/lib/documents/list";
-import {
-  countOwnedDocuments,
-  removeOwnedDocument,
-  saveUploadedPdf,
-} from "@/lib/documents/store-upload";
-import {
-  PDF_LIMIT_MESSAGE,
-  validatePdfUpload,
-  withinDocumentLimit,
-} from "@/lib/documents/upload-policy";
+import { finishUploadedPdf, removeOwnedDocument } from "@/lib/documents/store-upload";
 
 export const maxDuration = 60;
 export const runtime = "nodejs";
@@ -41,39 +32,22 @@ export async function POST(req: Request) {
     return Response.json({ error: "Database is not configured" }, { status: 503 });
   }
 
-  let form: FormData;
+  let body: unknown;
   try {
-    form = await req.formData();
+    body = await req.json();
   } catch {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }
-
-  const file = form.get("file");
-  if (!(file instanceof File)) {
-    return Response.json({ error: "Choose a PDF." }, { status: 400 });
-  }
-
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const checked = validatePdfUpload({
-    name: file.name,
-    size: file.size,
-    type: file.type,
-    bytes,
-  });
-  if (!checked.ok) {
-    return Response.json({ error: checked.message }, { status: 400 });
+  if (!isCompletedUpload(body)) {
+    return Response.json({ error: "Invalid request" }, { status: 400 });
   }
 
   try {
-    const existing = await countOwnedDocuments(userId);
-    if (!withinDocumentLimit(existing)) {
-      return Response.json({ error: PDF_LIMIT_MESSAGE }, { status: 400 });
-    }
-
-    const saved = await saveUploadedPdf({
+    const saved = await finishUploadedPdf({
       userId,
-      fileName: checked.fileName,
-      bytes,
+      uploadId: body.uploadId,
+      url: body.url,
+      pathname: body.pathname,
     });
     if (!saved.ok) {
       return Response.json(
@@ -89,6 +63,21 @@ export async function POST(req: Request) {
     console.error("Upload failed");
     return Response.json({ error: "Upload failed. Try again later." }, { status: 500 });
   }
+}
+
+function isCompletedUpload(
+  body: unknown,
+): body is { uploadId: string; url: string; pathname: string } {
+  return (
+    typeof body === "object" &&
+    body !== null &&
+    "uploadId" in body &&
+    typeof body.uploadId === "string" &&
+    "url" in body &&
+    typeof body.url === "string" &&
+    "pathname" in body &&
+    typeof body.pathname === "string"
+  );
 }
 
 export async function DELETE(req: Request) {

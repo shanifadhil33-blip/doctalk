@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "documents_file_url_idx" ON "documents" USING btree ("file_url");

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { UploadGlyph } from "@/components/icons";
 import { primaryButtonClass, secondaryButtonClass } from "@/components/button-styles";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -62,7 +63,15 @@ export function DocumentWorkspace({
   }
 
   if (fileName) {
-    return <StoredDocumentShell fileName={fileName} headerAccount={headerAccount} />;
+    return (
+      <StoredDocumentShell
+        documentId={documentId}
+        fileName={fileName}
+        headerAccount={headerAccount}
+        canDelete={canDelete ?? false}
+        documentStatus={documentStatus}
+      />
+    );
   }
 
   return <UnindexedWorkspace documentId={documentId} headerAccount={headerAccount} />;
@@ -253,19 +262,55 @@ function UnindexedWorkspace({
 }
 
 function StoredDocumentShell({
+  documentId,
   fileName,
   headerAccount,
+  canDelete,
+  documentStatus,
 }: {
+  documentId: string;
   fileName: string;
   headerAccount: ReactNode;
+  canDelete: boolean;
+  documentStatus?: "processing" | "ready" | "failed";
 }) {
+  const router = useRouter();
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const note =
+    documentStatus === "processing"
+      ? "This PDF is still being prepared. Delete it if you want that spot back."
+      : documentStatus === "failed"
+        ? "This PDF could not be read. Delete it to free a spot."
+        : "This document is in your library. Page text is not available in this view yet.";
+
+  async function onDelete() {
+    if (!canDelete) return;
+    if (!window.confirm("Delete this document?")) return;
+    setDeleteError(null);
+    const response = await fetch(`/api/documents/${documentId}`, { method: "DELETE" });
+    if (!response.ok) {
+      setDeleteError("Could not delete that document.");
+      return;
+    }
+    router.push("/documents");
+    router.refresh();
+  }
+
   return (
     <WorkspaceFrame title={fileName} pageCountLabel="PDF" headerAccount={headerAccount}>
       <div className="flex min-h-[70vh] w-full min-w-0 flex-1 flex-col items-center justify-center bg-[#eef0f3] px-6 text-center lg:min-h-0">
         <h2 className="text-base font-semibold text-slate-950">{fileName}</h2>
-        <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-600">
-          This document is in your library. Page text is not available in this view yet.
-        </p>
+        <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-600">{note}</p>
+        {canDelete ? (
+          <button type="button" className={`${secondaryButtonClass} mt-4`} onClick={() => void onDelete()}>
+            Delete
+          </button>
+        ) : null}
+        {deleteError ? (
+          <p role="alert" className="mt-3 text-sm text-red-700">
+            {deleteError}
+          </p>
+        ) : null}
       </div>
       <aside className="flex w-full shrink-0 flex-col border-t border-slate-200 bg-white lg:w-[420px] lg:border-l lg:border-t-0">
         <div className="border-b border-slate-200 px-5 py-4">
