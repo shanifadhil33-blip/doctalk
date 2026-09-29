@@ -30,9 +30,14 @@ describe("classifyPath", () => {
     });
   });
 
-  it("protects upload and chat", () => {
+  it("protects the upload page", () => {
     expect(classifyPath("/upload")).toEqual({ kind: "protected" });
-    expect(classifyPath("/api/chat")).toEqual({ kind: "protected" });
+  });
+
+  it("leaves chat and the document API to enforce access in the handler", () => {
+    expect(classifyPath("/api/chat")).toEqual({ kind: "public" });
+    expect(classifyPath("/api/documents")).toEqual({ kind: "public" });
+    expect(classifyPath("/api/documents/abc/file")).toEqual({ kind: "public" });
   });
 
   it("reads a document id from the document route", () => {

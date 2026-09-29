@@ -10,6 +10,8 @@ export type PathKind =
 
 export type FoundDocument = DocumentVisibility & {
   fileName: string;
+  fileUrl?: string;
+  status?: string;
 };
 
 export type DocumentLookup =
@@ -36,7 +38,12 @@ export function classifyPath(pathname: string): PathKind {
     path === "/sign-in" ||
     path.startsWith("/sign-in/") ||
     path === "/api/auth" ||
-    path.startsWith("/api/auth/")
+    path.startsWith("/api/auth/") ||
+    // Chat and the document API enforce visibility themselves so a signed-out
+    // viewer can open demo documents. Upload and delete still require a session.
+    path === "/api/chat" ||
+    path === "/api/documents" ||
+    path.startsWith("/api/documents/")
   ) {
     return { kind: "public" };
   }

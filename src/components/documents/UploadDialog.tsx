@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import Link from "next/link";
 import { primaryButtonClass, secondaryButtonClass } from "@/components/button-styles";
 import { CheckGlyph, CloseGlyph, UploadGlyph } from "@/components/icons";
 import { formatFileSize, validatePdfFile } from "@/lib/upload-validation";
@@ -11,10 +12,16 @@ export function UploadDialog({
   open,
   onClose,
   onOpenDocument,
+  uploadMode = "local",
+  signedIn = true,
+  onUpload,
 }: {
   open: boolean;
   onClose: () => void;
   onOpenDocument: (file: File) => void;
+  uploadMode?: "local" | "server";
+  signedIn?: boolean;
+  onUpload?: (file: File) => Promise<void>;
 }) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -26,6 +33,8 @@ export function UploadDialog({
   const [phase, setPhase] = useState<UploadPhase>("idle");
   const [uploadPercent, setUploadPercent] = useState(0);
   const [readPercent, setReadPercent] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const serverMode = uploadMode === "server";
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -39,6 +48,7 @@ export function UploadDialog({
     setPhase("idle");
     setUploadPercent(0);
     setReadPercent(0);
+    setBusy(false);
   }, [open]);
 
   useEffect(() => {
@@ -89,7 +99,7 @@ export function UploadDialog({
   }, [open]);
 
   useEffect(() => {
-    if (!file || phase === "idle" || phase === "ready") return;
+    if (serverMode || !file || phase === "idle" || phase === "ready") return;
     const timer = window.setInterval(() => {
       if (phase === "uploading") {
         setUploadPercent((current) => Math.min(100, current + 20));
@@ -98,7 +108,7 @@ export function UploadDialog({
       }
     }, 160);
     return () => window.clearInterval(timer);
-  }, [file, phase]);
+  }, [file, phase, serverMode]);
 
   useEffect(() => {
     if (phase === "uploading" && uploadPercent >= 100) {
@@ -120,7 +130,7 @@ export function UploadDialog({
     setFile(next);
     setUploadPercent(0);
     setReadPercent(0);
-    setPhase("uploading");
+    setPhase(serverMode ? "idle" : "uploading");
     if (inputRef.current) inputRef.current.value = "";
   }
 
@@ -166,6 +176,14 @@ export function UploadDialog({
         </div>
 
         <div className="space-y-4 px-5 py-5">
+          {serverMode && !signedIn ? (
+            <div className="rounded-xl border border-slate-200 bg-[#f8f9fb] px-4 py-8 text-center">
+              <p className="text-sm text-slate-700">Sign in to upload a PDF.</p>
+              <Link href="/sign-in?callbackUrl=%2Fdocuments" className={`${primaryButtonClass} mt-4`}>
+                Sign in
+              </Link>
+            </div>
+          ) : (
           <label
             htmlFor="pdf-file"
             onDragEnter={(event) => {
@@ -196,7 +214,7 @@ export function UploadDialog({
               Drop a PDF here or <span className="font-medium text-[#4338ca] underline">browse</span>
             </span>
             <span id="upload-hint" className="mt-1 text-xs text-slate-500">
-              Up to 10 MB
+              {serverMode ? "PDF only, up to 10 MB. 5 documents per account." : "Up to 10 MB"}
             </span>
             <input
               ref={inputRef}
@@ -210,6 +228,7 @@ export function UploadDialog({
               onChange={(event) => takeFile(event.target.files?.[0])}
             />
           </label>
+          )}
 
           {error ? (
             <p id="upload-error" role="alert" className="text-sm text-red-700">
@@ -246,6 +265,11 @@ export function UploadDialog({
                 </button>
               </div>
 
+              {serverMode ? (
+                <p className="mt-3 text-sm text-slate-600" aria-live="polite">
+                  {busy ? "Uploading and reading the PDF." : "Ready to upload."}
+                </p>
+              ) : (
               <div className="mt-3 space-y-2" aria-live="polite">
                 <ProgressRow
                   done={uploadPercent >= 100}
@@ -261,6 +285,7 @@ export function UploadDialog({
                 ) : null}
                 <p className="sr-only">{statusLabel}</p>
               </div>
+              )}
             </div>
           ) : null}
         </div>
@@ -272,12 +297,27 @@ export function UploadDialog({
           <button
             type="button"
             className={primaryButtonClass}
-            disabled={!ready || !file}
+            disabled={serverMode ? !file || busy || !signedIn : !ready || !file}
             onClick={() => {
+              if (serverMode) {
+                if (!file || !onUpload || busy) return;
+                setBusy(true);
+                setError(null);
+                void onUpload(file)
+                  .catch((uploadError: unknown) => {
+                    setError(
+                      uploadError instanceof Error
+                        ? uploadError.message
+                        : "Upload failed. Try again later.",
+                    );
+                  })
+                  .finally(() => setBusy(false));
+                return;
+              }
               if (file && ready) onOpenDocument(file);
             }}
           >
-            Open document
+            {serverMode ? (busy ? "Uploading" : "Upload") : "Open document"}
           </button>
         </div>
       </div>

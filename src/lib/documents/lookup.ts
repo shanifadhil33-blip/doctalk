@@ -23,6 +23,8 @@ export async function lookupDocument(
         userId: documents.userId,
         isDemo: documents.isDemo,
         fileName: documents.fileName,
+        fileUrl: documents.fileUrl,
+        status: documents.status,
       })
       .from(documents)
       .where(eq(documents.id, documentId))

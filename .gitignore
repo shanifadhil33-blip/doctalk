@@ -42,5 +42,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# copied from pdfjs-dist during npm install
+/public/pdf.worker.min.mjs
+
 # cursor
 .cursor/
