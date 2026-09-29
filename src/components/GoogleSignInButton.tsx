@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { secondaryButtonClass, textButtonClass } from "@/components/button-styles";
 import { GoogleMark } from "@/components/icons";
 
 type GoogleSignInButtonProps = {
@@ -10,12 +11,6 @@ type GoogleSignInButtonProps = {
   children?: ReactNode;
 };
 
-const googleClass =
-  "inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-800 shadow-sm transition-colors hover:bg-slate-50";
-
-const textClass =
-  "inline-flex h-10 items-center justify-center rounded-md px-2 text-sm font-medium text-slate-700 transition-colors hover:text-slate-950";
-
 export function GoogleSignInButton({
   href,
   onClick,
@@ -25,7 +20,10 @@ export function GoogleSignInButton({
   children,
 }: GoogleSignInButtonProps) {
   const label = children ?? (variant === "google" ? "Sign in with Google" : "Sign in");
-  const classNames = [variant === "google" ? googleClass : textClass, className]
+  const classNames = [
+    variant === "google" ? secondaryButtonClass : textButtonClass,
+    className,
+  ]
     .filter(Boolean)
     .join(" ");
 
