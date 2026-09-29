@@ -1,27 +1,25 @@
 # DocTalk state
 
-Owner: Adhil. Milestone B2 (auth and embeddings), with the approved screens wired to that auth.
+Owner: Adhil. Milestones B3 (upload and ingest) and B4 (retrieval with page citations).
 
 ## Done
 
 - Next.js 15 App Router, React 19, strict TypeScript, Tailwind v4.
 - Auth.js v5 (`next-auth` 5.0.0-beta.32), Google provider only. JWT sessions. No database adapter and no users table.
-- The viewer id is the Google account id (`token.sub`), copied onto `session.user.id`. The document list filters with `visibleDocumentsWhere` (`is_demo OR user_id IS NULL OR user_id = viewer`) when `DATABASE_URL` is set.
-- Middleware: `/`, `/documents`, `/sign-in`, and `/api/auth` are public. `/documents/:id` is allowed when that row is visible to the viewer. `/upload`, `/api/chat`, and every other route require a session. The document page repeats the same check when a database is configured.
-- When `DATABASE_URL` is unset, known sample ids and in-browser `local-` uploads skip the document lookup so the demo opens with no env vars. A configured database still fails closed on a missing or unavailable lookup.
-- Clerk packages, components, routes, and env vars are removed.
-- Header Sign in and Sign in with Google submit Auth.js `signIn("google")`. A signed-in session shows the account name and Sign out.
-- `/` is the landing page. `/documents` is the document list. The upload dialog accepts one PDF up to 10 MB. `/documents/[id]` is the workspace: page viewer on the left, cited answers on the right. Citation chips read `Source p. N` and move the viewer to that page.
-- The viewer is flexible and the chat panel is a fixed 420px, so the pair fills the window at desktop width. The Export button is removed. The chat subtitle is the page count, such as `11 pages`.
-- Sample answers use HTML pages so a citation can highlight a passage. `react-pdf` was not added. An iframe is used only for a file the browser still has. A stored row without page text shows the file name and says page text is not available in this view yet.
-- `/upload` redirects to the document list with the dialog open. The route stays protected.
-- Embeddings use the Gemini API. `EMBEDDING_MODEL` defaults to `gemini-embedding-2`. Requests set `output_dimensionality` to 768. Vectors are L2-normalized when their norm is not already 1. Key: `GEMINI_API_KEY`.
-- `chunks.embedding` stays `vector(768)`. HNSW index `chunks_embedding_hnsw_idx` uses `vector_cosine_ops`. The Drizzle migration in `drizzle/` was generated and not applied.
-- The seed script embeds chunk text before inserting a demo document. If `GEMINI_API_KEY` is missing it exits without writing and prints why.
-- Chat answers come from the Gemini API. `CHAT_MODEL` defaults to `gemini-3.5-flash-lite`. If that call returns 429 or 402 and both `OPENROUTER_API_KEY` and `OPENROUTER_MODEL` are set, the route tries that OpenRouter model. If the providers are limited, the response is `Demo limit reached, try again later`. `google/gemini-pro` is removed.
+- The viewer id is the Google account id (`token.sub`), copied onto `session.user.id`. Document lists use `visibleDocumentsWhere` (`is_demo OR user_id IS NULL OR user_id = viewer`) when `DATABASE_URL` is set.
+- Middleware: `/`, `/documents`, `/sign-in`, and `/api/auth` are public. `/documents/:id` is allowed when that row is visible to the viewer. `/upload` and every other page require a session. `/api/chat` and `/api/documents` are public at the middleware so a signed-out viewer can open demo documents. The handlers enforce access: upload and delete require a session, and a question about a private document does too.
+- When `DATABASE_URL` is unset, known sample ids and in-browser `local-` uploads skip the document lookup so the demo opens with no env vars. Questions on those samples stay in the browser. A configured database still fails closed on a missing or unavailable lookup.
+- `/` is the landing page. `/documents` is the document list. With a database, the list and the upload dialog call `/api/documents`. Without one, the list stays on the three sample documents and the dialog keeps the file in the browser session.
+- Signed-in upload is PDF only, 10 MB, and at most 5 documents per account. The checks run in the browser and again on `POST /api/documents`. Files go to Vercel Blob (`BLOB_READ_WRITE_TOKEN`, public Hobby objects). `DELETE /api/documents/:id` removes the caller's own row, its chunks, and the blob.
+- Ingest parses each page with `unpdf`, chunks the text with the page number in `chunks.page` (and in metadata), embeds with the existing Gemini helper in small batches, and retries 429 with backoff. `documents.status` is `processing`, `ready`, or `failed`.
+- Three original sample PDFs live in `/public/demo/` (a services agreement, an invoice, and a data policy). `npm run seed` reads those files, embeds them, and inserts `is_demo` rows whose `file_url` is the static path. It skips a file that is already seeded. If `GEMINI_API_KEY` is missing it exits without writing.
+- `/api/chat` embeds the question, takes a cosine top-k over that document's chunks (`<=>`, the operator for HNSW index `chunks_embedding_hnsw_idx`), and asks Gemini to answer only from those passages. The JSON body is `{ answer, citations: [{ page, excerpt }] }`. If the passages do not contain the answer, the answer is `That is not in this document.` and `citations` is empty. A provider 429 or 402, or the signed-out daily cap, returns `Demo limit reached, try again later`.
+- Signed-out demo questions are capped at 20 per IP per UTC day. The counter is a row in `settings`. Signed-in questions are not capped there. OpenRouter is still the optional fallback when both `OPENROUTER_API_KEY` and `OPENROUTER_MODEL` are set.
+- With `DATABASE_URL` set, the workspace posts questions to `/api/chat`. `Source p. N` chips use the returned citations and move a `react-pdf` viewer to that page of the real PDF. Demo files are served from `/demo/...`. Blob URLs are streamed through `/api/documents/:id/file` after the same visibility check. Without `DATABASE_URL`, the HTML sample pages and in-browser answers stay in place.
+- Embeddings use the Gemini API. `EMBEDDING_MODEL` defaults to `gemini-embedding-2` at 768 dimensions. Vectors are L2-normalized when their norm is not already 1. Chat defaults to `gemini-3.5-flash-lite`.
 - `getDb()` still connects on the first query. Importing `src/db/index.ts` does not require `DATABASE_URL`. The document list does not call `getDb()` when `DATABASE_URL` is unset.
 - The app layout exports `dynamic = "force-dynamic"`, so Next.js does not run those queries during `next build`.
-- Vitest covers Google user-id mapping, the embedding helper with a mocked client, rate-limit error mapping, visibility, `getDb`, citation chips, and PDF upload checks. The default environment is node. UI tests opt into jsdom.
+- Vitest covers page-numbered chunking, PDF parse of the sample invoice, upload validation and the 5-document cap, citation building, the not-in-document path, embedding 429 retry, the demo question cap, and the earlier auth, visibility, and rate-limit tests.
 - GitHub Actions (`.github/workflows/ci.yml`) is unchanged: Node 22, `npm ci`, lint, `tsc --noEmit`, `npm test`, `npm run build`. No env vars.
 
 Copy on the screens is plain. These labels are not shown: deterministic passage verification, exact coordinates verification, zero latency page indexing, verified passages, deterministic match, and match 100%.
@@ -30,32 +28,41 @@ The footer on these screens says Built by Adhil Shanif and links to https://gith
 
 ## Next
 
-- B3 PDF upload and storage
-- B4 retrieval with page citations
+- UI polish beyond the current screens
+- Landing page content
 
 ## Decisions
 
 - User id is Google's OIDC `sub`. On sign-in, `profile.sub` is written to `token.sub`. `account.providerAccountId` is used only when `profile.sub` is missing. Later requests keep the stored `token.sub`. `session.user.id` is that same string, and `visibleDocumentsWhere` compares it to `documents.user_id`.
 - JWT sessions only. A users table is not required for the visibility rule.
 - `trustHost: true` so Auth.js accepts the request host without `AUTH_URL`. `AUTH_SECRET` is required for a real session. When it is unset, `auth()` returns no session, which lets `next build` finish with no env vars.
-- The document list is public. With a database it shows only rows `visibleDocumentsWhere` allows, including a signed-out viewer seeing demo and null-owner rows. Without a database it shows the three sample documents.
+- The document list is public. With a database it shows only rows `visibleDocumentsWhere` allows, including a signed-out viewer seeing demo and null-owner rows. Without a database it shows the three HTML sample documents.
 - A document URL is public only after a visibility lookup when `DATABASE_URL` is set. If that lookup is missing or unavailable, a signed-out request goes to sign-in and a signed-in request gets 404. Without `DATABASE_URL`, sample slugs and `local-` ids are allowed so the demo still opens.
 - Screen headers own the chrome. The old `max-w-6xl` app wrapper is not used, so the workspace can span the window. The page viewer grows and the chat stays 420px.
-- Chat calls `generateText` with `maxRetries: 0`, then returns an AI SDK UI message stream. The provider status is known before the response is sent, so a 429 or 402 can fall back or return the friendly limit message.
+- Chat calls `generateText` with `maxRetries: 0`. Retrieval returns JSON (`answer` plus `citations`) so the workspace can attach `Source p. N` chips to the finished answer. A 429 or 402 still falls through to OpenRouter when that fallback is configured, then to `Demo limit reached, try again later`.
 - OpenRouter is optional. It is not called unless both the key and `OPENROUTER_MODEL` are set. Model ids are not hardcoded beyond the Gemini defaults.
-- The HNSW migration is the full initial Drizzle migration, including the tables already described in `src/db/schema.ts`. It was not applied. `src/db/enable-pgvector.ts` still creates the `vector` extension, and the migration SQL does too.
-- `gemini-embedding-2` normalizes 768-d vectors. The helper still normalizes when the L2 norm is not 1.
-- `.env.example` no longer lists Clerk, Cloudflare R2, `GOOGLE_GENERATIVE_AI_API_KEY`, or `NEXT_PUBLIC_ENABLE_ADMIN`. Gemini uses `GEMINI_API_KEY`.
+- Uploaded blobs use `access: "public"` so the browser can load them, and the pathname includes a random suffix. The document page does not hand that URL to the client. It loads `/api/documents/:id/file`, which checks visibility and then streams the blob.
+- `chunks.page` is a nullable integer. New chunks set it. Older rows can still be read from `metadata.pageNumber`. `documents.status` defaults to `ready`.
+- The HNSW migration `drizzle/0000_hnsw_cosine_embedding.sql` is the full initial schema. It was not applied. Do not run it against a database that already has these tables. For that database, apply only `drizzle/0001_document_status_and_page.sql` (status, page, and the two btree indexes). A brand-new database runs 0000, then 0001. `src/db/enable-pgvector.ts` still creates the `vector` extension, and 0000 does too.
+- `gemini-embedding-2` normalizes 768-d vectors. The helper still normalizes when the L2 norm is not 1. Ingest embeds at most 100 chunks. A longer PDF is marked failed with `This PDF has too much text to process.`
+- `.env.example` lists placeholders only. Gemini uses `GEMINI_API_KEY`. Blob storage uses `BLOB_READ_WRITE_TOKEN`.
+
+## How to seed
+
+1. Copy `.env.example` to `.env` and set `DATABASE_URL` and `GEMINI_API_KEY`. The seed script reads `.env`, not `.env.local`.
+2. Apply the migrations with the note above. Do not apply 0000 if the tables already exist.
+3. `npm run seed`
+
+The script reads `/public/demo/*.pdf`. It inserts nothing when `GEMINI_API_KEY` is unset.
 
 ## Parked
 
-- Stored documents do not render page text or extracted JSON. Retrieval with citations is B4. Sample documents still show their pages.
-- Upload still checks the file in the browser and keeps it for the session. Storage is B3. R2 is not wired, so those env vars were dropped.
-- The generated migration is not applied. Review it before running it against a database that already has these tables.
+- Vercel Hobby request bodies are often capped near 4.5 MB even though this app accepts a 10 MB PDF. A host that rejects the body will fail the upload before the route runs.
+- The generated migrations are not applied. Review them before running them.
 - README says to copy `.env.example` to `.env.local`. `drizzle.config.ts`, `src/db/seed.ts`, and `src/db/enable-pgvector.ts` load `.env`.
-- Seeded medical-bill text keeps the original fixture punctuation.
 - `npm audit` advisories were already present, including `glob` pulled in by `@vitest/coverage-v8`. Not changed here.
 - Vitest stays on 3.2.7 with `@types/node` 20, for the same resolver reasons as B1.
+- `public/pdf.worker.min.mjs` is copied from `pdfjs-dist` by `postinstall`. It is gitignored.
 
 ## Services
 
@@ -65,4 +72,5 @@ The footer on these screens says Built by Adhil Shanif and links to https://gith
 | Neon Postgres | Not recorded in the repo | `DATABASE_URL`, named in `.env.example`. Not committed. |
 | Gemini API | Free tier | `GEMINI_API_KEY`, named in `.env.example`. Used for embeddings and chat. Not committed. |
 | OpenRouter | Optional free-model fallback | `OPENROUTER_API_KEY` and `OPENROUTER_MODEL`, named in `.env.example`. Not committed. |
+| Vercel Blob | Free Hobby tier | `BLOB_READ_WRITE_TOKEN`, named in `.env.example`. Not committed. |
 | GitHub Actions | Not recorded in the repo | Workflow stores no secrets. |

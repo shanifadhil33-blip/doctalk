@@ -8,6 +8,13 @@
       "when": 1790652287525,
       "tag": "0000_hnsw_cosine_embedding",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790657328219,
+      "tag": "0001_document_status_and_page",
+      "breakpoints": true
     }
   ]
 }

@@ -6,7 +6,7 @@ import {
   generateText,
   type ModelMessage,
 } from "ai";
-import { demoLimitMessage, demoLimitResponse } from "@/lib/ai/limits";
+import { DEMO_LIMIT_MESSAGE, demoLimitMessage, demoLimitResponse } from "@/lib/ai/limits";
 
 export const DEFAULT_CHAT_MODEL = "gemini-3.5-flash-lite";
 
@@ -68,6 +68,106 @@ export function uiMessageResponse(text: string): Response {
   });
 
   return createUIMessageStreamResponse({ stream });
+}
+
+export class DemoLimitError extends Error {
+  readonly statusCode = 429;
+
+  constructor() {
+    super(DEMO_LIMIT_MESSAGE);
+    this.name = "DemoLimitError";
+  }
+}
+
+export class ChatConfigError extends Error {
+  readonly statusCode = 503;
+
+  constructor() {
+    super("Chat is not configured");
+    this.name = "ChatConfigError";
+  }
+}
+
+type TextAttempt = {
+  name: string;
+  send: () => Promise<string>;
+};
+
+export function createTextAttempts(
+  env: NodeJS.ProcessEnv,
+  prompt: string,
+): TextAttempt[] {
+  const messages: ModelMessage[] = [{ role: "user", content: prompt }];
+  const attempts: TextAttempt[] = [];
+  const geminiKey = env.GEMINI_API_KEY?.trim();
+
+  if (geminiKey) {
+    const modelId = chatModelFromEnv(env);
+    attempts.push({
+      name: "gemini",
+      async send() {
+        const google = createGoogleGenerativeAI({ apiKey: geminiKey });
+        const result = await generateText({
+          model: google(modelId),
+          messages,
+          maxRetries: 0,
+        });
+        return result.text;
+      },
+    });
+  }
+
+  const openRouterKey = env.OPENROUTER_API_KEY?.trim();
+  const openRouterModel = openRouterModelFromEnv(env);
+  if (openRouterKey && openRouterModel) {
+    attempts.push({
+      name: "openrouter",
+      async send() {
+        const openRouter = createOpenAI({
+          baseURL: "https://openrouter.ai/api/v1",
+          apiKey: openRouterKey,
+          name: "openrouter",
+        });
+        const result = await generateText({
+          model: openRouter.chat(openRouterModel),
+          messages,
+          maxRetries: 0,
+        });
+        return result.text;
+      },
+    });
+  }
+
+  return attempts;
+}
+
+export async function completePrompt(
+  env: NodeJS.ProcessEnv,
+  prompt: string,
+): Promise<string> {
+  const attempts = createTextAttempts(env, prompt);
+  if (attempts.length === 0) {
+    throw new ChatConfigError();
+  }
+
+  let sawLimit = false;
+  for (const attempt of attempts) {
+    try {
+      return await attempt.send();
+    } catch (error) {
+      if (demoLimitMessage(error)) {
+        sawLimit = true;
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  if (sawLimit) {
+    throw new DemoLimitError();
+  }
+
+  throw new ChatConfigError();
 }
 
 export function createChatAttempts(

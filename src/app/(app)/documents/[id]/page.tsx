@@ -7,6 +7,7 @@ import { decideDocumentAccess, safeCallbackPath } from "@/lib/auth/access";
 import { userIdFromTokenSub } from "@/lib/auth/user-id";
 import { getDemoDocument } from "@/lib/demo-documents";
 import { lookupDocument } from "@/lib/documents/lookup";
+import { pdfSrcFor } from "@/lib/documents/upload-policy";
 
 type DocumentPageProps = {
   params: Promise<{ id: string }>;
@@ -71,13 +72,26 @@ export default async function DocumentPage({
     notFound();
   }
 
+  const status = lookup.document.status;
+  const documentStatus =
+    status === "processing" || status === "failed" || status === "ready"
+      ? status
+      : "ready";
+
   return (
     <DocumentWorkspace
-      document={getDemoDocument(id) ?? null}
+      document={null}
       documentId={id}
       initialPage={parsed}
       headerAccount={headerAccount}
       fileName={lookup.document.fileName}
+      pdfSrc={pdfSrcFor(id, lookup.document.fileUrl)}
+      documentStatus={documentStatus}
+      canDelete={
+        viewerUserId !== null &&
+        lookup.document.userId === viewerUserId &&
+        !lookup.document.isDemo
+      }
     />
   );
 }

@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
 import { TopBar } from "@/components/TopBar";
 import { CitationChip } from "@/components/workspace/CitationChip";
+import { LiveDocumentWorkspace } from "@/components/workspace/LiveDocumentWorkspace";
 import { PdfPageViewer } from "@/components/workspace/PdfPageViewer";
 import { answerQuestion } from "@/lib/answer-question";
 import type { Citation, DemoDocument } from "@/lib/document-types";
@@ -23,12 +24,18 @@ export function DocumentWorkspace({
   initialPage,
   headerAccount,
   fileName,
+  pdfSrc,
+  documentStatus,
+  canDelete,
 }: {
   document: DemoDocument | null;
   documentId: string;
   initialPage?: number;
   headerAccount: ReactNode;
   fileName?: string;
+  pdfSrc?: string;
+  documentStatus?: "processing" | "ready" | "failed";
+  canDelete?: boolean;
 }) {
   if (document) {
     return (
@@ -36,6 +43,20 @@ export function DocumentWorkspace({
         document={document}
         initialPage={initialPage}
         headerAccount={headerAccount}
+      />
+    );
+  }
+
+  if (fileName && pdfSrc) {
+    return (
+      <LiveDocumentWorkspace
+        documentId={documentId}
+        fileName={fileName}
+        pdfSrc={pdfSrc}
+        initialPage={initialPage}
+        headerAccount={headerAccount}
+        documentStatus={documentStatus ?? "ready"}
+        canDelete={canDelete ?? false}
       />
     );
   }

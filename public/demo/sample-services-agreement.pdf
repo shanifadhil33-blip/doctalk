@@ -1,0 +1,95 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R 6 0 R 8 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 5 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+5 0 obj
+<< /Length 320 >>
+stream
+BT
+/F1 11 Tf
+54 740 Td
+16 TL
+(SAMPLE SERVICES AGREEMENT) Tj
+T*
+(Agreement number: SSA-2026-014) Tj
+T*
+(This sample agreement is between Northwind Studio \(Provider\) and Harbor Supplies \(Client\).) Tj
+T*
+(Effective date: April 1, 2026) Tj
+T*
+(The parties wrote this text as a sample. It is not a signed contract.) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 7 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+7 0 obj
+<< /Length 343 >>
+stream
+BT
+/F1 11 Tf
+54 740 Td
+16 TL
+(2. Scope of work) Tj
+T*
+(Provider will prepare one monthly product catalog layout for Client.) Tj
+T*
+(Provider will deliver the print-ready file on the first Monday of each month.) Tj
+T*
+(3. Fees) Tj
+T*
+(Client will pay Provider 2400 dollars per month.) Tj
+T*
+(Invoices are due on the 5th day of the month.) Tj
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 9 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+9 0 obj
+<< /Length 270 >>
+stream
+BT
+/F1 11 Tf
+54 740 Td
+16 TL
+(4. Termination) Tj
+T*
+(Either party may end this agreement by giving 14 days written notice.) Tj
+T*
+(5. Governing law) Tj
+T*
+(This agreement is governed by the laws of the State of Oregon.) Tj
+T*
+(Notices go to contracts@example.com.) Tj
+ET
+endstream
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000197 00000 n 
+0000000323 00000 n 
+0000000694 00000 n 
+0000000820 00000 n 
+0000001214 00000 n 
+0000001340 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+1661
+%%EOF

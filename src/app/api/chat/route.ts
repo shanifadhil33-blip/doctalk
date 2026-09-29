@@ -1,15 +1,14 @@
-import { convertToModelMessages, type UIMessage } from "ai";
 import { auth } from "@/auth";
-import { createChatAttempts, sendChatWithFallback } from "@/lib/ai/chat";
 import { userIdFromTokenSub } from "@/lib/auth/user-id";
+import { clientIp } from "@/lib/demo/quota";
+import { askDocument } from "@/lib/retrieval/ask";
 
-export const maxDuration = 30;
+export const maxDuration = 60;
+export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   const session = await auth();
-  if (!userIdFromTokenSub(session?.user?.id)) {
-    return Response.json({ error: "Sign in required" }, { status: 401 });
-  }
+  const viewerUserId = userIdFromTokenSub(session?.user?.id);
 
   let body: unknown;
   try {
@@ -18,30 +17,27 @@ export async function POST(req: Request) {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  if (!isChatRequest(body)) {
+  if (!isQuestion(body)) {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  try {
-    const messages = await convertToModelMessages(body.messages);
-    return await sendChatWithFallback(createChatAttempts(process.env, messages));
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      return Response.json({ error: "Invalid request" }, { status: 400 });
-    }
-    console.error("Chat request failed");
-    return Response.json(
-      { error: "Chat failed. Try again later." },
-      { status: 500 },
-    );
-  }
+  const result = await askDocument({
+    viewerUserId,
+    documentId: body.documentId,
+    question: body.question,
+    ip: clientIp(req.headers),
+    now: new Date(),
+  });
+  return Response.json(result.body, { status: result.status });
 }
 
-function isChatRequest(body: unknown): body is { messages: UIMessage[] } {
+function isQuestion(body: unknown): body is { documentId: string; question: string } {
   return (
     typeof body === "object" &&
     body !== null &&
-    "messages" in body &&
-    Array.isArray(body.messages)
+    "documentId" in body &&
+    typeof body.documentId === "string" &&
+    "question" in body &&
+    typeof body.question === "string"
   );
 }

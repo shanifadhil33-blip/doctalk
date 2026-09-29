@@ -10,6 +10,7 @@ import { TopBar } from "@/components/TopBar";
 import { DocumentCard } from "@/components/documents/DocumentCard";
 import { UploadDialog } from "@/components/documents/UploadDialog";
 import type { ListedDocument } from "@/lib/document-types";
+import { isListedDocumentList } from "@/lib/documents/list";
 import {
   readSessionUploads,
   rememberUploadFile,
@@ -41,16 +42,34 @@ export function DocumentsDashboard({
   const [layout, setLayout] = useState<"grid" | "list">("grid");
   const [uploadOpen, setUploadOpen] = useState(initialUploadOpen);
   const [uploads, setUploads] = useState<SessionUpload[]>([]);
+  const [remoteDocuments, setRemoteDocuments] = useState<ListedDocument[] | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     setUploads(readSessionUploads());
   }, []);
 
+  useEffect(() => {
+    if (source !== "library") return;
+    const controller = new AbortController();
+    void fetch("/api/documents", { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const payload: unknown = await response.json();
+        if (!isListedDocumentList(payload)) return;
+        setRemoteDocuments(payload.documents);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [source, reloadToken]);
+
   const cards = useMemo(() => {
-    const samples = documents;
+    const samples = source === "library" ? (remoteDocuments ?? documents) : documents;
 
     const local: ListedDocument[] =
-      uploads.map((upload) => ({
+      source === "library"
+        ? []
+        : uploads.map((upload) => ({
         id: upload.id,
         title: upload.fileName.replace(/\.pdf$/i, ""),
         counterparty: "Uploaded in this browser",
@@ -81,11 +100,29 @@ export function DocumentsDashboard({
     });
 
     return filtered;
-  }, [documents, uploads, query, sort]);
+  }, [documents, remoteDocuments, source, uploads, query, sort]);
 
   function closeUpload() {
     setUploadOpen(false);
     if (initialUploadOpen) router.replace("/documents");
+  }
+
+  async function uploadToServer(file: File) {
+    const body = new FormData();
+    body.set("file", file);
+    const response = await fetch("/api/documents", { method: "POST", body });
+    const payload: unknown = await response.json().catch(() => null);
+    const message = readError(payload) ?? "Upload failed. Try again later.";
+    const id = readUploadedId(payload);
+    if (!response.ok) {
+      if (id) setReloadToken((value) => value + 1);
+      throw new Error(message);
+    }
+    if (!id) throw new Error("Upload failed. Try again later.");
+    setUploadOpen(false);
+    setReloadToken((value) => value + 1);
+    router.push(`/documents/${id}`);
+    router.refresh();
   }
 
   function openUploadedFile(file: File) {
@@ -203,7 +240,9 @@ export function DocumentsDashboard({
         {cards.length === 0 ? (
           <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
             <h2 className="text-base font-semibold text-slate-950">
-              {documents.length === 0 && uploads.length === 0 && !query
+              {(source === "library"
+                ? (remoteDocuments ?? documents).length
+                : documents.length + uploads.length) === 0 && !query
                 ? "No documents yet"
                 : "No matching documents"}
             </h2>
@@ -251,9 +290,24 @@ export function DocumentsDashboard({
         open={uploadOpen}
         onClose={closeUpload}
         onOpenDocument={openUploadedFile}
+        uploadMode={source === "library" ? "server" : "local"}
+        signedIn={signedIn}
+        onUpload={source === "library" ? uploadToServer : undefined}
       />
     </div>
   );
+}
+
+function readError(payload: unknown): string | null {
+  if (!payload || typeof payload !== "object" || !("error" in payload)) return null;
+  return typeof payload.error === "string" ? payload.error : null;
+}
+
+function readUploadedId(payload: unknown): string | null {
+  if (!payload || typeof payload !== "object" || !("document" in payload)) return null;
+  const document = payload.document;
+  if (!document || typeof document !== "object" || !("id" in document)) return null;
+  return typeof document.id === "string" ? document.id : null;
 }
 
 function layoutButtonClass(active: boolean): string {
