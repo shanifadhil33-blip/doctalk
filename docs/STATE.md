@@ -1,24 +1,25 @@
 # DocTalk state
 
-Owner: Adhil. Milestone B1.
+Owner: Adhil. Milestone B2 (auth and embeddings).
 
 ## Done
 
 - Next.js 15 App Router, React 19, strict TypeScript, Tailwind v4.
-- Clerk sign-in. The dashboard at `/` is public. Upload, document detail, and `/api/chat` stay protected.
-- Neon Postgres schema in `src/db/schema.ts`: `documents`, `chunks` (pgvector, 768 dimensions), `extractions`, `settings`.
-- `documents.user_id` is a nullable text column. `documents.is_demo` is a boolean, default false, not null.
-- Dashboard query uses `visibleDocumentsWhere`. Signed-out viewers get demo and null-owner rows only. Signed-in viewers also get rows whose `user_id` matches their Clerk user id. Another user's private rows are not selected.
-- Seed script inserts three demo documents (invoice, medical bill, service contract) with `isDemo: true`, no `userId`, and zero embeddings.
-- Chat route streams through OpenRouter with the Vercel AI SDK (`google/gemini-pro`).
-- `getDb()` connects on the first query. Importing `src/db/index.ts` does not require `DATABASE_URL`.
-- The dashboard exports `dynamic = "force-dynamic"`, so Next.js does not run that query during `next build`.
-- Vitest 3.2.7 and `@vitest/coverage-v8` 3.2.7. `npm test` runs `vitest run`. Node `>=22` is set in `package.json` `engines` and `.nvmrc`.
-- GitHub Actions workflow `.github/workflows/ci.yml` runs on push and pull request: Node 22, `npm ci`, lint, `tsc --noEmit`, `npm test`, `npm run build`.
+- Auth.js v5 (`next-auth` 5.0.0-beta.32), Google provider only. JWT sessions. No database adapter and no users table.
+- The viewer id is the Google account id (`token.sub`), copied onto `session.user.id`. The dashboard still filters with `visibleDocumentsWhere` (`is_demo OR user_id IS NULL OR user_id = viewer`).
+- Middleware: `/`, `/sign-in`, and `/api/auth` are public. A document route is public when that row is visible to a signed-out viewer (demo or null owner). `/upload`, `/api/chat`, and every other route require a session. The document page repeats the same check.
+- Clerk packages, components, routes, and env vars are removed.
+- Embeddings use the Gemini API. `EMBEDDING_MODEL` defaults to `gemini-embedding-2`. Requests set `output_dimensionality` to 768. Vectors are L2-normalized when their norm is not already 1. Key: `GEMINI_API_KEY`.
+- `chunks.embedding` stays `vector(768)`. HNSW index `chunks_embedding_hnsw_idx` uses `vector_cosine_ops`. The Drizzle migration in `drizzle/` was generated and not applied.
+- The seed script embeds chunk text before inserting a demo document. If `GEMINI_API_KEY` is missing it exits without writing and prints why.
+- Chat answers come from the Gemini API. `CHAT_MODEL` defaults to `gemini-3.5-flash-lite`. If that call returns 429 or 402 and both `OPENROUTER_API_KEY` and `OPENROUTER_MODEL` are set, the route tries that OpenRouter model. If the providers are limited, the response is `Demo limit reached, try again later`. `google/gemini-pro` is removed.
+- `getDb()` still connects on the first query. Importing `src/db/index.ts` does not require `DATABASE_URL`.
+- The app layout and dashboard export `dynamic = "force-dynamic"`, so Next.js does not run those queries during `next build`.
+- Vitest covers Google user-id mapping, the embedding helper with a mocked client, and rate-limit error mapping. Existing visibility and `getDb` tests still run.
+- GitHub Actions (`.github/workflows/ci.yml`) is unchanged: Node 22, `npm ci`, lint, `tsc --noEmit`, `npm test`, `npm run build`. No env vars.
 
 ## Next
 
-- B2 real embeddings
 - B3 PDF upload and storage
 - B4 retrieval with page citations
 - UI from Stitch designs
@@ -26,32 +27,33 @@ Owner: Adhil. Milestone B1.
 
 ## Decisions
 
-- A row is public when `isDemo` is true or `userId` is null. Null owner means a public demo document. The `isDemo` flag is the other public signal, including a demo row that still has a `userId`.
-- Private means `isDemo` is false and `userId` is set. Those rows are visible only to that user.
-- The same rule lives in `isDocumentVisible` (row filter, unit tested) and `visibleDocumentsWhere` (SQL used by the dashboard). Signed-out SQL is `is_demo = true OR user_id IS NULL`. Signed-in SQL adds `OR user_id = viewer`.
-- No Drizzle migration. The owner column and demo flag were already on `documents`. Nothing was applied to a database.
-- `/` is public so a signed-out visitor can see demo documents. Document detail stays behind Clerk because that page does not load a document row yet, so it cannot enforce visibility.
-- CI does not set Clerk keys or `DATABASE_URL`. `npm run build` with no env vars succeeded on `@clerk/nextjs` 7.7.3. Production build does not use Clerk keyless mode, and no placeholder publishable key was required.
-- Vitest 3.2.7 is installed. Vitest 5 asks for `@types/node` 22, and this repo has `@types/node` 20. Vitest 4 fails this environment's npm 10 resolver (`edgesOut`). `@types/node` was not upgraded.
+- User id is Google's OIDC `sub`. On sign-in, `profile.sub` is written to `token.sub`. `account.providerAccountId` is used only when `profile.sub` is missing. Later requests keep the stored `token.sub`. `session.user.id` is that same string, and `visibleDocumentsWhere` compares it to `documents.user_id`.
+- JWT sessions only. A users table is not required for the visibility rule.
+- `trustHost: true` so Auth.js accepts the request host without `AUTH_URL`. `AUTH_SECRET` is required for a real session. When it is unset, `auth()` returns no session, which lets `next build` finish with no env vars.
+- Demo document URLs are public only after a visibility lookup. If the database is unavailable, a signed-out document request is sent to sign-in.
+- Document detail is still a placeholder. It shows the file name only after the visibility check passes.
+- Chat calls `generateText` with `maxRetries: 0`, then returns an AI SDK UI message stream. The provider status is known before the response is sent, so a 429 or 402 can fall back or return the friendly limit message.
+- OpenRouter is optional. It is not called unless both the key and `OPENROUTER_MODEL` are set. Model ids are not hardcoded beyond the Gemini defaults.
+- The HNSW migration is the full initial Drizzle migration, including the tables already described in `src/db/schema.ts`. It was not applied. `src/db/enable-pgvector.ts` still creates the `vector` extension, and the migration SQL does too.
+- `gemini-embedding-2` normalizes 768-d vectors. The helper still normalizes when the L2 norm is not 1.
+- `.env.example` no longer lists Clerk, Cloudflare R2, `GOOGLE_GENERATIVE_AI_API_KEY`, or `NEXT_PUBLIC_ENABLE_ADMIN`. Gemini uses `GEMINI_API_KEY`.
 
 ## Parked
 
-- Document detail is a placeholder (PDF viewer and extracted JSON). It does not query the database.
-- Upload is a dropzone placeholder. Cloudflare R2 is not wired up.
-- Seed embeddings are zeros. Real embeddings are B2.
-- `GOOGLE_GENERATIVE_AI_API_KEY` and `NEXT_PUBLIC_ENABLE_ADMIN` are named in `.env.example` and unused in code.
-- README says to copy `.env.example` to `.env.local`. `drizzle.config.ts`, `src/db/seed.ts`, and `src/db/enable-pgvector.ts` load `.env`. Not changed here.
-- `createRouteMatcher` is deprecated in the installed Clerk SDK. The existing middleware still uses it.
-- `src/db/seed.ts` and `src/db/enable-pgvector.ts` already log to the console. `src/app/(app)/upload/page.tsx` and the seed skip message already contain em dashes. Left as they were.
-- `npm audit` reports advisories, including `glob` pulled in by `@vitest/coverage-v8`. Not changed here.
+- Document detail does not render the PDF or extracted JSON. Retrieval with citations is B4.
+- Upload is a dropzone placeholder. Storage is B3. R2 is not wired, so those env vars were dropped.
+- The generated migration is not applied. Review it before running it against a database that already has these tables.
+- README says to copy `.env.example` to `.env.local`. `drizzle.config.ts`, `src/db/seed.ts`, and `src/db/enable-pgvector.ts` load `.env`.
+- Seeded medical-bill text keeps the original fixture punctuation.
+- `npm audit` advisories were already present, including `glob` pulled in by `@vitest/coverage-v8`. Not changed here.
+- Vitest stays on 3.2.7 with `@types/node` 20, for the same resolver reasons as B1.
 
 ## Services
 
 | Service | Plan | Where the key lives |
 | --- | --- | --- |
-| Clerk | Not recorded in the repo | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`, named in `.env.example`. Values stay in local env and the host env. Not committed. |
+| Auth.js Google | Free OAuth client | `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, named in `.env.example`. Values stay in local env and the host env. Not committed. |
 | Neon Postgres | Not recorded in the repo | `DATABASE_URL`, named in `.env.example`. Not committed. |
-| Cloudflare R2 | Not recorded in the repo | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL`, named in `.env.example`. Example bucket name is `doctalk-pdfs`. Not committed. |
-| OpenRouter | Not recorded in the repo | `OPENROUTER_API_KEY`, named in `.env.example`. Used by `src/lib/ai.ts`. Not committed. |
-| Google AI | Not recorded in the repo | `GOOGLE_GENERATIVE_AI_API_KEY`, optional and unused. Not committed. |
+| Gemini API | Free tier | `GEMINI_API_KEY`, named in `.env.example`. Used for embeddings and chat. Not committed. |
+| OpenRouter | Optional free-model fallback | `OPENROUTER_API_KEY` and `OPENROUTER_MODEL`, named in `.env.example`. Not committed. |
 | GitHub Actions | Not recorded in the repo | Workflow stores no secrets. |

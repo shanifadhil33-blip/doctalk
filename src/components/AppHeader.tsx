@@ -1,7 +1,12 @@
-import { Show, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import { auth, signOut } from "@/auth";
+import { userIdFromTokenSub } from "@/lib/auth/user-id";
 
-export default function AppHeader() {
+export default async function AppHeader() {
+  const session = await auth();
+  const signedIn = userIdFromTokenSub(session?.user?.id) !== null;
+  const name = session?.user?.name;
+
   return (
     <header className="border-b border-slate-200 bg-white">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
@@ -20,14 +25,29 @@ export default function AppHeader() {
               Upload
             </Link>
           </nav>
-          <Show when="signed-in">
-            <UserButton />
-          </Show>
-          <Show when="signed-out">
+          {signedIn ? (
+            <form
+              action={async () => {
+                "use server";
+                await signOut({ redirectTo: "/" });
+              }}
+              className="flex items-center gap-3"
+            >
+              {name ? (
+                <span className="text-sm text-slate-600">{name}</span>
+              ) : null}
+              <button
+                type="submit"
+                className="text-sm font-medium text-slate-900"
+              >
+                Sign out
+              </button>
+            </form>
+          ) : (
             <Link href="/sign-in" className="text-sm font-medium text-slate-900">
               Sign in
             </Link>
-          </Show>
+          )}
         </div>
       </div>
     </header>

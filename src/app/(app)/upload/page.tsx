@@ -11,7 +11,7 @@ export default function UploadPage() {
         Drag and drop a PDF to process it.
       </p>
       <div className="mt-6 rounded-lg border border-dashed border-slate-300 bg-white p-12 text-center text-sm text-slate-500">
-        Dropzone placeholder — Cloudflare R2 + processing pipeline come later.
+        Dropzone placeholder. File storage and the processing pipeline come later.
       </div>
     </div>
   );

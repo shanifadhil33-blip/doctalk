@@ -1,4 +1,11 @@
 import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { auth } from "@/auth";
+import { decideDocumentAccess, safeCallbackPath } from "@/lib/auth/access";
+import { userIdFromTokenSub } from "@/lib/auth/user-id";
+import { lookupDocument } from "@/lib/documents/lookup";
+
+export const dynamic = "force-dynamic";
 
 type DocumentDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -8,6 +15,18 @@ export default async function DocumentDetailPage({
   params,
 }: DocumentDetailPageProps) {
   const { id } = await params;
+  const session = await auth();
+  const viewerUserId = userIdFromTokenSub(session?.user?.id);
+  const lookup = await lookupDocument(id);
+  const decision = decideDocumentAccess(viewerUserId, lookup);
+
+  if (decision === "sign-in") {
+    redirect(`/sign-in?callbackUrl=${encodeURIComponent(safeCallbackPath(`/documents/${id}`))}`);
+  }
+
+  if (decision !== "allow" || lookup.status !== "found") {
+    notFound();
+  }
 
   return (
     <div>
@@ -15,7 +34,7 @@ export default async function DocumentDetailPage({
         ← Back to Dashboard
       </Link>
       <h1 className="mt-4 text-2xl font-semibold tracking-tight">
-        Document Detail
+        {lookup.document.fileName}
       </h1>
       <p className="mt-1 text-sm text-slate-600">
         Document ID: <span className="font-mono text-slate-800">{id}</span>
