@@ -29,6 +29,13 @@ function normalizePath(pathname: string): string {
   return path;
 }
 
+/** PDF.js worker and the seeded sample PDFs in /public/demo. */
+function isPublicPdfAsset(pathname: string): boolean {
+  const path = normalizePath(pathname);
+  if (path === "/pdf.worker.min.mjs") return true;
+  return path.startsWith("/demo/") && !path.includes("..") && path.endsWith(".pdf");
+}
+
 export function classifyPath(pathname: string): PathKind {
   const path = normalizePath(pathname);
 
@@ -43,7 +50,8 @@ export function classifyPath(pathname: string): PathKind {
     // viewer can open demo documents. Upload and delete still require a session.
     path === "/api/chat" ||
     path === "/api/documents" ||
-    path.startsWith("/api/documents/")
+    path.startsWith("/api/documents/") ||
+    isPublicPdfAsset(path)
   ) {
     return { kind: "public" };
   }

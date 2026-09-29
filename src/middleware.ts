@@ -54,8 +54,11 @@ function redirectToSignIn(req: {
 }
 
 export const config = {
+  // Static files in public/ must not be treated as protected routes.
+  // The PDF.js worker is .mjs (the default list only skips .js). Demo PDFs
+  // are .pdf. Private documents are streamed from /api/documents/:id/file.
   matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|mjs|pdf|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     "/(api|trpc)(.*)",
   ],
 };

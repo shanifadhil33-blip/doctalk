@@ -34,6 +34,17 @@ describe("classifyPath", () => {
     expect(classifyPath("/upload")).toEqual({ kind: "protected" });
   });
 
+  it("leaves the PDF.js worker and demo PDFs public", () => {
+    expect(classifyPath("/pdf.worker.min.mjs")).toEqual({ kind: "public" });
+    expect(classifyPath("/demo/sample-invoice.pdf")).toEqual({ kind: "public" });
+    expect(classifyPath("/demo/sample-services-agreement.pdf")).toEqual({
+      kind: "public",
+    });
+    expect(classifyPath("/demo/sample-data-policy.pdf")).toEqual({
+      kind: "public",
+    });
+  });
+
   it("leaves chat and the document API to enforce access in the handler", () => {
     expect(classifyPath("/api/chat")).toEqual({ kind: "public" });
     expect(classifyPath("/api/documents")).toEqual({ kind: "public" });
