@@ -1,7 +1,9 @@
+import { get } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { decideDocumentAccess } from "@/lib/auth/access";
 import { userIdFromTokenSub } from "@/lib/auth/user-id";
+import { classifyStoredFileUrl } from "@/lib/documents/blob-url";
 import { lookupDocument } from "@/lib/documents/lookup";
 
 export const runtime = "nodejs";
@@ -24,21 +26,38 @@ export async function GET(req: Request, context: RouteContext) {
   }
 
   const fileUrl = lookup.document.fileUrl;
-  if (fileUrl.startsWith("/") && !fileUrl.startsWith("//")) {
+  const kind = classifyStoredFileUrl(fileUrl);
+  if (kind === "local") {
     return NextResponse.redirect(new URL(fileUrl, req.url));
   }
 
-  const upstream = await fetch(fileUrl);
-  if (!upstream.ok || !upstream.body) {
-    return Response.json({ error: "File is unavailable" }, { status: 502 });
+  const fileName = lookup.document.fileName.replace(/[^a-zA-Z0-9._-]+/g, "_").slice(0, 120);
+  const headers = {
+    "Content-Type": "application/pdf",
+    "Content-Disposition": `inline; filename="${fileName || "document.pdf"}"`,
+    "Cache-Control": "private, max-age=60",
+    "X-Content-Type-Options": "nosniff",
+  };
+
+  if (kind === "private-blob") {
+    const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
+    if (!token) {
+      return Response.json({ error: "File storage is not configured." }, { status: 503 });
+    }
+    const result = await get(fileUrl, { access: "private", token });
+    if (!result || result.statusCode !== 200 || !result.stream) {
+      return Response.json({ error: "File is unavailable" }, { status: 502 });
+    }
+    return new Response(result.stream, { headers });
   }
 
-  const fileName = lookup.document.fileName.replace(/[^a-zA-Z0-9._-]+/g, "_").slice(0, 120);
-  return new Response(upstream.body, {
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="${fileName || "document.pdf"}"`,
-      "Cache-Control": "private, max-age=60",
-    },
-  });
+  if (kind === "public-blob") {
+    const upstream = await fetch(fileUrl);
+    if (!upstream.ok || !upstream.body) {
+      return Response.json({ error: "File is unavailable" }, { status: 502 });
+    }
+    return new Response(upstream.body, { headers });
+  }
+
+  return Response.json({ error: "Document not found" }, { status: 404 });
 }

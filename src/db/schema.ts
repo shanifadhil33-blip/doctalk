@@ -6,6 +6,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   vector,
 } from "drizzle-orm/pg-core";
@@ -24,7 +25,10 @@ export const documents = pgTable(
       .defaultNow()
       .notNull(),
   },
-  (table) => [index("documents_user_id_idx").on(table.userId)],
+  (table) => [
+    index("documents_user_id_idx").on(table.userId),
+    uniqueIndex("documents_file_url_idx").on(table.fileUrl),
+  ],
 );
 
 export const chunks = pgTable(

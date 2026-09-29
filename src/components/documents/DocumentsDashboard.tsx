@@ -10,6 +10,7 @@ import { TopBar } from "@/components/TopBar";
 import { DocumentCard } from "@/components/documents/DocumentCard";
 import { UploadDialog } from "@/components/documents/UploadDialog";
 import type { ListedDocument } from "@/lib/document-types";
+import { uploadPdfFromBrowser } from "@/lib/documents/client-upload";
 import { isListedDocumentList } from "@/lib/documents/list";
 import {
   readSessionUploads,
@@ -108,17 +109,7 @@ export function DocumentsDashboard({
   }
 
   async function uploadToServer(file: File) {
-    const body = new FormData();
-    body.set("file", file);
-    const response = await fetch("/api/documents", { method: "POST", body });
-    const payload: unknown = await response.json().catch(() => null);
-    const message = readError(payload) ?? "Upload failed. Try again later.";
-    const id = readUploadedId(payload);
-    if (!response.ok) {
-      if (id) setReloadToken((value) => value + 1);
-      throw new Error(message);
-    }
-    if (!id) throw new Error("Upload failed. Try again later.");
+    const { id } = await uploadPdfFromBrowser(file);
     setUploadOpen(false);
     setReloadToken((value) => value + 1);
     router.push(`/documents/${id}`);
@@ -296,18 +287,6 @@ export function DocumentsDashboard({
       />
     </div>
   );
-}
-
-function readError(payload: unknown): string | null {
-  if (!payload || typeof payload !== "object" || !("error" in payload)) return null;
-  return typeof payload.error === "string" ? payload.error : null;
-}
-
-function readUploadedId(payload: unknown): string | null {
-  if (!payload || typeof payload !== "object" || !("document" in payload)) return null;
-  const document = payload.document;
-  if (!document || typeof document !== "object" || !("id" in document)) return null;
-  return typeof document.id === "string" ? document.id : null;
 }
 
 function layoutButtonClass(active: boolean): string {

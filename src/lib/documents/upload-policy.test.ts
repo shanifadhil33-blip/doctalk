@@ -64,5 +64,9 @@ describe("pdfSrcFor", () => {
     expect(pdfSrcFor("abc", "https://example.public.blob.vercel-storage.com/a.pdf")).toBe(
       "/api/documents/abc/file",
     );
+    expect(
+      pdfSrcFor("abc", "https://example.private.blob.vercel-storage.com/uploads/a.pdf"),
+    ).toBe("/api/documents/abc/file");
+    expect(pdfSrcFor("abc", "pending:00000000-0000-4000-8000-000000000001")).toBeUndefined();
   });
 });
