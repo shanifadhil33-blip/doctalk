@@ -27,10 +27,12 @@ const features = [
 
 export function LandingPage({
   demoHref,
+  sourceHref,
   headerAccount,
   heroAccount,
 }: {
   demoHref: string;
+  sourceHref: string;
   headerAccount: ReactNode;
   heroAccount?: ReactNode;
 }) {
@@ -64,14 +66,14 @@ export function LandingPage({
                 {heroAccount}
               </div>
             </div>
-            <ProductPreview demoHref={`${demoHref}/master-services-agreement?page=3`} />
+            <ProductPreview sourceHref={sourceHref} />
           </div>
 
           <ul className="grid gap-4 border-t border-slate-200 pt-8 md:grid-cols-3">
             {features.map((feature) => (
               <li
                 key={feature.title}
-                className="rounded-2xl border border-slate-200 bg-[#f8f9fb] p-5"
+                className="rounded-2xl border border-slate-200 bg-[#f8f9fb] p-5 transition-colors duration-150 hover:border-slate-300 hover:bg-white"
               >
                 <span className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-700">
                   <feature.icon className="h-5 w-5" />
@@ -92,7 +94,7 @@ export function LandingPage({
   );
 }
 
-function ProductPreview({ demoHref }: { demoHref: string }) {
+function ProductPreview({ sourceHref }: { sourceHref: string }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-[#f7f8fa] shadow-sm">
       <div className="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3">
@@ -146,7 +148,7 @@ function ProductPreview({ demoHref }: { demoHref: string }) {
             <p className="mt-1">Either party can terminate with 60 days written notice.</p>
             <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
               <span className="text-xs text-slate-500">Source</span>
-              <Link href={demoHref} className={citationChipClass(true)}>
+              <Link href={sourceHref} className={citationChipClass(true)}>
                 Source p. 3
               </Link>
             </div>

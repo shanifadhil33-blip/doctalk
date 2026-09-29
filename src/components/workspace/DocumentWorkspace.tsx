@@ -8,7 +8,7 @@ import { primaryButtonClass, secondaryButtonClass } from "@/components/button-st
 import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
 import { TopBar } from "@/components/TopBar";
-import { CitationChip } from "@/components/workspace/CitationChip";
+import { AssistantAnswer } from "@/components/workspace/AnswerBlock";
 import { LiveDocumentWorkspace } from "@/components/workspace/LiveDocumentWorkspace";
 import { PdfPageViewer } from "@/components/workspace/PdfPageViewer";
 import { answerQuestion } from "@/lib/answer-question";
@@ -412,33 +412,12 @@ function ChatColumn({
               </li>
             ) : (
               <li key={message.id}>
-                <article className="rounded-xl border border-slate-200 p-3 text-sm leading-relaxed text-slate-800">
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
-                    Answer
-                  </p>
-                  <p className="mt-1">{message.text}</p>
-                  {message.citations.length > 0 ? (
-                    <div className="mt-3 border-t border-slate-100 pt-3">
-                      <p className="text-xs text-slate-500">Sources</p>
-                      <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Sources">
-                        {message.citations.map((citation) => (
-                          <CitationChip
-                            key={citation.passageId}
-                            page={citation.page}
-                            active={citation.passageId === activePassageId}
-                            onSelect={() => onSelectCitation(citation)}
-                          />
-                        ))}
-                      </div>
-                      <SelectedQuote
-                        citation={
-                          message.citations.find((citation) => citation.passageId === activePassageId) ??
-                          message.citations[0]
-                        }
-                      />
-                    </div>
-                  ) : null}
-                </article>
+                <AssistantAnswer
+                  text={message.text}
+                  citations={message.citations}
+                  activePassageId={activePassageId}
+                  onSelectCitation={onSelectCitation}
+                />
               </li>
             ),
           )}
@@ -454,7 +433,7 @@ function ChatColumn({
             value={draft}
             onChange={(event) => onDraft(event.target.value)}
             placeholder="Ask a question about this document"
-            className="h-11 min-w-0 flex-1 rounded-lg border border-slate-200 px-3 text-sm text-slate-900"
+            className="h-11 min-w-0 flex-1 rounded-lg border border-slate-200 px-3 text-sm text-slate-900 transition-colors duration-150 hover:border-slate-400 focus-visible:border-[#4f46e5]"
           />
           <button type="submit" className={primaryButtonClass} disabled={!draft.trim()}>
             Send
@@ -463,18 +442,6 @@ function ChatColumn({
         <p className="mt-2 text-xs text-slate-500">Press Enter to send</p>
       </form>
     </aside>
-  );
-}
-
-function SelectedQuote({ citation }: { citation: Citation | undefined }) {
-  if (!citation) return null;
-  return (
-    <blockquote className="mt-3 border-l-4 border-[#f3e2a6] bg-[#fff8df] px-3 py-2 text-sm text-slate-800">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-[#8a5a12]">
-        Passage · Page {citation.page}
-      </p>
-      <p className="mt-1">{citation.quote}</p>
-    </blockquote>
   );
 }
 

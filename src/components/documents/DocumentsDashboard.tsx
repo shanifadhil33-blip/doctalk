@@ -3,17 +3,19 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { GridGlyph, ListGlyph, SearchGlyph, UploadGlyph } from "@/components/icons";
-import { primaryButtonClass } from "@/components/button-styles";
+import { controlFocusClass, primaryButtonClass } from "@/components/button-styles";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
 import { TopBar } from "@/components/TopBar";
 import { DocumentCard } from "@/components/documents/DocumentCard";
+import { documentPreviewSrc } from "@/lib/documents/preview";
 import { UploadDialog } from "@/components/documents/UploadDialog";
 import type { ListedDocument } from "@/lib/document-types";
 import { uploadPdfFromBrowser } from "@/lib/documents/client-upload";
 import { isListedDocumentList } from "@/lib/documents/list";
 import {
   readSessionUploads,
+  recallUploadFile,
   rememberUploadFile,
   saveSessionUpload,
   stampUpload,
@@ -43,12 +45,29 @@ export function DocumentsDashboard({
   const [layout, setLayout] = useState<"grid" | "list">("grid");
   const [uploadOpen, setUploadOpen] = useState(initialUploadOpen);
   const [uploads, setUploads] = useState<SessionUpload[]>([]);
+  const [localPreviewUrls, setLocalPreviewUrls] = useState<Record<string, string>>({});
   const [remoteDocuments, setRemoteDocuments] = useState<ListedDocument[] | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     setUploads(readSessionUploads());
   }, []);
+
+  useEffect(() => {
+    const created: string[] = [];
+    const next: Record<string, string> = {};
+    for (const upload of uploads) {
+      const file = recallUploadFile(upload.id);
+      if (!file) continue;
+      const url = URL.createObjectURL(file);
+      created.push(url);
+      next[upload.id] = url;
+    }
+    setLocalPreviewUrls(next);
+    return () => {
+      for (const url of created) URL.revokeObjectURL(url);
+    };
+  }, [uploads]);
 
   useEffect(() => {
     if (source !== "library") return;
@@ -184,7 +203,7 @@ export function DocumentsDashboard({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search by document name or counterparty..."
-              className="h-11 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-3 text-sm text-slate-900"
+              className="h-11 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-3 text-sm text-slate-900 transition-colors duration-150 hover:border-slate-400 focus-visible:border-[#4f46e5]"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -195,7 +214,7 @@ export function DocumentsDashboard({
               id="document-sort"
               value={sort}
               onChange={(event) => setSort(event.target.value as SortKey)}
-              className="h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800"
+              className={`h-11 cursor-pointer rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 transition-colors duration-150 hover:border-slate-400 hover:bg-slate-50 active:bg-slate-100 ${controlFocusClass}`}
             >
               <option value="recent">Recently added</option>
               <option value="name">Name</option>
@@ -270,7 +289,14 @@ export function DocumentsDashboard({
           >
             {cards.map((item) => (
               <li key={item.id}>
-                <DocumentCard item={item} layout={layout} />
+                <DocumentCard
+                  item={item}
+                  layout={layout}
+                  fileSrc={
+                    localPreviewUrls[item.id] ??
+                    documentPreviewSrc(item.id, item.fileName, item.status)
+                  }
+                />
               </li>
             ))}
           </ul>
@@ -291,7 +317,11 @@ export function DocumentsDashboard({
 
 function layoutButtonClass(active: boolean): string {
   return [
-    "grid h-9 w-9 place-items-center rounded-md",
-    active ? "bg-slate-100 text-slate-900" : "text-slate-500 hover:text-slate-800",
+    "grid h-9 w-9 cursor-pointer place-items-center rounded-md transition-colors duration-150 ease-out motion-reduce:transition-none",
+    controlFocusClass,
+    "active:bg-slate-200",
+    active
+      ? "bg-slate-200 text-slate-950 hover:bg-slate-300"
+      : "text-slate-500 hover:bg-slate-100 hover:text-slate-900",
   ].join(" ");
 }

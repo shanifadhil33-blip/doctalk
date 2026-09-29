@@ -2,7 +2,11 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
-import { primaryButtonClass, secondaryButtonClass } from "@/components/button-styles";
+import {
+  ghostIconButtonClass,
+  primaryButtonClass,
+  secondaryButtonClass,
+} from "@/components/button-styles";
 import { CheckGlyph, CloseGlyph, UploadGlyph } from "@/components/icons";
 import { formatFileSize, validatePdfFile } from "@/lib/upload-validation";
 
@@ -167,7 +171,7 @@ export function UploadDialog({
           </h2>
           <button
             type="button"
-            className="grid h-9 w-9 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+            className={ghostIconButtonClass}
             onClick={onClose}
             aria-label="Close upload dialog"
           >
@@ -201,10 +205,10 @@ export function UploadDialog({
               takeFile(event.dataTransfer.files[0]);
             }}
             className={[
-              "flex cursor-pointer flex-col items-center rounded-xl border border-dashed px-4 py-8 text-center transition-colors",
+              "flex cursor-pointer flex-col items-center rounded-xl border border-dashed px-4 py-8 text-center transition-colors duration-150 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#4f46e5]",
               dragOver
                 ? "border-[#4f46e5] bg-[#f5f4ff]"
-                : "border-slate-300 bg-[#f8f9fb] hover:border-slate-400",
+                : "border-slate-300 bg-[#f8f9fb] hover:border-slate-400 hover:bg-white active:bg-slate-100",
             ].join(" ")}
           >
             <span className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-600">
@@ -252,7 +256,7 @@ export function UploadDialog({
                 </span>
                 <button
                   type="button"
-                  className="grid h-8 w-8 place-items-center rounded-md text-slate-500 hover:bg-slate-100"
+                  className={ghostIconButtonClass}
                   aria-label={`Remove ${file.name}`}
                   onClick={() => {
                     setFile(null);

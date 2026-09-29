@@ -8,7 +8,7 @@ import {
   MinusGlyph,
   PlusGlyph,
 } from "@/components/icons";
-import { iconButtonClass } from "@/components/button-styles";
+import { iconButtonClass, toolbarButtonClass } from "@/components/button-styles";
 
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
@@ -79,7 +79,7 @@ export function RealPdfViewer({
         </button>
         <button
           type="button"
-          className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 hover:bg-slate-50"
+          className={toolbarButtonClass}
           onClick={() => setZoom(100)}
         >
           Fit width

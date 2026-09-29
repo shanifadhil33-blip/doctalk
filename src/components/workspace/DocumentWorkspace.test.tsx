@@ -44,4 +44,38 @@ describe("DocumentWorkspace citations", () => {
       "Notices for termination for convenience",
     );
   });
+
+  it("copies the answer and the passage shown for the selected source", async () => {
+    const user = userEvent.setup();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+    const document = getDemoDocument("master-services-agreement");
+    if (!document) throw new Error("Missing sample contract");
+
+    render(
+      <DocumentWorkspace
+        document={document}
+        documentId={document.id}
+        headerAccount={<a href="/sign-in">Sign in</a>}
+      />,
+    );
+
+    const send = screen.getByRole("button", { name: "Send" });
+    expect(send).toBeDisabled();
+    expect(send.className).toContain("disabled:cursor-not-allowed");
+    expect(send.className).toContain("disabled:hover:bg-[#e4e3f8]");
+
+    await user.click(screen.getByRole("button", { name: "Copy answer" }));
+    expect(writeText).toHaveBeenCalledWith(document.intro.answer);
+    expect(screen.getByRole("button", { name: "Copied" })).toHaveTextContent("Copied");
+
+    const passage = document.intro.citations.find((citation) => citation.page === 7);
+    if (!passage) throw new Error("Missing page 7 citation");
+    await user.click(screen.getByRole("button", { name: "Show source on page 7" }));
+    await user.click(screen.getByRole("button", { name: "Copy passage" }));
+    expect(writeText).toHaveBeenCalledWith(passage.quote);
+  });
 });

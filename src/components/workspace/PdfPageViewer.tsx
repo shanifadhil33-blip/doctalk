@@ -9,7 +9,7 @@ import {
   PlusGlyph,
   SearchGlyph,
 } from "@/components/icons";
-import { iconButtonClass } from "@/components/button-styles";
+import { iconButtonClass, toolbarButtonClass } from "@/components/button-styles";
 import { blockText, type DocumentPage, type PageBlock } from "@/lib/document-types";
 
 export function PdfPageViewer({
@@ -135,7 +135,7 @@ export function PdfPageViewer({
         </button>
         <button
           type="button"
-          className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 hover:bg-slate-50"
+          className={toolbarButtonClass}
           onClick={() => setZoom(100)}
         >
           Fit width
@@ -151,7 +151,7 @@ export function PdfPageViewer({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Find in document"
-              className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2 text-sm"
+              className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2 text-sm transition-colors duration-150 hover:border-slate-400 focus-visible:border-[#4f46e5]"
             />
           </span>
         </form>

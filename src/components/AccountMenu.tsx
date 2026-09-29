@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { textButtonClass } from "@/components/button-styles";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { safeCallbackPath } from "@/lib/auth/access";
 import { signInWithGoogle, signOutToHome } from "@/lib/auth/actions";
@@ -29,7 +30,7 @@ export async function AccountMenu({
         </span>
         <button
           type="submit"
-          className="inline-flex h-10 items-center justify-center rounded-md px-2 text-sm font-medium text-slate-700 transition-colors hover:text-slate-950"
+          className={textButtonClass}
         >
           Sign out
         </button>

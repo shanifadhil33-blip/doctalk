@@ -1,3 +1,4 @@
+import { textLinkClass } from "@/components/button-styles";
 import { GitHubGlyph } from "@/components/icons";
 
 export function SiteFooter() {
@@ -6,7 +7,7 @@ export function SiteFooter() {
       <p>Built by Adhil Shanif</p>
       <a
         href="https://github.com/shanifadhil33-blip/doctalk"
-        className="inline-flex items-center gap-2 font-medium text-slate-700 hover:text-slate-950"
+        className={textLinkClass}
         target="_blank"
         rel="noreferrer"
       >
