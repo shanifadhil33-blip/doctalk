@@ -5,10 +5,10 @@ DocTalk is a work-in-progress app for asking questions about PDFs, with answers 
 ## Current state
 
 - Next.js 15
-- Clerk sign-in
+- Google sign-in with Auth.js
 - Neon Postgres with pgvector and a Drizzle schema
 - Seed script for three demo documents
-- Streaming chat via OpenRouter
+- Chat via the Gemini API, with an optional OpenRouter fallback
 
 ## In progress
 

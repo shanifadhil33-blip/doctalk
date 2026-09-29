@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
 import { desc } from "drizzle-orm";
+import { auth } from "@/auth";
+import { userIdFromTokenSub } from "@/lib/auth/user-id";
 import { getDb } from "@/db";
 import { documents } from "@/db/schema";
 import { visibleDocumentsWhere } from "@/lib/documents/visibility";
@@ -16,7 +17,8 @@ function formatUploadDate(date: Date) {
 }
 
 export default async function DashboardPage() {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = userIdFromTokenSub(session?.user?.id);
   const docs = await getDb()
     .select()
     .from(documents)

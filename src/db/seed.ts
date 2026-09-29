@@ -2,13 +2,48 @@ import { config } from "dotenv";
 import { eq } from "drizzle-orm";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
+import { embedText, embeddingModelFromEnv } from "../lib/embeddings/embed";
+import { createGeminiEmbeddingClient } from "../lib/embeddings/gemini";
 import { chunks, documents, extractions, settings } from "./schema";
 
 config({ path: ".env" });
 
-const ZERO_EMBEDDING = Array.from({ length: 768 }, () => 0);
+async function requireEmbeddings(contents: readonly string[]): Promise<number[][]> {
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not set");
+  }
+
+  const client = createGeminiEmbeddingClient({ apiKey });
+  const model = embeddingModelFromEnv(process.env);
+  const vectors: number[][] = [];
+  for (const content of contents) {
+    vectors.push(await embedText(content, client, model));
+  }
+  return vectors;
+}
+
+async function withEmbeddings<T extends { content: string }>(
+  rows: readonly T[],
+): Promise<Array<T & { embedding: number[] }>> {
+  const embeddings = await requireEmbeddings(rows.map((row) => row.content));
+  return rows.map((row, index) => {
+    const embedding = embeddings[index];
+    if (!embedding) {
+      throw new Error("Missing embedding for chunk");
+    }
+    return { ...row, embedding };
+  });
+}
 
 async function seed() {
+  if (!process.env.GEMINI_API_KEY?.trim()) {
+    console.log(
+      "GEMINI_API_KEY is not set. Skipping seed. Set GEMINI_API_KEY to compute embeddings and insert demo documents.",
+    );
+    return;
+  }
+
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is not set");
   }
@@ -30,11 +65,17 @@ async function seed() {
     .select({ id: documents.id })
     .from(documents)
     .where(eq(documents.isDemo, true))
-    .limit(1);
+    .limit(3);
+
+  if (existingDemos.length >= 3) {
+    console.log("Demo data already exists. Skipping seed.");
+    return;
+  }
 
   if (existingDemos.length > 0) {
-    console.log("Demo data already exists — skipping seed");
-    return;
+    throw new Error(
+      "Partial demo data exists. Remove demo documents before seeding again.",
+    );
   }
 
   await seedInvoice(db);
@@ -47,6 +88,33 @@ async function seed() {
 async function seedInvoice(
   db: ReturnType<typeof drizzle>
 ) {
+  const embeddedChunks = await withEmbeddings([
+      {
+        chunkIndex: 0,
+        content:
+          "ACME CORP\nINVOICE\nInvoice Number: INV-2025-0042\nInvoice Date: March 12, 2025\nDue Date: April 11, 2025",
+        metadata: { pageNumber: 1, chunkType: "header", sectionTitle: "Invoice Header" },
+      },
+      {
+        chunkIndex: 1,
+        content:
+          "Bill To:\nBrightside Retail LLC\n488 Market Street, Suite 210\nSan Francisco, CA 94105",
+        metadata: { pageNumber: 1, chunkType: "paragraph", sectionTitle: "Bill To" },
+      },
+      {
+        chunkIndex: 2,
+        content:
+          "| Description | Qty | Unit Price | Total |\n| --- | --- | --- | --- |\n| Industrial sensor pack (SKU-SEN-12) | 4 | 125.00 | 500.00 |\n| On-site calibration visit | 1 | 350.00 | 350.00 |\n| Priority shipping | 1 | 45.00 | 45.00 |",
+        metadata: { pageNumber: 1, chunkType: "table_context", sectionTitle: "Line Items" },
+      },
+      {
+        chunkIndex: 3,
+        content:
+          "Subtotal: $895.00\nSales Tax (8.5%): $76.08\nTotal Due: $971.08\nCurrency: USD\nPayment terms: Net 30",
+        metadata: { pageNumber: 1, chunkType: "paragraph", sectionTitle: "Totals" },
+      },
+  ]);
+
   const [doc] = await db
     .insert(documents)
     .values({
@@ -60,40 +128,12 @@ async function seedInvoice(
 
   const chunkRows = await db
     .insert(chunks)
-    .values([
-      {
+    .values(
+      embeddedChunks.map((chunk) => ({
+        ...chunk,
         documentId: doc.id,
-        chunkIndex: 0,
-        content:
-          "ACME CORP\nINVOICE\nInvoice Number: INV-2025-0042\nInvoice Date: March 12, 2025\nDue Date: April 11, 2025",
-        embedding: ZERO_EMBEDDING,
-        metadata: { pageNumber: 1, chunkType: "header", sectionTitle: "Invoice Header" },
-      },
-      {
-        documentId: doc.id,
-        chunkIndex: 1,
-        content:
-          "Bill To:\nBrightside Retail LLC\n488 Market Street, Suite 210\nSan Francisco, CA 94105",
-        embedding: ZERO_EMBEDDING,
-        metadata: { pageNumber: 1, chunkType: "paragraph", sectionTitle: "Bill To" },
-      },
-      {
-        documentId: doc.id,
-        chunkIndex: 2,
-        content:
-          "| Description | Qty | Unit Price | Total |\n| --- | --- | --- | --- |\n| Industrial sensor pack (SKU-SEN-12) | 4 | 125.00 | 500.00 |\n| On-site calibration visit | 1 | 350.00 | 350.00 |\n| Priority shipping | 1 | 45.00 | 45.00 |",
-        embedding: ZERO_EMBEDDING,
-        metadata: { pageNumber: 1, chunkType: "table_context", sectionTitle: "Line Items" },
-      },
-      {
-        documentId: doc.id,
-        chunkIndex: 3,
-        content:
-          "Subtotal: $895.00\nSales Tax (8.5%): $76.08\nTotal Due: $971.08\nCurrency: USD\nPayment terms: Net 30",
-        embedding: ZERO_EMBEDDING,
-        metadata: { pageNumber: 1, chunkType: "paragraph", sectionTitle: "Totals" },
-      },
-    ])
+      })),
+    )
     .returning();
 
   const [header, billTo, table, totals] = chunkRows;
@@ -187,6 +227,37 @@ async function seedInvoice(
 }
 
 async function seedMedicalBill(db: ReturnType<typeof drizzle>) {
+  const embeddedChunks = await withEmbeddings([
+      {
+        chunkIndex: 0,
+        content:
+          "CITY HOSPITAL — PATIENT STATEMENT\nPatient Name: Jane Doe\nPatient ID: CH-882194\nDate of Service: February 3, 2025\nProvider: City Hospital Outpatient Imaging",
+        metadata: {
+          pageNumber: 1,
+          chunkType: "header",
+          sectionTitle: "Patient Information",
+        },
+      },
+      {
+        chunkIndex: 1,
+        content:
+          "Diagnosis Codes:\nM54.5 — Low back pain\nR51.9 — Headache, unspecified",
+        metadata: { pageNumber: 1, chunkType: "paragraph", sectionTitle: "Diagnosis" },
+      },
+      {
+        chunkIndex: 2,
+        content:
+          "| Code | Description | Charge |\n| --- | --- | --- |\n| 72148 | MRI lumbar spine w/o contrast | 1,850.00 |\n| 99213 | Office/outpatient visit, established | 215.00 |\n| 36415 | Routine venipuncture | 35.00 |",
+        metadata: { pageNumber: 2, chunkType: "table_context", sectionTitle: "Procedures" },
+      },
+      {
+        chunkIndex: 3,
+        content:
+          "Total Charges: $2,100.00\nInsurance Adjustments: -$1,260.00\nAmount Due: $840.00\nPlease remit payment within 30 days of statement date.",
+        metadata: { pageNumber: 2, chunkType: "paragraph", sectionTitle: "Balances" },
+      },
+  ]);
+
   const [doc] = await db
     .insert(documents)
     .values({
@@ -200,44 +271,12 @@ async function seedMedicalBill(db: ReturnType<typeof drizzle>) {
 
   const chunkRows = await db
     .insert(chunks)
-    .values([
-      {
+    .values(
+      embeddedChunks.map((chunk) => ({
+        ...chunk,
         documentId: doc.id,
-        chunkIndex: 0,
-        content:
-          "CITY HOSPITAL — PATIENT STATEMENT\nPatient Name: Jane Doe\nPatient ID: CH-882194\nDate of Service: February 3, 2025\nProvider: City Hospital Outpatient Imaging",
-        embedding: ZERO_EMBEDDING,
-        metadata: {
-          pageNumber: 1,
-          chunkType: "header",
-          sectionTitle: "Patient Information",
-        },
-      },
-      {
-        documentId: doc.id,
-        chunkIndex: 1,
-        content:
-          "Diagnosis Codes:\nM54.5 — Low back pain\nR51.9 — Headache, unspecified",
-        embedding: ZERO_EMBEDDING,
-        metadata: { pageNumber: 1, chunkType: "paragraph", sectionTitle: "Diagnosis" },
-      },
-      {
-        documentId: doc.id,
-        chunkIndex: 2,
-        content:
-          "| Code | Description | Charge |\n| --- | --- | --- |\n| 72148 | MRI lumbar spine w/o contrast | 1,850.00 |\n| 99213 | Office/outpatient visit, established | 215.00 |\n| 36415 | Routine venipuncture | 35.00 |",
-        embedding: ZERO_EMBEDDING,
-        metadata: { pageNumber: 2, chunkType: "table_context", sectionTitle: "Procedures" },
-      },
-      {
-        documentId: doc.id,
-        chunkIndex: 3,
-        content:
-          "Total Charges: $2,100.00\nInsurance Adjustments: -$1,260.00\nAmount Due: $840.00\nPlease remit payment within 30 days of statement date.",
-        embedding: ZERO_EMBEDDING,
-        metadata: { pageNumber: 2, chunkType: "paragraph", sectionTitle: "Balances" },
-      },
-    ])
+      })),
+    )
     .returning();
 
   const [patient, diagnosis, procedures, balances] = chunkRows;
@@ -320,6 +359,39 @@ async function seedMedicalBill(db: ReturnType<typeof drizzle>) {
 }
 
 async function seedServiceContract(db: ReturnType<typeof drizzle>) {
+  const embeddedChunks = await withEmbeddings([
+      {
+        chunkIndex: 0,
+        content:
+          'SERVICE AGREEMENT\nContract ID: SA-2025-118\nThis Service Agreement is entered into between Acme Corp ("Client") and WebDesign Co. ("Provider").',
+        metadata: { pageNumber: 1, chunkType: "header", sectionTitle: "Parties" },
+      },
+      {
+        chunkIndex: 1,
+        content:
+          '1. Term\nThe services shall commence on January 15, 2025 ("Start Date") and continue through July 15, 2025 ("End Date"), unless terminated earlier in accordance with Section 8.',
+        metadata: { pageNumber: 1, chunkType: "paragraph", sectionTitle: "Term" },
+      },
+      {
+        chunkIndex: 2,
+        content:
+          "2. Scope of Work\nProvider shall design, build, and launch a marketing website for Client, including homepage, product pages, contact form, and CMS training for up to three Client staff members.",
+        metadata: { pageNumber: 2, chunkType: "paragraph", sectionTitle: "Scope of Work" },
+      },
+      {
+        chunkIndex: 3,
+        content:
+          "3. Payment Terms\nTotal contract value: $18,500.00 USD.\nPayment schedule: 40% upon signing, 40% at design approval, 20% on launch.\nInvoices are due within fifteen (15) days of receipt.",
+        metadata: { pageNumber: 2, chunkType: "paragraph", sectionTitle: "Payment Terms" },
+      },
+      {
+        chunkIndex: 4,
+        content:
+          "8. Termination\nEither party may terminate this Agreement by providing thirty (30) days prior written notice to the other party.",
+        metadata: { pageNumber: 3, chunkType: "paragraph", sectionTitle: "Termination" },
+      },
+  ]);
+
   const [doc] = await db
     .insert(documents)
     .values({
@@ -333,48 +405,12 @@ async function seedServiceContract(db: ReturnType<typeof drizzle>) {
 
   const chunkRows = await db
     .insert(chunks)
-    .values([
-      {
+    .values(
+      embeddedChunks.map((chunk) => ({
+        ...chunk,
         documentId: doc.id,
-        chunkIndex: 0,
-        content:
-          'SERVICE AGREEMENT\nContract ID: SA-2025-118\nThis Service Agreement is entered into between Acme Corp ("Client") and WebDesign Co. ("Provider").',
-        embedding: ZERO_EMBEDDING,
-        metadata: { pageNumber: 1, chunkType: "header", sectionTitle: "Parties" },
-      },
-      {
-        documentId: doc.id,
-        chunkIndex: 1,
-        content:
-          '1. Term\nThe services shall commence on January 15, 2025 ("Start Date") and continue through July 15, 2025 ("End Date"), unless terminated earlier in accordance with Section 8.',
-        embedding: ZERO_EMBEDDING,
-        metadata: { pageNumber: 1, chunkType: "paragraph", sectionTitle: "Term" },
-      },
-      {
-        documentId: doc.id,
-        chunkIndex: 2,
-        content:
-          "2. Scope of Work\nProvider shall design, build, and launch a marketing website for Client, including homepage, product pages, contact form, and CMS training for up to three Client staff members.",
-        embedding: ZERO_EMBEDDING,
-        metadata: { pageNumber: 2, chunkType: "paragraph", sectionTitle: "Scope of Work" },
-      },
-      {
-        documentId: doc.id,
-        chunkIndex: 3,
-        content:
-          "3. Payment Terms\nTotal contract value: $18,500.00 USD.\nPayment schedule: 40% upon signing, 40% at design approval, 20% on launch.\nInvoices are due within fifteen (15) days of receipt.",
-        embedding: ZERO_EMBEDDING,
-        metadata: { pageNumber: 2, chunkType: "paragraph", sectionTitle: "Payment Terms" },
-      },
-      {
-        documentId: doc.id,
-        chunkIndex: 4,
-        content:
-          "8. Termination\nEither party may terminate this Agreement by providing thirty (30) days prior written notice to the other party.",
-        embedding: ZERO_EMBEDDING,
-        metadata: { pageNumber: 3, chunkType: "paragraph", sectionTitle: "Termination" },
-      },
-    ])
+      })),
+    )
     .returning();
 
   const [parties, dates, scope, payment, termination] = chunkRows;
