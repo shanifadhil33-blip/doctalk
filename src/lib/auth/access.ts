@@ -32,6 +32,7 @@ export function classifyPath(pathname: string): PathKind {
 
   if (
     path === "/" ||
+    path === "/documents" ||
     path === "/sign-in" ||
     path.startsWith("/sign-in/") ||
     path === "/api/auth" ||

@@ -6,6 +6,7 @@ import {
   decideProtectedAccess,
 } from "@/lib/auth/access";
 import { userIdFromTokenSub } from "@/lib/auth/user-id";
+import { isOfflineSampleId } from "@/lib/demo-documents";
 import { lookupDocument } from "@/lib/documents/lookup";
 
 export default auth(async (req) => {
@@ -21,6 +22,10 @@ export default auth(async (req) => {
       return NextResponse.next();
     }
     return redirectToSignIn(req);
+  }
+
+  if (!process.env.DATABASE_URL && isOfflineSampleId(kind.documentId)) {
+    return NextResponse.next();
   }
 
   const decision = decideDocumentAccess(

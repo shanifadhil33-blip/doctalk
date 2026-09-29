@@ -1,16 +1,12 @@
-import AppHeader from "@/components/AppHeader";
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
 
 export const dynamic = "force-dynamic";
 
-export default function AppLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <AppHeader />
-      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
-    </div>
-  );
+export const metadata: Metadata = {
+  description: "Ask a PDF a question and see the page the answer came from.",
+};
+
+export default function AppLayout({ children }: { children: ReactNode }) {
+  return children;
 }

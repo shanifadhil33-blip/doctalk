@@ -19,8 +19,10 @@ const owned = {
 };
 
 describe("classifyPath", () => {
-  it("keeps the dashboard, sign-in, and Auth.js routes public", () => {
+  it("keeps the dashboard, document list, sign-in, and Auth.js routes public", () => {
     expect(classifyPath("/")).toEqual({ kind: "public" });
+    expect(classifyPath("/documents")).toEqual({ kind: "public" });
+    expect(classifyPath("/documents/")).toEqual({ kind: "public" });
     expect(classifyPath("/sign-in")).toEqual({ kind: "public" });
     expect(classifyPath("/sign-in/")).toEqual({ kind: "public" });
     expect(classifyPath("/api/auth/callback/google")).toEqual({

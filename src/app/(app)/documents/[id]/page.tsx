@@ -1,27 +1,70 @@
-import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { AccountMenu } from "@/components/AccountMenu";
+import { DocumentWorkspace } from "@/components/workspace/DocumentWorkspace";
 import { decideDocumentAccess, safeCallbackPath } from "@/lib/auth/access";
 import { userIdFromTokenSub } from "@/lib/auth/user-id";
+import { getDemoDocument } from "@/lib/demo-documents";
 import { lookupDocument } from "@/lib/documents/lookup";
 
-export const dynamic = "force-dynamic";
-
-type DocumentDetailPageProps = {
+type DocumentPageProps = {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ page?: string }>;
 };
 
-export default async function DocumentDetailPage({
+export async function generateMetadata({
   params,
-}: DocumentDetailPageProps) {
+}: DocumentPageProps): Promise<Metadata> {
   const { id } = await params;
+  const demo = getDemoDocument(id);
+  if (demo) {
+    return { title: `${demo.title} | DocTalk` };
+  }
+
+  if (!process.env.DATABASE_URL) {
+    return { title: "Document | DocTalk" };
+  }
+
+  const lookup = await lookupDocument(id);
+  if (lookup.status === "found") {
+    return { title: `${lookup.document.fileName} | DocTalk` };
+  }
+
+  return { title: "Document | DocTalk" };
+}
+
+export default async function DocumentPage({
+  params,
+  searchParams,
+}: DocumentPageProps) {
+  const { id } = await params;
+  const { page } = await searchParams;
+  const parsed = page ? Number.parseInt(page, 10) : undefined;
+  const headerAccount = (
+    <AccountMenu variant="text" redirectTo={`/documents/${id}`} />
+  );
+
+  if (!process.env.DATABASE_URL) {
+    return (
+      <DocumentWorkspace
+        document={getDemoDocument(id) ?? null}
+        documentId={id}
+        initialPage={parsed}
+        headerAccount={headerAccount}
+      />
+    );
+  }
+
   const session = await auth();
   const viewerUserId = userIdFromTokenSub(session?.user?.id);
   const lookup = await lookupDocument(id);
   const decision = decideDocumentAccess(viewerUserId, lookup);
 
   if (decision === "sign-in") {
-    redirect(`/sign-in?callbackUrl=${encodeURIComponent(safeCallbackPath(`/documents/${id}`))}`);
+    redirect(
+      `/sign-in?callbackUrl=${encodeURIComponent(safeCallbackPath(`/documents/${id}`))}`,
+    );
   }
 
   if (decision !== "allow" || lookup.status !== "found") {
@@ -29,24 +72,12 @@ export default async function DocumentDetailPage({
   }
 
   return (
-    <div>
-      <Link href="/" className="text-sm text-slate-600 hover:text-slate-900">
-        ← Back to Dashboard
-      </Link>
-      <h1 className="mt-4 text-2xl font-semibold tracking-tight">
-        {lookup.document.fileName}
-      </h1>
-      <p className="mt-1 text-sm text-slate-600">
-        Document ID: <span className="font-mono text-slate-800">{id}</span>
-      </p>
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-500">
-          PDF viewer placeholder
-        </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-500">
-          Extracted JSON placeholder
-        </div>
-      </div>
-    </div>
+    <DocumentWorkspace
+      document={getDemoDocument(id) ?? null}
+      documentId={id}
+      initialPage={parsed}
+      headerAccount={headerAccount}
+      fileName={lookup.document.fileName}
+    />
   );
 }

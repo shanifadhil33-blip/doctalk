@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "DocTalk",
-  description: "Hallucination-free PDF assistant for grounded document extraction",
+  description: "Ask a PDF a question and see the page the answer came from.",
 };
 
 export default function RootLayout({

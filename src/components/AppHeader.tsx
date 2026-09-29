@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { auth, signOut } from "@/auth";
+import { auth } from "@/auth";
+import { signInWithGoogle, signOutToHome } from "@/lib/auth/actions";
 import { userIdFromTokenSub } from "@/lib/auth/user-id";
 
 export default async function AppHeader() {
@@ -26,16 +27,12 @@ export default async function AppHeader() {
             </Link>
           </nav>
           {signedIn ? (
-            <form
-              action={async () => {
-                "use server";
-                await signOut({ redirectTo: "/" });
-              }}
-              className="flex items-center gap-3"
-            >
+            <form action={signOutToHome} className="flex items-center gap-3">
               {name ? (
                 <span className="text-sm text-slate-600">{name}</span>
-              ) : null}
+              ) : (
+                <span className="text-sm text-slate-600">Signed in</span>
+              )}
               <button
                 type="submit"
                 className="text-sm font-medium text-slate-900"
@@ -44,9 +41,12 @@ export default async function AppHeader() {
               </button>
             </form>
           ) : (
-            <Link href="/sign-in" className="text-sm font-medium text-slate-900">
-              Sign in
-            </Link>
+            <form action={signInWithGoogle}>
+              <input type="hidden" name="redirectTo" value="/" />
+              <button type="submit" className="text-sm font-medium text-slate-900">
+                Sign in
+              </button>
+            </form>
           )}
         </div>
       </div>
