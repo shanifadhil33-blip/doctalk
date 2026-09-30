@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   ChevronLeftGlyph,
   ChevronRightGlyph,
@@ -11,6 +11,7 @@ import {
 } from "@/components/icons";
 import { iconButtonClass, toolbarButtonClass } from "@/components/button-styles";
 import { blockText, type DocumentPage, type PageBlock } from "@/lib/document-types";
+import { useContainedScroll } from "@/components/workspace/scroll-contain";
 
 export function PdfPageViewer({
   fileName,
@@ -25,6 +26,8 @@ export function PdfPageViewer({
   activePassageId: string | null;
   onPageChange: (page: number, passageId: string | null) => void;
 }) {
+  const paneRef = useRef<HTMLDivElement>(null);
+  useContainedScroll(paneRef);
   const [zoom, setZoom] = useState(100);
   const [query, setQuery] = useState("");
   const [searchNote, setSearchNote] = useState("");
@@ -164,7 +167,11 @@ export function PdfPageViewer({
           {searchNote}
         </p>
       ) : null}
-      <div id="pdf-scroll" className="min-h-0 w-full min-w-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto bg-[#eef0f3] px-3 py-4 sm:px-6 sm:py-6">
+      <div
+        id="pdf-scroll"
+        ref={paneRef}
+        className="min-h-0 w-full min-w-0 max-w-full flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-y-contain bg-[#eef0f3] px-3 py-4 [overflow-anchor:none] sm:px-6 sm:py-6"
+      >
         <article
           aria-label={`Page ${current.number}`}
           className="mx-auto w-full min-w-0 max-w-3xl bg-white px-4 py-8 text-slate-800 shadow-sm ring-1 ring-slate-200 sm:px-10"

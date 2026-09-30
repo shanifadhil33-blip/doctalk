@@ -48,7 +48,13 @@ describe("LiveDocumentWorkspace question column", () => {
 
     const heading = screen.getByRole("heading", { name: "Ask this document" });
     const shell = document.getElementById("main")?.parentElement;
-    expect(shell).toHaveClass("min-h-screen", "overflow-x-hidden", "lg:h-dvh", "lg:overflow-hidden");
+    expect(shell).toHaveClass(
+      "min-h-screen",
+      "overflow-x-hidden",
+      "[overflow-anchor:none]",
+      "lg:h-dvh",
+      "lg:overflow-hidden",
+    );
     expect(shell?.className.split(/\s+/)).not.toContain("h-dvh");
     expect(shell?.className.split(/\s+/)).not.toContain("overflow-hidden");
     const aside = heading.closest("aside");
@@ -70,7 +76,14 @@ describe("LiveDocumentWorkspace question column", () => {
     const regionClass = descriptionRegion.className.split(/\s+/);
     expect(regionClass).toContain("flex-1");
     expect(regionClass).toContain("overflow-y-auto");
+    expect(regionClass).toContain("overscroll-y-contain");
+    expect(regionClass).toContain("[overflow-anchor:none]");
     expect(regionClass).not.toContain("max-h-36");
+    const main = document.getElementById("main");
+    expect(main?.querySelector("aside")?.previousElementSibling).toHaveAttribute(
+      "data-testid",
+      "pdf-viewer",
+    );
     expect(
       descriptionRegion.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();

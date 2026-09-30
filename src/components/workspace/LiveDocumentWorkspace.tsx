@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,6 +12,7 @@ import { TopBar } from "@/components/TopBar";
 import { AssistantAnswer } from "@/components/workspace/AnswerBlock";
 import { DocumentHeading } from "@/components/workspace/DocumentHeading";
 import type { Citation } from "@/lib/document-types";
+import { useContainedScroll, useStableDocumentScroll } from "@/components/workspace/scroll-contain";
 
 const RealPdfViewer = dynamic(
   () => import("@/components/workspace/RealPdfViewer").then((mod) => mod.RealPdfViewer),
@@ -49,6 +50,9 @@ export function LiveDocumentWorkspace({
   canDelete: boolean;
 }) {
   const router = useRouter();
+  const answerScrollRef = useRef<HTMLDivElement>(null);
+  useContainedScroll(answerScrollRef);
+  useStableDocumentScroll();
   const [page, setPage] = useState(initialPage && initialPage > 0 ? initialPage : 1);
   const [pageCount, setPageCount] = useState(0);
   const [activePassageId, setActivePassageId] = useState<string | null>(null);
@@ -127,7 +131,7 @@ export function LiveDocumentWorkspace({
   const pageCountLabel = pageCount > 0 ? `${pageCount} pages · PDF` : "PDF";
 
   return (
-    <div className="flex min-h-screen w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8] lg:h-dvh lg:overflow-hidden">
+    <div className="flex min-h-screen w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8] [overflow-anchor:none] lg:h-dvh lg:overflow-hidden">
       <div className="shrink-0">
         <SkipLink />
         <TopBar
@@ -162,7 +166,10 @@ export function LiveDocumentWorkspace({
               {pageCount > 0 ? `${pageCount} pages` : "PDF"}
             </p>
           </div>
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
+          <div
+            ref={answerScrollRef}
+            className="min-h-0 flex-1 touch-pan-y space-y-4 overflow-y-auto overscroll-y-contain px-4 py-4 [overflow-anchor:none]"
+          >
             <p className="sr-only" aria-live="polite">
               {liveStatus}
             </p>

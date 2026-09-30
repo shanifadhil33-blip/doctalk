@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UploadGlyph } from "@/components/icons";
@@ -15,6 +15,7 @@ import { PdfPageViewer } from "@/components/workspace/PdfPageViewer";
 import { answerQuestion } from "@/lib/answer-question";
 import type { Citation, DemoDocument } from "@/lib/document-types";
 import { recallUploadFile, readSessionUploads, type SessionUpload } from "@/lib/session-uploads";
+import { useContainedScroll, useStableDocumentScroll } from "@/components/workspace/scroll-contain";
 
 type ThreadMessage =
   | { id: string; role: "user"; text: string }
@@ -339,8 +340,9 @@ function WorkspaceFrame({
   headerAccount: ReactNode;
   children: ReactNode;
 }) {
+  useStableDocumentScroll();
   return (
-    <div className="flex min-h-screen w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8] lg:h-dvh">
+    <div className="flex min-h-screen w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8] [overflow-anchor:none] lg:h-dvh">
       <SkipLink />
       <TopBar
         leading={<DocumentHeading title={title} meta={pageCountLabel} />}
@@ -381,13 +383,18 @@ function ChatColumn({
   onSubmit: (event: FormEvent) => void;
   onSelectCitation: (citation: Citation) => void;
 }) {
+  const answerScrollRef = useRef<HTMLDivElement>(null);
+  useContainedScroll(answerScrollRef);
   return (
     <aside className="flex min-h-[28rem] w-full min-w-0 max-w-full shrink-0 flex-col border-t border-slate-200 bg-white lg:min-h-0 lg:w-[420px] lg:border-l lg:border-t-0">
       <div className="border-b border-slate-200 px-5 py-4">
         <h2 className="text-base font-semibold text-slate-950">Ask this document</h2>
         <p className="mt-1 text-sm text-slate-500">{pageCount} pages</p>
       </div>
-      <div className="flex-1 space-y-4 overflow-auto px-4 py-4">
+      <div
+        ref={answerScrollRef}
+        className="min-h-0 flex-1 touch-pan-y space-y-4 overflow-y-auto overscroll-y-contain px-4 py-4 [overflow-anchor:none]"
+      >
         <p className="sr-only" aria-live="polite">
           {liveStatus}
         </p>
