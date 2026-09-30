@@ -8,6 +8,7 @@ import { primaryButtonClass, secondaryButtonClass } from "@/components/button-st
 import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
 import { TopBar } from "@/components/TopBar";
+import { DeleteDocumentDialog } from "@/components/documents/DeleteDocumentDialog";
 import { AssistantAnswer } from "@/components/workspace/AnswerBlock";
 import { DocumentHeading } from "@/components/workspace/DocumentHeading";
 import { LiveDocumentWorkspace } from "@/components/workspace/LiveDocumentWorkspace";
@@ -296,6 +297,8 @@ function StoredDocumentShell({
 }) {
   const router = useRouter();
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletePending, setDeletePending] = useState(false);
   const note =
     documentStatus === "processing"
       ? "This PDF is still being prepared. Delete it if you want that spot back."
@@ -303,13 +306,20 @@ function StoredDocumentShell({
         ? "This PDF could not be read. Delete it to free a spot."
         : "This document is in your library. Page text is not available in this view yet.";
 
-  async function onDelete() {
-    if (!canDelete) return;
-    if (!window.confirm("Delete this document?")) return;
+  function askToDelete() {
+    if (!canDelete || deletePending) return;
+    setDeleteError(null);
+    setDeleteOpen(true);
+  }
+
+  async function confirmDelete() {
+    if (!canDelete || deletePending) return;
+    setDeletePending(true);
     setDeleteError(null);
     const response = await fetch(`/api/documents/${documentId}`, { method: "DELETE" });
     if (!response.ok) {
       setDeleteError("Could not delete that document.");
+      setDeletePending(false);
       return;
     }
     router.push("/documents");
@@ -317,19 +327,15 @@ function StoredDocumentShell({
   }
 
   return (
+    <>
     <WorkspaceFrame title={fileName} pageCountLabel="PDF" headerAccount={headerAccount}>
       <div className="flex min-h-[70vh] w-full min-w-0 flex-1 flex-col items-center justify-center bg-[#eef0f3] px-6 text-center lg:min-h-0">
         <h2 className="text-base font-semibold text-slate-950">{fileName}</h2>
         <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-600">{note}</p>
         {canDelete ? (
-          <button type="button" className={`${secondaryButtonClass} mt-4`} onClick={() => void onDelete()}>
+          <button type="button" className={`${secondaryButtonClass} mt-4`} onClick={askToDelete}>
             Delete
           </button>
-        ) : null}
-        {deleteError ? (
-          <p role="alert" className="mt-3 text-sm text-red-700">
-            {deleteError}
-          </p>
         ) : null}
       </div>
       <aside className="flex w-full min-w-0 max-w-full shrink-0 flex-col border-t border-slate-200 bg-white lg:w-[420px] lg:border-l lg:border-t-0">
@@ -344,6 +350,18 @@ function StoredDocumentShell({
         </div>
       </aside>
     </WorkspaceFrame>
+    <DeleteDocumentDialog
+      open={deleteOpen}
+      fileName={fileName}
+      pending={deletePending}
+      error={deleteError}
+      onCancel={() => {
+        if (deletePending) return;
+        setDeleteOpen(false);
+      }}
+      onConfirm={() => void confirmDelete()}
+    />
+    </>
   );
 }
 
