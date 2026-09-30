@@ -2,11 +2,13 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { chunks } from "@/db/schema";
 import { EMBEDDING_DIMENSIONS } from "@/lib/embeddings/embed";
+import { MAX_INGEST_CHUNKS } from "@/lib/pdf/chunk";
 import {
   labelFromChunk,
   pageNumberFromChunk,
   type Passage,
 } from "@/lib/retrieval/answer";
+import { choosePassages, documentFitsInPrompt } from "@/lib/retrieval/passage-selection";
 
 export const RETRIEVAL_TOP_K = 5;
 
@@ -58,6 +60,21 @@ export async function loadDocumentPassages(
     .limit(limit);
 
   return rows.map((row) => passageFromRow(row));
+}
+
+/**
+ * A short file is read in full. A long file uses vector search, and still
+ * keeps a heading the question names even when that heading is not a near neighbor.
+ */
+export async function passagesForAsk(
+  documentId: string,
+  question: string,
+  embedQuestion: () => Promise<readonly number[]>,
+): Promise<Passage[]> {
+  const ordered = await loadDocumentPassages(documentId, MAX_INGEST_CHUNKS);
+  if (documentFitsInPrompt(ordered)) return ordered;
+  const hits = await searchDocumentChunks(documentId, await embedQuestion());
+  return choosePassages(ordered, question, hits);
 }
 
 function passageFromRow(row: {

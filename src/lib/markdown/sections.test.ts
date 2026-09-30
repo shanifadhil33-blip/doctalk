@@ -47,6 +47,26 @@ describe("visitor desk note", () => {
     expect(result.citations[0]?.label).not.toMatch(/page/i);
   });
 
+  it("answers a numbered point from that heading", () => {
+    const source = [
+      "# 1. Opening",
+      "The desk opens at 8:30.",
+      "",
+      "# 2. The loop",
+      "Run the check, then send the report.",
+      "",
+      "# 4. Review steps",
+      "Write the boundary before the prompt.",
+    ].join("\n");
+    const result = answerMarkdownLocally(source, "what is point 4");
+    expect(result.answer).toContain("Write the boundary before the prompt.");
+    expect(result.citations[0]?.label).toBe("4. Review steps");
+    expect(answerMarkdownLocally(source, "what is point 9")).toEqual({
+      answer: NOT_IN_DOCUMENT_ANSWER,
+      citations: [],
+    });
+  });
+
   it("cites nothing when the fact is absent", () => {
     const result = answerMarkdownLocally(source, "Who is the mayor?");
     expect(result).toEqual({ answer: NOT_IN_DOCUMENT_ANSWER, citations: [] });

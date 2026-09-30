@@ -6,6 +6,7 @@ import { MinusGlyph, PlusGlyph } from "@/components/icons";
 import { iconButtonClass, toolbarButtonClass } from "@/components/button-styles";
 import { fittedPageWidth } from "@/components/workspace/pdf-fit";
 import { useContainedScroll } from "@/components/workspace/scroll-contain";
+import { scrollPane } from "@/components/workspace/scroll-passage";
 
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
@@ -14,11 +15,14 @@ export function RealPdfViewer({
   fileName,
   page,
   onPageCount,
+  focusKey = 0,
 }: {
   fileUrl: string;
   fileName: string;
   page: number;
   onPageCount?: (count: number) => void;
+  /** Changes when a citation should move the pane, even if the page number did not. */
+  focusKey?: number;
 }) {
   const [pageCount, setPageCount] = useState(0);
   const [zoom, setZoom] = useState(100);
@@ -26,7 +30,7 @@ export function RealPdfViewer({
   const [error, setError] = useState<string | null>(null);
   const paneRef = useRef<HTMLDivElement>(null);
   useContainedScroll(paneRef);
-  const scrolledPage = useRef<number | null>(null);
+  const scrolledPage = useRef<{ page: number; key: number } | null>(null);
   const pageWidth = fittedPageWidth(paneWidth, zoom);
   const safePage = pageCount > 0 ? Math.min(Math.max(page, 1), pageCount) : Math.max(page, 1);
 
@@ -48,9 +52,11 @@ export function RealPdfViewer({
 
   useEffect(() => {
     const node = document.getElementById(`pdf-page-${safePage}`);
-    if (!node || scrolledPage.current === safePage) return;
-    const openingOnFirstPage = scrolledPage.current === null && safePage <= 1;
-    scrolledPage.current = safePage;
+    if (!node) return;
+    const previous = scrolledPage.current;
+    if (previous?.page === safePage && previous.key === focusKey) return;
+    const openingOnFirstPage = previous === null && safePage <= 1 && focusKey === 0;
+    scrolledPage.current = { page: safePage, key: focusKey };
     if (openingOnFirstPage) return;
     const pane = paneRef.current;
     if (!pane) return;
@@ -58,8 +64,8 @@ export function RealPdfViewer({
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const top = node.getBoundingClientRect().top - pane.getBoundingClientRect().top + pane.scrollTop;
-    pane.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
-  }, [safePage, pageCount, pageWidth]);
+    scrollPane(pane, top, reduce ? "auto" : "smooth");
+  }, [safePage, pageCount, pageWidth, focusKey]);
 
   return (
     <div className="flex h-[50dvh] max-h-[50dvh] w-full min-w-0 max-w-full shrink-0 flex-col overflow-hidden lg:h-full lg:max-h-none lg:min-h-0 lg:flex-1">

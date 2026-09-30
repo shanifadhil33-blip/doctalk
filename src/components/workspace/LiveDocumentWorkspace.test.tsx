@@ -33,6 +33,8 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+HTMLElement.prototype.scrollTo = vi.fn();
+
 describe("LiveDocumentWorkspace question column", () => {
   it("places the description and question field directly under the pdf", () => {
     render(
@@ -127,6 +129,12 @@ describe("LiveDocumentWorkspace question column", () => {
     expect(sending).toHaveAttribute("aria-busy", "true");
     expect(screen.queryByText("Sending")).not.toBeInTheDocument();
     const waiting = screen.getByRole("status", { name: "Waiting for an answer" });
+    const question = screen.getByText("Who owns an uploaded file?");
+    expect(
+      question.compareDocumentPosition(waiting) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getByRole("list", { name: "Conversation" }).contains(waiting)).toBe(true);
+    expect(sending.closest("form")?.contains(waiting)).toBe(false);
     const spinner = waiting.querySelector("svg");
     expect(spinner).toHaveClass("animate-spin");
     expect(spinner).toHaveAttribute("aria-hidden", "true");

@@ -1,5 +1,6 @@
-import { parseMarkdownSections } from "@/lib/markdown/sections";
+import { parseMarkdownSections, type MarkdownSection } from "@/lib/markdown/sections";
 import { NOT_IN_DOCUMENT_ANSWER } from "@/lib/retrieval/answer";
+import { numberedRefs, startsWithNumber } from "@/lib/retrieval/passage-selection";
 
 export type LocalMarkdownCitation = {
   page: number;
@@ -47,9 +48,20 @@ export function answerMarkdownLocally(
   source: string,
   question: string,
 ): { answer: string; citations: LocalMarkdownCitation[] } {
-  const tokens = questionTokens(question);
   const sections = parseMarkdownSections(source);
-  if (tokens.length === 0 || sections.length === 0) {
+  if (sections.length === 0) {
+    return { answer: NOT_IN_DOCUMENT_ANSWER, citations: [] };
+  }
+
+  const numbers = numberedRefs(question);
+  if (numbers.length > 0) {
+    const numbered = sectionForNumber(sections, numbers);
+    if (!numbered) return { answer: NOT_IN_DOCUMENT_ANSWER, citations: [] };
+    return answerFromSection(numbered);
+  }
+
+  const tokens = questionTokens(question);
+  if (tokens.length === 0) {
     return { answer: NOT_IN_DOCUMENT_ANSWER, citations: [] };
   }
 
@@ -74,6 +86,30 @@ export function answerMarkdownLocally(
   return {
     answer: excerpt,
     citations: [{ page: chosen.index, excerpt, label: chosen.heading }],
+  };
+}
+
+function sectionForNumber(
+  sections: readonly MarkdownSection[],
+  numbers: readonly number[],
+): MarkdownSection | null {
+  return (
+    sections.find((section) =>
+      numbers.some(
+        (number) => startsWithNumber(section.heading, number) || startsWithNumber(section.text, number),
+      ),
+    ) ?? null
+  );
+}
+
+function answerFromSection(section: MarkdownSection): {
+  answer: string;
+  citations: LocalMarkdownCitation[];
+} {
+  const excerpt = excerptFrom(section.text);
+  return {
+    answer: excerpt,
+    citations: [{ page: section.index, excerpt, label: section.heading }],
   };
 }
 

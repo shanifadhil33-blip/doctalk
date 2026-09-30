@@ -121,5 +121,20 @@ describe("RealPdfViewer", () => {
       expect(scrollTo.mock.instances).toContain(document.getElementById("pdf-scroll"));
     });
     expect(scrollIntoView).not.toHaveBeenCalled();
+    const callsAfterPageChange = scrollTo.mock.calls.length;
+
+    view.rerender(
+      <RealPdfViewer
+        fileUrl="/demo/sample-data-policy.pdf"
+        fileName="Sample_Data_Policy.pdf"
+        page={3}
+        focusKey={1}
+        onPageCount={onPageCount}
+      />,
+    );
+    await waitFor(() => {
+      expect(scrollTo.mock.calls.length).toBeGreaterThan(callsAfterPageChange);
+    });
+    expect(scrollIntoView).not.toHaveBeenCalled();
   });
 });

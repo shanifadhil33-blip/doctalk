@@ -12,6 +12,7 @@ import {
 import { iconButtonClass, toolbarButtonClass } from "@/components/button-styles";
 import { blockText, type DocumentPage, type PageBlock } from "@/lib/document-types";
 import { useContainedScroll } from "@/components/workspace/scroll-contain";
+import { scrollPane } from "@/components/workspace/scroll-passage";
 
 export function PdfPageViewer({
   fileName,
@@ -34,8 +35,10 @@ export function PdfPageViewer({
   const current = pages.find((item) => item.number === page) ?? pages[0];
 
   useEffect(() => {
+    const pane = paneRef.current;
+    if (!pane) return;
     if (!activePassageId) {
-      document.getElementById("pdf-scroll")?.scrollTo({ top: 0 });
+      scrollPane(pane, 0, "auto");
       return;
     }
     const node = document.getElementById(activePassageId);
@@ -43,7 +46,8 @@ export function PdfPageViewer({
     const reduce =
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    node.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
+    const top = node.getBoundingClientRect().top - pane.getBoundingClientRect().top + pane.scrollTop;
+    scrollPane(pane, Math.max(0, top - 12), reduce ? "auto" : "smooth");
   }, [activePassageId, page]);
 
   if (!current) {

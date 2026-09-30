@@ -34,6 +34,7 @@ export function buildRetrievalPrompt(
     "Do not put those numbers in the answer text.",
     "If the question asks what the document contains, what it is about, or for a summary, summarize the passages in the answer and list those passage numbers in used.",
     "Do not use the sentence below for that kind of question.",
+    "When the question refers to a numbered point, step, section, or heading, answer from the passage whose heading or text is that number and cite it.",
     `Use this sentence only when the question asks for a specific fact that none of the passages state: ${NOT_IN_DOCUMENT_ANSWER}`,
     "When you use that sentence, set used to [].",
     "Do not use outside knowledge.",

@@ -23,6 +23,7 @@ describe("retrieval prompt", () => {
     expect(prompt).toContain("Total due: 2400.00 USD");
     expect(prompt).toContain('"used":[1,3]');
     expect(prompt).toContain(NOT_IN_DOCUMENT_ANSWER);
+    expect(prompt).toContain("numbered point");
     expect(prompt.toLowerCase()).toContain("summary");
   });
 });
