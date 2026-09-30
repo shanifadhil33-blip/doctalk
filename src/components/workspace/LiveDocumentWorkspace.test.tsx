@@ -42,9 +42,12 @@ describe("LiveDocumentWorkspace question column", () => {
     );
 
     const heading = screen.getByRole("heading", { name: "Ask this document" });
+    const shell = heading.closest(".h-dvh");
+    expect(shell).toHaveClass("h-dvh", "overflow-hidden");
     const aside = heading.closest("aside");
     expect(aside?.className).not.toContain("min-h-[28rem]");
     expect(aside?.className).toContain("lg:min-h-0");
+    expect(aside?.className.split(/\s+/)).toContain("shrink-0");
 
     const description = screen.getByText(
       "Ask a question about this document. Sources point at the page they came from.",
@@ -61,5 +64,13 @@ describe("LiveDocumentWorkspace question column", () => {
     expect(
       descriptionRegion.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+
+    const footer = screen.getByText("Built by Adhil Shanif");
+    const gap = [...(shell?.querySelectorAll(".h-8") ?? [])].find((node) =>
+      node.classList.contains("lg:hidden"),
+    );
+    expect(gap).toHaveClass("shrink-0", "lg:hidden");
+    expect(input.compareDocumentPosition(gap as Node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect((gap as Node).compareDocumentPosition(footer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });
