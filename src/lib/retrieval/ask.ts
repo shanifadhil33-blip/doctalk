@@ -1,6 +1,12 @@
 import { ChatConfigError, completePrompt } from "@/lib/ai/chat";
 import { demoLimitMessage } from "@/lib/ai/limits";
 import { decideDocumentAccess } from "@/lib/auth/access";
+import {
+  DEMO_MARKDOWN_FILE,
+  DEMO_MARKDOWN_TITLE,
+  isDemoMarkdownId,
+} from "@/lib/demo/markdown-catalog";
+import { passagesForMarkdownFile } from "@/lib/demo/markdown-passages";
 import { passagesForDemoFile } from "@/lib/demo/pdf-catalog";
 import { takeDemoQuestionSlot } from "@/lib/demo/quota-store";
 import { lookupDocument } from "@/lib/documents/lookup";
@@ -40,6 +46,10 @@ export async function askDocument(input: {
     return { status: 503, body: { error: "Database is not configured" } };
   }
 
+  if (isDemoMarkdownId(input.documentId)) {
+    return answerDemoMarkdown(input, env);
+  }
+
   const lookup = await lookupDocument(input.documentId);
   const decision = decideDocumentAccess(input.viewerUserId, lookup);
   if (decision === "sign-in") {
@@ -71,7 +81,8 @@ export async function askDocument(input: {
 
   try {
     const demoPassages = lookup.document.isDemo
-      ? passagesForDemoFile(lookup.document.fileName)
+      ? passagesForDemoFile(lookup.document.fileName) ??
+        passagesForMarkdownFile(lookup.document.fileName)
       : null;
     const passages = demoPassages
       ? demoPassages
@@ -93,6 +104,55 @@ export async function askDocument(input: {
         userId: input.viewerUserId,
         documentId: input.documentId,
         documentTitle: documentTitleFromFileName(lookup.document.fileName),
+        question,
+        answer: result.answer,
+      });
+    }
+    return { status: 200, body: result };
+  } catch (error) {
+    if (error instanceof ChatConfigError) {
+      return { status: 503, body: { error: error.message } };
+    }
+    if (demoLimitMessage(error)) {
+      return { status: 429, body: { error: "Demo limit reached, try again later" } };
+    }
+    console.error("Chat request failed");
+    return { status: 500, body: { error: "Chat failed. Try again later." } };
+  }
+}
+
+async function answerDemoMarkdown(
+  input: {
+    viewerUserId: string | null;
+    question: string;
+    ip: string;
+    now: Date;
+  },
+  env: NodeJS.ProcessEnv,
+): Promise<AskResult> {
+  const question = input.question.trim();
+  if (!input.viewerUserId) {
+    const allowed = await takeDemoQuestionSlot(input.ip, input.now);
+    if (!allowed) {
+      return { status: 429, body: { error: "Demo limit reached, try again later" } };
+    }
+  }
+
+  const apiKey = env.GEMINI_API_KEY?.trim();
+  if (!apiKey) {
+    return { status: 503, body: { error: "Chat is not configured" } };
+  }
+
+  try {
+    const passages = passagesForMarkdownFile(DEMO_MARKDOWN_FILE) ?? [];
+    const result = await answerFromPassages(question, passages, (prompt) =>
+      completePrompt(env, prompt),
+    );
+    if (input.viewerUserId) {
+      await recordAskedQuestion({
+        userId: input.viewerUserId,
+        documentId: null,
+        documentTitle: DEMO_MARKDOWN_TITLE,
         question,
         answer: result.answer,
       });

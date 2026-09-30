@@ -31,7 +31,7 @@ vi.mock("next/dynamic", () => ({
 }));
 
 vi.mock("@/lib/documents/client-upload", () => ({
-  uploadPdfFromBrowser: vi.fn(),
+  uploadDocumentFromBrowser: vi.fn(),
 }));
 
 const owned: ListedDocument = {
@@ -87,8 +87,9 @@ describe("SignedInHome", () => {
     renderHome();
 
     expect(screen.getByRole("heading", { name: "Your documents" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Upload PDF" })).toBeInTheDocument();
-    expect(screen.getByText("Drop a PDF here, or choose a file.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Upload PDF or Markdown" })).toBeInTheDocument();
+    expect(screen.getByText("Drop a PDF or Markdown file here, or choose a file.")).toBeInTheDocument();
+    expect(screen.getByText("PDF or Markdown, up to 10 MB. 5 documents per account.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open Warehouse lease" })).toHaveAttribute(
       "href",
       "/documents/owned-1",
@@ -117,13 +118,42 @@ describe("SignedInHome", () => {
   it("rejects a file that is not a PDF", () => {
     renderHome();
 
-    fireEvent.change(screen.getByLabelText("Choose a PDF"), {
+    fireEvent.change(screen.getByLabelText("Choose a PDF or Markdown file"), {
       target: {
         files: [new File(["hello"], "notes.txt", { type: "text/plain" })],
       },
     });
 
-    expect(screen.getByRole("alert")).toHaveTextContent("Only PDF files can be uploaded.");
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Only PDF and Markdown files can be uploaded.",
+    );
+  });
+
+  it("accepts a markdown file and shows a moving upload mark", async () => {
+    const { uploadDocumentFromBrowser } = await import("@/lib/documents/client-upload");
+    let finish: (value: { id: string }) => void = () => {};
+    vi.mocked(uploadDocumentFromBrowser).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+
+    renderHome();
+    fireEvent.change(screen.getByLabelText("Choose a PDF or Markdown file"), {
+      target: {
+        files: [new File(["# Desk hours\nOpen at 8:30."], "desk-note.md", { type: "text/markdown" })],
+      },
+    });
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent("Uploading");
+    expect(status.querySelector("svg")).toHaveClass("animate-spin");
+    expect(screen.queryByText("desk-note.md")).not.toBeInTheDocument();
+
+    finish({ id: "uploaded-note" });
+    await screen.findByText("Drop a PDF or Markdown file here, or choose a file.");
   });
 
   it("says when there are no documents or questions yet", () => {

@@ -45,6 +45,9 @@ describe("classifyPath", () => {
     expect(classifyPath("/demo/sample-data-policy.pdf")).toEqual({
       kind: "public",
     });
+    expect(classifyPath("/demo/sample-visitor-note.md")).toEqual({
+      kind: "public",
+    });
   });
 
   it("leaves chat and the document API to enforce access in the handler", () => {

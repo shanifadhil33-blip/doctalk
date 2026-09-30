@@ -74,7 +74,9 @@ describe("POST /api/documents/upload", () => {
     vi.mocked(auth).mockResolvedValue({ user: { id: "user-1" } } as never);
     const response = await POST(tokenRequest({ type: "text/plain" }));
     expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ error: "Only PDF files can be uploaded." });
+    expect(await response.json()).toEqual({
+      error: "Only PDF and Markdown files can be uploaded.",
+    });
     expect(reserveOwnedUpload).not.toHaveBeenCalled();
   });
 

@@ -9,6 +9,7 @@ import {
   knownPageCount,
   metaWithPageCount,
 } from "@/lib/documents/preview";
+import { isMarkdownFileName } from "@/lib/markdown/sections";
 
 const PdfThumbnail = dynamic(
   () => import("@/components/documents/PdfThumbnail").then((mod) => mod.PdfThumbnail),
@@ -36,6 +37,7 @@ export function DocumentCard({
   layout: "grid" | "list";
   fileSrc?: string | null;
 }) {
+  const markdown = isMarkdownFileName(item.fileName);
   const lines = documentPreviewLines(item.id, item.fileName, item.status);
   const [loadedPages, setLoadedPages] = useState<number | null>(null);
   const pageCount =
@@ -46,8 +48,9 @@ export function DocumentCard({
   const meta = metaWithPageCount(item.meta, pageCount);
   const preview = (
     <DocumentPreview
-      fileSrc={fileSrc}
+      fileSrc={markdown ? null : fileSrc}
       lines={lines.length > 0 ? lines : [item.fileName]}
+      kicker={markdown ? "Markdown" : "PDF"}
       compact={layout === "list"}
       onPageCount={setLoadedPages}
     />
@@ -104,17 +107,19 @@ export function DocumentCard({
 function DocumentPreview({
   fileSrc,
   lines,
+  kicker,
   compact,
   onPageCount,
 }: {
   fileSrc?: string | null;
   lines: string[];
+  kicker: string;
   compact: boolean;
   onPageCount: (pageCount: number) => void;
 }) {
   const frameRef = useRef<HTMLSpanElement>(null);
   const [width, setWidth] = useState(compact ? 72 : 280);
-  const sheet = <TextSheet lines={lines} compact={compact} />;
+  const sheet = <TextSheet lines={lines} compact={compact} kicker={kicker} />;
 
   useEffect(() => {
     const node = frameRef.current;
@@ -153,11 +158,19 @@ function DocumentPreview({
   );
 }
 
-function TextSheet({ lines, compact }: { lines: string[]; compact: boolean }) {
+function TextSheet({
+  lines,
+  compact,
+  kicker,
+}: {
+  lines: string[];
+  compact: boolean;
+  kicker: string;
+}) {
   return (
     <span className={compact ? "block h-full bg-white px-1.5 py-1.5" : "block h-full bg-white px-4 py-4"}>
       <span className="block text-[9px] font-semibold uppercase tracking-wide text-slate-400">
-        PDF
+        {kicker}
       </span>
       {lines.slice(0, compact ? 4 : 6).map((line, index) => (
         <span

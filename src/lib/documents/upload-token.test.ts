@@ -40,7 +40,11 @@ describe("authorizeUploadToken", () => {
         clientPayload: payload({ type: "image/png" }),
         reserve,
       }),
-    ).toEqual({ ok: false, status: 400, message: "Only PDF files can be uploaded." });
+    ).toEqual({
+      ok: false,
+      status: 400,
+      message: "Only PDF and Markdown files can be uploaded.",
+    });
 
     expect(
       await authorizeUploadToken({
@@ -79,6 +83,27 @@ describe("authorizeUploadToken", () => {
       uploadId,
       documentId: "doc-1",
       fileName: "My Notes.PDF",
+      extension: "pdf",
+    });
+  });
+
+  it("reserves a slot for a markdown file", async () => {
+    const reserve = vi.fn().mockResolvedValue({ ok: true, documentId: "doc-2" });
+    const decision = await authorizeUploadToken({
+      userId: "user-1",
+      pathname: `uploads/${uploadId}.md`,
+      clientPayload: payload({
+        fileName: "Visitor note.md",
+        type: "text/plain",
+      }),
+      reserve,
+    });
+    expect(decision).toEqual({
+      ok: true,
+      uploadId,
+      documentId: "doc-2",
+      fileName: "Visitor note.md",
+      extension: "md",
     });
   });
 });

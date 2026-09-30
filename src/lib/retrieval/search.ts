@@ -3,6 +3,7 @@ import { getDb } from "@/db";
 import { chunks } from "@/db/schema";
 import { EMBEDDING_DIMENSIONS } from "@/lib/embeddings/embed";
 import {
+  labelFromChunk,
   pageNumberFromChunk,
   type Passage,
 } from "@/lib/retrieval/answer";
@@ -37,10 +38,7 @@ export async function searchDocumentChunks(
     .orderBy(sql`${chunks.embedding} <=> ${literal}::vector`)
     .limit(limit);
 
-  return rows.map((row) => ({
-    page: pageNumberFromChunk(row),
-    content: row.content,
-  }));
+  return rows.map((row) => passageFromRow(row));
 }
 
 /** Opening passages in document order, for a summary of the whole file. */
@@ -59,8 +57,18 @@ export async function loadDocumentPassages(
     .orderBy(asc(chunks.chunkIndex))
     .limit(limit);
 
-  return rows.map((row) => ({
+  return rows.map((row) => passageFromRow(row));
+}
+
+function passageFromRow(row: {
+  content: string;
+  page: number | null;
+  metadata: unknown;
+}): Passage {
+  const label = labelFromChunk(row);
+  return {
     page: pageNumberFromChunk(row),
     content: row.content,
-  }));
+    ...(label ? { label } : {}),
+  };
 }

@@ -18,7 +18,7 @@ function renderDialog() {
 describe("UploadDialog", () => {
   it("rejects a file that is not a PDF", () => {
     renderDialog();
-    const input = screen.getByLabelText("Choose a PDF");
+    const input = screen.getByLabelText("Choose a PDF or Markdown file");
 
     fireEvent.change(input, {
       target: {
@@ -27,7 +27,7 @@ describe("UploadDialog", () => {
     });
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Only PDF files can be uploaded.",
+      "Only PDF and Markdown files can be uploaded.",
     );
     expect(screen.queryByText("notes.txt")).not.toBeInTheDocument();
   });
@@ -37,7 +37,7 @@ describe("UploadDialog", () => {
     renderDialog();
 
     await user.upload(
-      screen.getByLabelText("Choose a PDF"),
+      screen.getByLabelText("Choose a PDF or Markdown file"),
       new File([new Uint8Array(MAX_PDF_BYTES + 1)], "large.pdf", {
         type: "application/pdf",
       }),
@@ -54,7 +54,7 @@ describe("UploadDialog", () => {
     const { onOpenDocument } = renderDialog();
 
     await user.upload(
-      screen.getByLabelText("Choose a PDF"),
+      screen.getByLabelText("Choose a PDF or Markdown file"),
       new File(["%PDF-1.4"], "lease-agreement.pdf", { type: "application/pdf" }),
     );
 

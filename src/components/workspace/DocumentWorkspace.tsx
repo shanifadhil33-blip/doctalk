@@ -14,6 +14,7 @@ import { LiveDocumentWorkspace } from "@/components/workspace/LiveDocumentWorksp
 import { PdfPageViewer } from "@/components/workspace/PdfPageViewer";
 import { answerQuestion } from "@/lib/answer-question";
 import type { Citation, DemoDocument } from "@/lib/document-types";
+import { isMarkdownFileName } from "@/lib/markdown/sections";
 import { recallUploadFile, readSessionUploads, type SessionUpload } from "@/lib/session-uploads";
 import { useContainedScroll, useStableDocumentScroll } from "@/components/workspace/scroll-contain";
 
@@ -30,6 +31,7 @@ export function DocumentWorkspace({
   pdfSrc,
   documentStatus,
   canDelete,
+  localAnswers,
 }: {
   document: DemoDocument | null;
   documentId: string;
@@ -39,6 +41,7 @@ export function DocumentWorkspace({
   pdfSrc?: string;
   documentStatus?: "processing" | "ready" | "failed";
   canDelete?: boolean;
+  localAnswers?: boolean;
 }) {
   if (document) {
     return (
@@ -60,6 +63,7 @@ export function DocumentWorkspace({
         headerAccount={headerAccount}
         documentStatus={documentStatus ?? "ready"}
         canDelete={canDelete ?? false}
+        localAnswers={localAnswers}
       />
     );
   }
@@ -208,6 +212,20 @@ function UnindexedWorkspace({
     );
   }
 
+  if (upload && fileUrl && isMarkdownFileName(upload.fileName)) {
+    return (
+      <LiveDocumentWorkspace
+        documentId={documentId}
+        fileName={upload.fileName}
+        pdfSrc={fileUrl}
+        headerAccount={headerAccount}
+        documentStatus="ready"
+        canDelete={false}
+        localAnswers
+      />
+    );
+  }
+
   if (!upload) {
     return (
       <div className="flex min-h-screen flex-col bg-[#f5f6f8]">
@@ -350,7 +368,7 @@ function WorkspaceFrame({
           <>
             <Link href="/documents?upload=1" className={secondaryButtonClass}>
               <UploadGlyph />
-              <span className="hidden sm:inline">Upload PDF</span>
+              <span className="hidden sm:inline">Upload PDF or Markdown</span>
             </Link>
             {headerAccount}
           </>

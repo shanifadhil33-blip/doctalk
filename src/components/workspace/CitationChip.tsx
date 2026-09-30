@@ -20,21 +20,25 @@ export function CitationChip({
   onSelect,
   active = false,
   label,
+  section,
 }: {
   page: number;
   onSelect: (page: number) => void;
   active?: boolean;
   label?: string;
+  /** Heading for a markdown source. When set, the chip does not say "page". */
+  section?: string;
 }) {
+  const sectionName = section?.trim();
   return (
     <button
       type="button"
-      className={citationChipClass(active)}
+      className={`${citationChipClass(active)} max-w-full`}
       aria-pressed={active}
-      aria-label={`Show source on page ${page}`}
+      aria-label={sectionName ? `Show source: ${sectionName}` : `Show source on page ${page}`}
       onClick={() => onSelect(page)}
     >
-      {label ?? `Source p. ${page}`}
+      <span className="truncate">{sectionName ?? label ?? `Source p. ${page}`}</span>
     </button>
   );
 }

@@ -16,6 +16,8 @@ describe("question history", () => {
 
   it("uses the file name without the PDF extension as the document title", () => {
     expect(documentTitleFromFileName("Lease Agreement.pdf")).toBe("Lease Agreement");
+    expect(documentTitleFromFileName("Visitor note.md")).toBe("Visitor note");
+    expect(documentTitleFromFileName("Desk.markdown")).toBe("Desk");
     expect(documentTitleFromFileName("notes")).toBe("notes");
   });
 

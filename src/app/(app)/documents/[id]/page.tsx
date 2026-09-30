@@ -6,6 +6,12 @@ import { DocumentWorkspace } from "@/components/workspace/DocumentWorkspace";
 import { decideDocumentAccess, safeCallbackPath } from "@/lib/auth/access";
 import { userIdFromTokenSub } from "@/lib/auth/user-id";
 import { getDemoDocument } from "@/lib/demo-documents";
+import {
+  DEMO_MARKDOWN_FILE,
+  DEMO_MARKDOWN_TITLE,
+  DEMO_MARKDOWN_URL,
+  isDemoMarkdownId,
+} from "@/lib/demo/markdown-catalog";
 import { lookupDocument } from "@/lib/documents/lookup";
 import { pdfSrcFor } from "@/lib/documents/upload-policy";
 
@@ -18,6 +24,9 @@ export async function generateMetadata({
   params,
 }: DocumentPageProps): Promise<Metadata> {
   const { id } = await params;
+  if (isDemoMarkdownId(id)) {
+    return { title: `${DEMO_MARKDOWN_TITLE} | DocTalk` };
+  }
   const demo = getDemoDocument(id);
   if (demo) {
     return { title: `${demo.title} | DocTalk` };
@@ -45,6 +54,22 @@ export default async function DocumentPage({
   const headerAccount = (
     <AccountMenu variant="text" redirectTo={`/documents/${id}`} />
   );
+
+  if (isDemoMarkdownId(id)) {
+    return (
+      <DocumentWorkspace
+        document={null}
+        documentId={id}
+        initialPage={parsed}
+        headerAccount={headerAccount}
+        fileName={DEMO_MARKDOWN_FILE}
+        pdfSrc={DEMO_MARKDOWN_URL}
+        documentStatus="ready"
+        canDelete={false}
+        localAnswers={!process.env.DATABASE_URL}
+      />
+    );
+  }
 
   if (!process.env.DATABASE_URL) {
     return (

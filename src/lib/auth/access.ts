@@ -29,11 +29,12 @@ function normalizePath(pathname: string): string {
   return path;
 }
 
-/** PDF.js worker and the seeded sample PDFs in /public/demo. */
+/** PDF.js worker and the seeded sample files in /public/demo. */
 function isPublicPdfAsset(pathname: string): boolean {
   const path = normalizePath(pathname);
   if (path === "/pdf.worker.min.mjs") return true;
-  return path.startsWith("/demo/") && !path.includes("..") && path.endsWith(".pdf");
+  if (!path.startsWith("/demo/") || path.includes("..")) return false;
+  return path.endsWith(".pdf") || path.endsWith(".md") || path.endsWith(".markdown");
 }
 
 export function classifyPath(pathname: string): PathKind {
