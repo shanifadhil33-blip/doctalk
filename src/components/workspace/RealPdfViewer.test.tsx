@@ -87,6 +87,12 @@ describe("RealPdfViewer", () => {
     expect(pane?.className).toContain("overflow-y-auto");
     expect(pane?.className.split(/\s+/)).toContain("flex-1");
     expect(pane?.className).toContain("min-h-0");
+    expect(pane?.className.split(/\s+/)).toContain("overflow-x-hidden");
+    const frame = pane?.parentElement;
+    const frameClass = frame?.className.split(/\s+/) ?? [];
+    expect(frameClass).toContain("h-[70dvh]");
+    expect(frameClass).toContain("min-h-[28rem]");
+    expect(frameClass).toContain("overflow-hidden");
 
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Zoom in" }));
