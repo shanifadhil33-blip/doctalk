@@ -49,6 +49,8 @@ export function DocumentsDashboard({
   const [localPreviewUrls, setLocalPreviewUrls] = useState<Record<string, string>>({});
   const [remoteDocuments, setRemoteDocuments] = useState<ListedDocument[] | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
+  const [hiddenIds, setHiddenIds] = useState<string[]>([]);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     setUploads(readSessionUploads());
@@ -105,6 +107,7 @@ export function DocumentsDashboard({
 
     const needle = query.trim().toLowerCase();
     const filtered = [...local, ...samples].filter((item) => {
+      if (hiddenIds.includes(item.id)) return false;
       if (!needle) return true;
       return (
         item.title.toLowerCase().includes(needle) ||
@@ -121,7 +124,27 @@ export function DocumentsDashboard({
     });
 
     return filtered;
-  }, [documents, remoteDocuments, source, uploads, query, sort]);
+  }, [documents, remoteDocuments, source, uploads, query, sort, hiddenIds]);
+
+  async function deleteOwnedDocument(id: string) {
+    const response = await fetch(`/api/documents/${id}`, { method: "DELETE" });
+    if (!response.ok) {
+      const payload: unknown = await response.json().catch(() => null);
+      const message =
+        payload &&
+        typeof payload === "object" &&
+        "error" in payload &&
+        typeof payload.error === "string"
+          ? payload.error
+          : "Could not delete that document.";
+      setDeleteError(message);
+      throw new Error(message);
+    }
+    setDeleteError(null);
+    setHiddenIds((current) => [...current, id]);
+    setRemoteDocuments((current) => current?.filter((item) => item.id !== id) ?? current);
+    router.refresh();
+  }
 
   function closeUpload() {
     setUploadOpen(false);
@@ -244,6 +267,12 @@ export function DocumentsDashboard({
           </div>
         </div>
 
+        {deleteError ? (
+          <p role="alert" className="mt-4 text-sm text-red-700">
+            {deleteError}
+          </p>
+        ) : null}
+
         <p className="sr-only" aria-live="polite">
           {cards.length === 0 ? "No documents" : `${cards.length} documents`}
         </p>
@@ -293,6 +322,12 @@ export function DocumentsDashboard({
                 <DocumentCard
                   item={item}
                   layout={layout}
+                  menu={source === "library" && signedIn}
+                  onDelete={
+                    source === "library" && signedIn && item.status !== "Sample"
+                      ? deleteOwnedDocument
+                      : undefined
+                  }
                   fileSrc={
                     localPreviewUrls[item.id] ??
                     documentPreviewSrc(item.id, item.fileName, item.status)

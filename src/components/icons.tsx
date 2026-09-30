@@ -71,6 +71,16 @@ export function ListGlyph({ className }: IconProps) {
   );
 }
 
+export function MoreGlyph({ className }: IconProps) {
+  return (
+    <svg {...stroke(className)}>
+      <circle cx="12" cy="5" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export function CloseGlyph({ className }: IconProps) {
   return (
     <svg {...stroke(className)}>

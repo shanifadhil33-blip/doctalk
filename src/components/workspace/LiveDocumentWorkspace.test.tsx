@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@/test/setup";
 import type { AnchorHTMLAttributes, ReactNode } from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LiveDocumentWorkspace } from "@/components/workspace/LiveDocumentWorkspace";
@@ -193,5 +193,48 @@ describe("LiveDocumentWorkspace question column", () => {
     expect(screen.queryByRole("status", { name: "Waiting for an answer" })).not.toBeInTheDocument();
     expect(screen.queryByText("Sending")).not.toBeInTheDocument();
     expect(screen.getAllByText("Could not answer that question. Try again later.")).toHaveLength(2);
+  });
+
+  it("asks to delete in the app instead of the browser confirm box", async () => {
+    const user = userEvent.setup();
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const fetchMock = vi.fn(
+      () =>
+        new Promise<Response>(() => {
+          /* leave the request pending */
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <LiveDocumentWorkspace
+        documentId="owned-note"
+        fileName="desk-note.pdf"
+        pdfSrc="/api/documents/owned-note/file"
+        headerAccount={<a href="/sign-in">Sign in</a>}
+        documentStatus="ready"
+        canDelete
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+    const dialog = screen.getByRole("dialog", { name: "Delete this document?" });
+    expect(dialog).toHaveTextContent("This document will be deleted.");
+    expect(dialog).toHaveTextContent("desk-note.pdf");
+    expect(confirm).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Delete this document?" })).getByRole("button", {
+        name: "Delete",
+      }),
+    );
+    expect(fetchMock).toHaveBeenCalledWith("/api/documents/owned-note", { method: "DELETE" });
+    expect(confirm).not.toHaveBeenCalled();
+    confirm.mockRestore();
   });
 });

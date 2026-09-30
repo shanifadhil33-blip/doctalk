@@ -10,6 +10,7 @@ import { primaryButtonClass, secondaryButtonClass } from "@/components/button-st
 import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
 import { TopBar } from "@/components/TopBar";
+import { DeleteDocumentDialog } from "@/components/documents/DeleteDocumentDialog";
 import { AssistantAnswer } from "@/components/workspace/AnswerBlock";
 import { DocumentHeading } from "@/components/workspace/DocumentHeading";
 import { MarkdownPane } from "@/components/workspace/MarkdownPane";
@@ -72,6 +73,8 @@ export function LiveDocumentWorkspace({
   const [pending, setPending] = useState(false);
   const [liveStatus, setLiveStatus] = useState("");
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletePending, setDeletePending] = useState(false);
   const [noteText, setNoteText] = useState<string | null>(null);
   const markdown = isMarkdownFileName(fileName);
   const ready = documentStatus === "ready" && (!localAnswers || !markdown || noteText !== null);
@@ -172,14 +175,21 @@ export function LiveDocumentWorkspace({
     }));
   }
 
-  async function onDelete() {
-    if (!canDelete || pending) return;
-    if (!window.confirm("Delete this document?")) return;
+  function askToDelete() {
+    if (!canDelete || pending || deletePending) return;
+    setDeleteError(null);
+    setDeleteOpen(true);
+  }
+
+  async function confirmDelete() {
+    if (!canDelete || deletePending) return;
+    setDeletePending(true);
     setDeleteError(null);
     const response = await fetch(`/api/documents/${documentId}`, { method: "DELETE" });
     if (!response.ok) {
       const payload: unknown = await response.json().catch(() => null);
       setDeleteError(readError(payload) ?? "Could not delete that document.");
+      setDeletePending(false);
       return;
     }
     router.push("/documents");
@@ -197,7 +207,7 @@ export function LiveDocumentWorkspace({
           actions={
             <>
               {canDelete ? (
-                <button type="button" className={secondaryButtonClass} onClick={() => void onDelete()}>
+                <button type="button" className={secondaryButtonClass} onClick={askToDelete}>
                   Delete
                 </button>
               ) : null}
@@ -325,6 +335,17 @@ export function LiveDocumentWorkspace({
       <div className="shrink-0">
         <SiteFooter />
       </div>
+      <DeleteDocumentDialog
+        open={deleteOpen}
+        fileName={fileName}
+        pending={deletePending}
+        error={deleteError}
+        onCancel={() => {
+          if (deletePending) return;
+          setDeleteOpen(false);
+        }}
+        onConfirm={() => void confirmDelete()}
+      />
     </div>
   );
 }
