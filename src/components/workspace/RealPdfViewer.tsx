@@ -50,14 +50,17 @@ export function RealPdfViewer({
     const openingOnFirstPage = scrolledPage.current === null && safePage <= 1;
     scrolledPage.current = safePage;
     if (openingOnFirstPage) return;
+    const pane = paneRef.current;
+    if (!pane) return;
     const reduce =
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    node.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
+    const top = node.getBoundingClientRect().top - pane.getBoundingClientRect().top + pane.scrollTop;
+    pane.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
   }, [safePage, pageCount, pageWidth]);
 
   return (
-    <div className="flex w-full min-w-0 max-w-full flex-col lg:h-full lg:min-h-0 lg:flex-1 lg:overflow-hidden">
+    <div className="flex h-full min-h-0 w-full min-w-0 max-w-full flex-1 flex-col overflow-hidden">
       <div className="flex w-full min-w-0 max-w-full flex-wrap items-center gap-2 border-b border-slate-200 bg-white px-3 py-2">
         <button
           type="button"
@@ -84,7 +87,7 @@ export function RealPdfViewer({
         id="pdf-scroll"
         ref={paneRef}
         className={[
-          "w-full min-w-0 max-w-full contain-paint bg-[#eef0f3] px-3 py-3 sm:px-6 sm:py-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto",
+          "min-h-0 w-full min-w-0 max-w-full flex-1 contain-paint overflow-y-auto overscroll-contain bg-[#eef0f3] px-3 py-3 sm:px-6 sm:py-4",
           zoom > 100 ? "overflow-x-auto" : "overflow-x-hidden",
         ].join(" ")}
       >

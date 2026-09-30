@@ -53,6 +53,8 @@ class TestResizeObserver {
 describe("RealPdfViewer", () => {
   it("stacks every page at the pane width and drops the pager", async () => {
     vi.stubGlobal("ResizeObserver", TestResizeObserver);
+    const scrollTo = vi.fn();
+    HTMLElement.prototype.scrollTo = scrollTo;
     const scrollIntoView = vi.fn();
     Element.prototype.scrollIntoView = scrollIntoView;
     const onPageCount = vi.fn();
@@ -80,6 +82,11 @@ describe("RealPdfViewer", () => {
     expect(screen.getByRole("button", { name: "Fit width" })).toBeInTheDocument();
     expect(onPageCount).toHaveBeenCalledWith(5);
     expect(scrollIntoView).not.toHaveBeenCalled();
+    expect(scrollTo).not.toHaveBeenCalled();
+    const pane = document.getElementById("pdf-scroll");
+    expect(pane?.className).toContain("overflow-y-auto");
+    expect(pane?.className.split(/\s+/)).toContain("flex-1");
+    expect(pane?.className).toContain("min-h-0");
 
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Zoom in" }));
@@ -103,8 +110,8 @@ describe("RealPdfViewer", () => {
       />,
     );
     await waitFor(() => {
-      expect(scrollIntoView).toHaveBeenCalled();
+      expect(scrollTo.mock.instances).toContain(document.getElementById("pdf-scroll"));
     });
-    expect(screen.getByRole("article", { name: "Page 3" }).scrollIntoView).toBe(scrollIntoView);
+    expect(scrollIntoView).not.toHaveBeenCalled();
   });
 });
