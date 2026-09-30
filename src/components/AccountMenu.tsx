@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { auth } from "@/auth";
 import { textButtonClass } from "@/components/button-styles";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
@@ -8,9 +9,11 @@ import { userIdFromTokenSub } from "@/lib/auth/user-id";
 export async function AccountMenu({
   variant = "text",
   redirectTo = "/",
+  showSettings = true,
 }: {
   variant?: "google" | "text";
   redirectTo?: string;
+  showSettings?: boolean;
 }) {
   const session = await auth();
   const signedIn = userIdFromTokenSub(session?.user?.id) !== null;
@@ -24,17 +27,21 @@ export async function AccountMenu({
     const name = session?.user?.name?.trim() || "Signed in";
 
     return (
-      <form action={signOutToHome} className="flex max-w-full items-center gap-2">
-        <span className="max-w-[10rem] truncate text-sm text-slate-600" title={name}>
+      <div className="flex max-w-full flex-wrap items-center justify-end gap-1">
+        <span className="max-w-[10rem] min-w-0 truncate px-2 text-sm text-slate-600" title={name}>
           {name}
         </span>
-        <button
-          type="submit"
-          className={textButtonClass}
-        >
-          Sign out
-        </button>
-      </form>
+        {showSettings ? (
+          <Link href="/settings" className={textButtonClass}>
+            Settings
+          </Link>
+        ) : null}
+        <form action={signOutToHome}>
+          <button type="submit" className={textButtonClass}>
+            Sign out
+          </button>
+        </form>
+      </div>
     );
   }
 

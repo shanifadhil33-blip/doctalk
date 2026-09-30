@@ -56,6 +56,8 @@ describe("signed-out PDF assets", () => {
   it("still sends a signed-out visitor of a protected page to sign-in", () => {
     expect(middlewareRuns("/upload")).toBe(true);
     expect(signedOutRedirectsToSignIn("/upload")).toBe(true);
+    expect(middlewareRuns("/settings")).toBe(true);
+    expect(signedOutRedirectsToSignIn("/settings")).toBe(true);
   });
 
   it("still runs middleware on document pages so private rows can be hidden", () => {
