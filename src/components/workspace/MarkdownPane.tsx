@@ -1,23 +1,36 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { parseMarkdownSections } from "@/lib/markdown/sections";
 import { useContainedScroll } from "@/components/workspace/scroll-contain";
+import {
+  findExcerptInRoot,
+  scrollOffsetForText,
+  scrollOffsetWithin,
+  scrollPane,
+} from "@/components/workspace/scroll-passage";
 
 export function MarkdownPane({
   fileUrl,
   section,
   source,
+  focusKey = 0,
+  heading,
+  excerpt,
 }: {
   fileUrl: string;
   section: number;
   source?: string | null;
+  /** Changes when a citation should move the pane, even if the section number did not. */
+  focusKey?: number;
+  heading?: string;
+  excerpt?: string;
 }) {
   const [text, setText] = useState<string | null>(source ?? null);
   const [error, setError] = useState<string | null>(null);
   const paneRef = useRef<HTMLDivElement>(null);
   useContainedScroll(paneRef);
-  const scrolledSection = useRef<number | null>(null);
+  const scrolledSection = useRef<string | null>(null);
 
   useEffect(() => {
     if (source) {
@@ -45,20 +58,26 @@ export function MarkdownPane({
   const sections = text ? parseMarkdownSections(text) : [];
   const active = sections.some((item) => item.index === section) ? section : sections[0]?.index ?? 1;
 
-  useEffect(() => {
-    const node = document.getElementById(`md-section-${active}`);
-    if (!node || scrolledSection.current === active) return;
-    const openingOnFirst = scrolledSection.current === null && active <= 1;
-    scrolledSection.current = active;
-    if (openingOnFirst) return;
+  useLayoutEffect(() => {
+    if (!text) return;
     const pane = paneRef.current;
     if (!pane) return;
+    const article = articleForCitation(pane, active, heading);
+    if (!article) return;
+    const signature = `${focusKey}:${active}:${heading ?? ""}:${excerpt ?? ""}`;
+    const opening = focusKey === 0 && scrolledSection.current === null && active <= 1;
+    if (!opening && scrolledSection.current === signature) return;
+    scrolledSection.current = signature;
+    if (opening) return;
+    const located = excerpt ? findExcerptInRoot(article, excerpt) : null;
+    const top = located
+      ? scrollOffsetForText(pane, located.node, located.offset)
+      : scrollOffsetWithin(pane, article);
     const reduce =
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const top = node.getBoundingClientRect().top - pane.getBoundingClientRect().top + pane.scrollTop;
-    pane.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
-  }, [active, sections.length]);
+    scrollPane(pane, top, reduce ? "auto" : "smooth");
+  }, [text, active, focusKey, heading, excerpt]);
 
   return (
     <div className="flex h-[50dvh] max-h-[50dvh] w-full min-w-0 max-w-full shrink-0 flex-col overflow-hidden lg:h-full lg:max-h-none lg:min-h-0 lg:flex-1">
@@ -84,6 +103,7 @@ export function MarkdownPane({
                 <article
                   key={item.index}
                   id={`md-section-${item.index}`}
+                  data-md-heading={item.heading}
                   className={[
                     "rounded-xl border bg-white px-4 py-4 text-sm leading-relaxed text-slate-800 shadow-sm",
                     selected ? "border-[#c7c9f5]" : "border-slate-200",
@@ -101,4 +121,18 @@ export function MarkdownPane({
       </div>
     </div>
   );
+}
+
+function articleForCitation(
+  pane: HTMLElement,
+  section: number,
+  heading: string | undefined,
+): HTMLElement | null {
+  if (heading) {
+    for (const article of pane.querySelectorAll("article")) {
+      if (article.getAttribute("data-md-heading") === heading) return article;
+    }
+  }
+  const byIndex = document.getElementById(`md-section-${section}`);
+  return byIndex instanceof HTMLElement ? byIndex : null;
 }

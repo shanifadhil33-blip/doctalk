@@ -14,11 +14,10 @@ import { embedText, embeddingModelFromEnv } from "@/lib/embeddings/embed";
 import { createGeminiEmbeddingClient } from "@/lib/embeddings/gemini";
 import {
   answerFromPassages,
-  isDocumentOverviewQuestion,
   type RetrievalCitation,
 } from "@/lib/retrieval/answer";
 import { documentTitleFromFileName, recordAskedQuestion } from "@/lib/questions/history";
-import { loadDocumentPassages, searchDocumentChunks } from "@/lib/retrieval/search";
+import { passagesForAsk } from "@/lib/retrieval/search";
 
 const QUESTION_MAX = 2000;
 
@@ -86,16 +85,13 @@ export async function askDocument(input: {
       : null;
     const passages = demoPassages
       ? demoPassages
-      : isDocumentOverviewQuestion(question)
-        ? await loadDocumentPassages(input.documentId)
-        : await searchDocumentChunks(
-            input.documentId,
-            await embedText(
-              question,
-              createGeminiEmbeddingClient({ apiKey }),
-              embeddingModelFromEnv(env),
-            ),
-          );
+      : await passagesForAsk(input.documentId, question, () =>
+          embedText(
+            question,
+            createGeminiEmbeddingClient({ apiKey }),
+            embeddingModelFromEnv(env),
+          ),
+        );
     const result = await answerFromPassages(question, passages, (prompt) =>
       completePrompt(env, prompt),
     );

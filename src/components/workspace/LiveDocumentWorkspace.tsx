@@ -17,6 +17,7 @@ import type { Citation } from "@/lib/document-types";
 import { answerMarkdownLocally } from "@/lib/markdown/local-answer";
 import { isMarkdownFileName } from "@/lib/markdown/sections";
 import { useContainedScroll, useStableDocumentScroll } from "@/components/workspace/scroll-contain";
+import { scrollPane } from "@/components/workspace/scroll-passage";
 
 const RealPdfViewer = dynamic(
   () => import("@/components/workspace/RealPdfViewer").then((mod) => mod.RealPdfViewer),
@@ -63,6 +64,9 @@ export function LiveDocumentWorkspace({
   const [page, setPage] = useState(initialPage && initialPage > 0 ? initialPage : 1);
   const [pageCount, setPageCount] = useState(0);
   const [activePassageId, setActivePassageId] = useState<string | null>(null);
+  const [focus, setFocus] = useState<{ key: number; heading?: string; excerpt?: string }>({
+    key: 0,
+  });
   const [messages, setMessages] = useState<ThreadMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
@@ -71,6 +75,12 @@ export function LiveDocumentWorkspace({
   const [noteText, setNoteText] = useState<string | null>(null);
   const markdown = isMarkdownFileName(fileName);
   const ready = documentStatus === "ready" && (!localAnswers || !markdown || noteText !== null);
+
+  useEffect(() => {
+    const pane = answerScrollRef.current;
+    if (!pane || !pending) return;
+    scrollPane(pane, pane.scrollHeight, "auto");
+  }, [pending, messages.length]);
 
   useEffect(() => {
     if (!markdown) return;
@@ -110,10 +120,7 @@ export function LiveDocumentWorkspace({
       ]);
       setLiveStatus(result.answer);
       const first = citations[0];
-      if (first) {
-        setPage(first.page);
-        setActivePassageId(first.passageId);
-      }
+      if (first) revealCitation(first);
       setPending(false);
       return;
     }
@@ -142,10 +149,7 @@ export function LiveDocumentWorkspace({
       ]);
       setLiveStatus(answer);
       const first = citations[0];
-      if (first) {
-        setPage(first.page);
-        setActivePassageId(first.passageId);
-      }
+      if (first) revealCitation(first);
     } catch {
       const text = "Could not answer that question. Try again later.";
       setMessages((current) => [
@@ -156,6 +160,16 @@ export function LiveDocumentWorkspace({
     } finally {
       setPending(false);
     }
+  }
+
+  function revealCitation(citation: Citation) {
+    setPage(citation.page);
+    setActivePassageId(citation.passageId);
+    setFocus((current) => ({
+      key: current.key + 1,
+      heading: citation.label,
+      excerpt: citation.quote,
+    }));
   }
 
   async function onDelete() {
@@ -198,12 +212,20 @@ export function LiveDocumentWorkspace({
       </div>
       <main id="main" className="flex w-full min-w-0 max-w-full flex-col lg:min-h-0 lg:flex-1 lg:flex-row lg:overflow-hidden">
         {markdown ? (
-          <MarkdownPane fileUrl={pdfSrc} section={page} source={noteText} />
+          <MarkdownPane
+            fileUrl={pdfSrc}
+            section={page}
+            source={noteText}
+            focusKey={focus.key}
+            heading={focus.heading}
+            excerpt={focus.excerpt}
+          />
         ) : (
           <RealPdfViewer
             fileUrl={pdfSrc}
             fileName={fileName}
             page={page}
+            focusKey={focus.key}
             onPageCount={setPageCount}
           />
         )}
@@ -255,14 +277,22 @@ export function LiveDocumentWorkspace({
                       text={message.text}
                       citations={message.citations}
                       activePassageId={activePassageId}
-                      onSelectCitation={(citation) => {
-                        setPage(citation.page);
-                        setActivePassageId(citation.passageId);
-                      }}
+                      onSelectCitation={revealCitation}
                     />
                   </li>
                 ),
               )}
+              {pending ? (
+                <li>
+                  <div
+                    role="status"
+                    aria-label="Waiting for an answer"
+                    className="flex h-10 items-center text-slate-500"
+                  >
+                    <RollingMark className="h-5 w-5" />
+                  </div>
+                </li>
+              ) : null}
             </ol>
           </div>
           <form onSubmit={(event) => void onSubmit(event)} className="min-w-0 border-t border-slate-200 p-4">
@@ -287,16 +317,7 @@ export function LiveDocumentWorkspace({
                 Send
               </button>
             </div>
-            <div className="mt-2 flex h-4 items-center justify-between gap-3">
-              <p className="text-xs text-slate-500">Press Enter to send</p>
-              <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-slate-500">
-                {pending ? (
-                  <span role="status" aria-label="Waiting for an answer">
-                    <RollingMark />
-                  </span>
-                ) : null}
-              </span>
-            </div>
+            <p className="mt-2 text-xs text-slate-500">Press Enter to send</p>
           </form>
         </aside>
       </main>
