@@ -60,7 +60,7 @@ export function RealPdfViewer({
   }, [safePage, pageCount, pageWidth]);
 
   return (
-    <div className="flex h-full min-h-0 w-full min-w-0 max-w-full flex-1 flex-col overflow-hidden">
+    <div className="flex h-[70dvh] min-h-[28rem] w-full min-w-0 max-w-full shrink-0 flex-col overflow-hidden lg:h-full lg:min-h-0 lg:flex-1">
       <div className="flex w-full min-w-0 max-w-full flex-wrap items-center gap-2 border-b border-slate-200 bg-white px-3 py-2">
         <button
           type="button"
