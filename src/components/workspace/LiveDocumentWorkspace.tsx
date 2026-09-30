@@ -123,40 +123,42 @@ export function LiveDocumentWorkspace({
   const pageCountLabel = pageCount > 0 ? `${pageCount} pages · PDF` : "PDF";
 
   return (
-    <div className="flex min-h-screen w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8] lg:h-dvh">
-      <SkipLink />
-      <TopBar
-        leading={<DocumentHeading title={fileName} meta={pageCountLabel} />}
-        actions={
-          <>
-            {canDelete ? (
-              <button type="button" className={secondaryButtonClass} onClick={() => void onDelete()}>
-                Delete
-              </button>
-            ) : null}
-            <Link href="/documents?upload=1" className={secondaryButtonClass}>
-              <UploadGlyph />
-              <span className="hidden sm:inline">Upload PDF</span>
-            </Link>
-            {headerAccount}
-          </>
-        }
-      />
-      <main id="main" className="flex w-full min-w-0 max-w-full flex-1 flex-col overflow-x-hidden lg:min-h-0 lg:flex-row">
+    <div className="flex h-dvh w-full min-w-0 max-w-full flex-col overflow-hidden bg-[#f5f6f8]">
+      <div className="shrink-0">
+        <SkipLink />
+        <TopBar
+          leading={<DocumentHeading title={fileName} meta={pageCountLabel} />}
+          actions={
+            <>
+              {canDelete ? (
+                <button type="button" className={secondaryButtonClass} onClick={() => void onDelete()}>
+                  Delete
+                </button>
+              ) : null}
+              <Link href="/documents?upload=1" className={secondaryButtonClass}>
+                <UploadGlyph />
+                <span className="hidden sm:inline">Upload PDF</span>
+              </Link>
+              {headerAccount}
+            </>
+          }
+        />
+      </div>
+      <main id="main" className="flex min-h-0 w-full min-w-0 max-w-full flex-1 flex-col overflow-hidden lg:flex-row">
         <RealPdfViewer
           fileUrl={pdfSrc}
           fileName={fileName}
           page={page}
           onPageCount={setPageCount}
         />
-        <aside className="flex w-full min-w-0 max-w-full flex-col border-t border-slate-200 bg-white lg:min-h-0 lg:w-[420px] lg:shrink-0 lg:overflow-hidden lg:border-l lg:border-t-0">
+        <aside className="flex w-full min-w-0 max-w-full shrink-0 flex-col border-t border-slate-200 bg-white lg:min-h-0 lg:w-[420px] lg:shrink-0 lg:overflow-hidden lg:border-l lg:border-t-0">
           <div className="border-b border-slate-200 px-5 py-4">
             <h2 className="text-base font-semibold text-slate-950">Ask this document</h2>
             <p className="mt-1 text-sm text-slate-500">
               {pageCount > 0 ? `${pageCount} pages` : "PDF"}
             </p>
           </div>
-          <div className="space-y-4 px-4 py-4 lg:min-h-0 lg:flex-1 lg:overflow-auto">
+          <div className="max-h-36 space-y-4 overflow-y-auto px-4 py-4 lg:max-h-none lg:min-h-0 lg:flex-1 lg:overflow-auto">
             <p className="sr-only" aria-live="polite">
               {liveStatus}
             </p>
@@ -227,7 +229,10 @@ export function LiveDocumentWorkspace({
           </form>
         </aside>
       </main>
-      <SiteFooter />
+      <div className="h-8 shrink-0 lg:hidden" aria-hidden="true" />
+      <div className="shrink-0">
+        <SiteFooter />
+      </div>
     </div>
   );
 }
