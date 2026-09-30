@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { chunks } from "@/db/schema";
 import { EMBEDDING_DIMENSIONS } from "@/lib/embeddings/embed";
@@ -35,6 +35,28 @@ export async function searchDocumentChunks(
     .from(chunks)
     .where(and(eq(chunks.documentId, documentId), sql`${chunks.embedding} IS NOT NULL`))
     .orderBy(sql`${chunks.embedding} <=> ${literal}::vector`)
+    .limit(limit);
+
+  return rows.map((row) => ({
+    page: pageNumberFromChunk(row),
+    content: row.content,
+  }));
+}
+
+/** Opening passages in document order, for a summary of the whole file. */
+export async function loadDocumentPassages(
+  documentId: string,
+  limit = 8,
+): Promise<Passage[]> {
+  const rows = await getDb()
+    .select({
+      content: chunks.content,
+      page: chunks.page,
+      metadata: chunks.metadata,
+    })
+    .from(chunks)
+    .where(eq(chunks.documentId, documentId))
+    .orderBy(asc(chunks.chunkIndex))
     .limit(limit);
 
   return rows.map((row) => ({

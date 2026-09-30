@@ -29,6 +29,8 @@ describe("parsePdfPages", () => {
     );
     const pages = await parsePdfPages(new Uint8Array(bytes));
     expect(pages.length).toBe(invoice.pages.length);
-    expect(pages[1]?.text).toContain("Total due: 2400.00 USD");
+    expect(pages.length).toBeGreaterThanOrEqual(4);
+    expect(pages[1]?.text).toContain("Total due: 2440.00 USD");
+    expect(pages[0]?.text.length).toBeGreaterThan(200);
   });
 });

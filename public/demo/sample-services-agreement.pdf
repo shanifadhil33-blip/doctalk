@@ -3,93 +3,597 @@
 << /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<< /Type /Pages /Kids [4 0 R 6 0 R 8 0 R] /Count 3 >>
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R 13 0 R] /Count 5 >>
 endobj
 3 0 obj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 4 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 5 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
 endobj
 5 0 obj
-<< /Length 320 >>
-stream
-BT
-/F1 11 Tf
-54 740 Td
-16 TL
-(SAMPLE SERVICES AGREEMENT) Tj
-T*
-(Agreement number: SSA-2026-014) Tj
-T*
-(This sample agreement is between Northwind Studio \(Provider\) and Harbor Supplies \(Client\).) Tj
-T*
-(Effective date: April 1, 2026) Tj
-T*
-(The parties wrote this text as a sample. It is not a signed contract.) Tj
-ET
-endstream
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 6 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
 endobj
 6 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 7 0 R /Resources << /Font << /F1 3 0 R >> >> >>
-endobj
-7 0 obj
-<< /Length 343 >>
+<< /Length 2168 >>
 stream
 BT
-/F1 11 Tf
-54 740 Td
-16 TL
-(2. Scope of work) Tj
-T*
-(Provider will prepare one monthly product catalog layout for Client.) Tj
-T*
-(Provider will deliver the print-ready file on the first Monday of each month.) Tj
-T*
-(3. Fees) Tj
-T*
-(Client will pay Provider 2400 dollars per month.) Tj
-T*
-(Invoices are due on the 5th day of the month.) Tj
+0 0 0 rg
+/F2 18 Tf
+1 0 0 1 54 730.00 Tm
+(SAMPLE SERVICES AGREEMENT) Tj
+ET
+0.75 0.75 0.75 RG
+0.8 w
+54 700.00 m 558 700.00 l S
+0 0 0 RG
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 682.00 Tm
+(Northwind Studio and Harbor Supplies) Tj
+ET
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 667.00 Tm
+(Agreement number: SSA-2026-014) Tj
+ET
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 652.00 Tm
+(Effective date: April 1, 2026) Tj
+ET
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 637.00 Tm
+(Term: April 1, 2026 through March 31, 2027) Tj
+ET
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 622.00 Tm
+(This text is a sample. It is not a signed contract.) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 599.00 Tm
+(Northwind Studio \(Provider\) and Harbor Supplies \(Client\) wrote this sample so a reader can) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 583.00 Tm
+(ask about scope, fees, dates, and notice. Elena Voss signs for the Provider. Chris Patel signs) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 567.00 Tm
+(for the Client. Neither signature is on this copy.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 529.00 Tm
+(1. Parties and notices) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 506.00 Tm
+(Provider's office for this sample is 120 Sample Avenue, Portland, OR 97204. Client's office is) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 490.00 Tm
+(488 Market Street, Portland, OR 97204. Notices go to contracts@example.com and are) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 474.00 Tm
+(effective when the other party receives them on a business day. A notice received after 5:00) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 458.00 Tm
+(p.m. Pacific Time counts as received at 9:00 a.m. the next business day.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 420.00 Tm
+(2. Purpose) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 397.00 Tm
+(Provider will prepare Client's monthly product catalog. The work is layout only. Provider does) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 381.00 Tm
+(not print the catalog, buy media, or sell Client's goods. Each month stands on its own once the) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 365.00 Tm
+(invoice for that month is paid.) Tj
+ET
+BT
+0.35 0.35 0.35 rg
+/F1 9 Tf
+1 0 0 1 54 36 Tm
+(Sample document - Page 1 of 5) Tj
 ET
 endstream
 endobj
-8 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 9 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 8 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
 endobj
-9 0 obj
-<< /Length 270 >>
+8 0 obj
+<< /Length 2071 >>
 stream
 BT
-/F1 11 Tf
-54 740 Td
-16 TL
-(4. Termination) Tj
-T*
-(Either party may end this agreement by giving 14 days written notice.) Tj
-T*
-(5. Governing law) Tj
-T*
-(This agreement is governed by the laws of the State of Oregon.) Tj
-T*
-(Notices go to contracts@example.com.) Tj
+0 0 0 rg
+/F2 18 Tf
+1 0 0 1 54 730.00 Tm
+(SAMPLE SERVICES AGREEMENT) Tj
+ET
+0.75 0.75 0.75 RG
+0.8 w
+54 700.00 m 558 700.00 l S
+0 0 0 RG
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 682.00 Tm
+(SSA-2026-014, continued. Effective April 1, 2026.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 651.00 Tm
+(3. Scope of work) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 628.00 Tm
+(Provider will prepare one monthly product catalog layout of 24 pages for Client. The layout) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 612.00 Tm
+(covers the product list Chris Patel sends by the 20th of the prior month. Provider will deliver) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 596.00 Tm
+(the print-ready file on the first Monday of each month, starting Monday, May 4, 2026. A month) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 580.00 Tm
+(with no list by the 20th is billed at the monthly fee and delivered as a cover plus a note that the) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 564.00 Tm
+(list was late.) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 534.00 Tm
+(The May 2026 catalog uses the April 20, 2026 list of 186 items. Provider includes one round of) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 518.00 Tm
+(revisions on the cover and the contents page. Further revisions are 85.00 USD per hour, billed) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 502.00 Tm
+(in half hours, and only after Chris Patel approves the hours in writing.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 464.00 Tm
+(4. Client duties) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 441.00 Tm
+(Client will name one contact. For this sample the contact is Chris Patel, purchasing manager,) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 425.00 Tm
+(chris.patel@example.com. Client will supply product names, prices, and photographs that) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 409.00 Tm
+(Client has the right to use. Provider may rely on those prices. A wrong price in the catalog is) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 393.00 Tm
+(Client's correction to make on the next month's list.) Tj
+ET
+BT
+0.35 0.35 0.35 rg
+/F1 9 Tf
+1 0 0 1 54 36 Tm
+(Sample document - Page 2 of 5) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 10 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
+endobj
+10 0 obj
+<< /Length 1841 >>
+stream
+BT
+0 0 0 rg
+/F2 18 Tf
+1 0 0 1 54 730.00 Tm
+(SAMPLE SERVICES AGREEMENT) Tj
+ET
+0.75 0.75 0.75 RG
+0.8 w
+54 700.00 m 558 700.00 l S
+0 0 0 RG
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 682.00 Tm
+(SSA-2026-014, continued.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 651.00 Tm
+(5. Fees) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 628.00 Tm
+(Client will pay Provider 2400.00 USD per month for the catalog layout. The fee covers the) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 612.00 Tm
+(24-page file and one revision round. It does not cover printing, postage, or photography.) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 582.00 Tm
+(Out-of-pocket expenses are capped at 150.00 USD per month unless Chris Patel approves a) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 566.00 Tm
+(higher amount in writing. The May 2026 expense estimate is 40.00 USD for a proof courier to) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 550.00 Tm
+(488 Market Street.) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 520.00 Tm
+(Invoices are due on the 5th day of the month. Invoice INV-1044, dated May 2, 2026, is the first) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 504.00 Tm
+(invoice under this agreement and is due May 16, 2026. Undisputed amounts unpaid 15 days) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 488.00 Tm
+(after the due date accrue interest at 1.5 percent per month.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 450.00 Tm
+(6. Acceptance) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 427.00 Tm
+(Client has 5 business days after delivery to accept the file or to send a written list of) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 411.00 Tm
+(corrections. Silence after 5 business days is acceptance. The May 4, 2026 delivery is accepted) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 395.00 Tm
+(if Client sends no list by May 11, 2026.) Tj
+ET
+BT
+0.35 0.35 0.35 rg
+/F1 9 Tf
+1 0 0 1 54 36 Tm
+(Sample document - Page 3 of 5) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 12 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
+endobj
+12 0 obj
+<< /Length 1999 >>
+stream
+BT
+0 0 0 rg
+/F2 18 Tf
+1 0 0 1 54 730.00 Tm
+(SAMPLE SERVICES AGREEMENT) Tj
+ET
+0.75 0.75 0.75 RG
+0.8 w
+54 700.00 m 558 700.00 l S
+0 0 0 RG
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 682.00 Tm
+(SSA-2026-014, continued.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 651.00 Tm
+(7. Term) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 628.00 Tm
+(This agreement starts on April 1, 2026 and ends on March 31, 2027 unless ended earlier) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 612.00 Tm
+(under section 8. It does not renew on its own. A new term needs a new written agreement) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 596.00 Tm
+(number.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 558.00 Tm
+(8. Termination) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 535.00 Tm
+(Either party may end this agreement by giving 14 days written notice. Provider will finish a) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 519.00 Tm
+(catalog whose list arrived before the notice and will invoice that month. Client will pay for work) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 503.00 Tm
+(done through the end date. A notice sent on June 1, 2026 would end the agreement on June) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 487.00 Tm
+(15, 2026.) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 457.00 Tm
+(If Client does not pay an undisputed invoice within 30 days after the due date, Provider may) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 441.00 Tm
+(stop work until the invoice is paid. Stopping work is not itself a termination.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 403.00 Tm
+(9. Ownership) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 380.00 Tm
+(After Client pays the invoice for a month, Client owns that month's catalog file. Provider keeps) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 364.00 Tm
+(its type styles, grid, and working files. Provider may show the cover in a sample portfolio if the) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 348.00 Tm
+(prices and the Harbor Supplies name are removed.) Tj
+ET
+BT
+0.35 0.35 0.35 rg
+/F1 9 Tf
+1 0 0 1 54 36 Tm
+(Sample document - Page 4 of 5) Tj
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 14 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
+endobj
+14 0 obj
+<< /Length 1620 >>
+stream
+BT
+0 0 0 rg
+/F2 18 Tf
+1 0 0 1 54 730.00 Tm
+(SAMPLE SERVICES AGREEMENT) Tj
+ET
+0.75 0.75 0.75 RG
+0.8 w
+54 700.00 m 558 700.00 l S
+0 0 0 RG
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 682.00 Tm
+(SSA-2026-014, continued.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 651.00 Tm
+(10. Confidentiality) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 628.00 Tm
+(Each party will keep the other's non-public prices, supplier names, and schedules private and) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 612.00 Tm
+(will use them only to perform this agreement. The duty lasts for 2 years after March 31, 2027.) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 596.00 Tm
+(A document that is already public is not covered.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 558.00 Tm
+(11. Governing law) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 535.00 Tm
+(This agreement is governed by the laws of the State of Oregon. The sample venue is the state) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 519.00 Tm
+(courts in Multnomah County, Oregon. The parties wrote the venue for the sample only.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 481.00 Tm
+(12. Sample notice) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 458.00 Tm
+(Elena Voss, studio director, Northwind Studio, and Chris Patel, purchasing manager, Harbor) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 442.00 Tm
+(Supplies, are fictional contacts. The fee of 2400.00 USD, the 14 day notice, and the addresses) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 426.00 Tm
+(in this agreement are sample figures. Do not treat this file as a contract of a real company.) Tj
+ET
+BT
+0.35 0.35 0.35 rg
+/F1 9 Tf
+1 0 0 1 54 36 Tm
+(Sample document - Page 5 of 5) Tj
 ET
 endstream
 endobj
 xref
-0 10
+0 15
 0000000000 65535 f 
 0000000009 00000 n 
 0000000058 00000 n 
-0000000127 00000 n 
-0000000197 00000 n 
-0000000323 00000 n 
-0000000694 00000 n 
-0000000820 00000 n 
-0000001214 00000 n 
-0000001340 00000 n 
+0000000141 00000 n 
+0000000211 00000 n 
+0000000286 00000 n 
+0000000422 00000 n 
+0000002642 00000 n 
+0000002778 00000 n 
+0000004901 00000 n 
+0000005038 00000 n 
+0000006932 00000 n 
+0000007070 00000 n 
+0000009122 00000 n 
+0000009260 00000 n 
 trailer
-<< /Size 10 /Root 1 0 R >>
+<< /Size 15 /Root 1 0 R >>
 startxref
-1661
+10933
 %%EOF

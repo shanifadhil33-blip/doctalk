@@ -1,4 +1,4 @@
-import { demoPdfs } from "@/lib/demo/pdf-catalog";
+import { demoPdfs, plainDemoLine } from "@/lib/demo/pdf-catalog";
 import { getDemoDocument } from "@/lib/demo-documents";
 import { blockText } from "@/lib/document-types";
 
@@ -45,7 +45,7 @@ export function documentPreviewLines(
   const seeded = demoPdfs.find((pdf) => pdf.fileName === fileName);
   const seededPage = seeded?.pages[0];
   if (seeded && isSampleStatus(status) && seededPage && seededPage.length > 0) {
-    return seededPage.slice(0, PREVIEW_LINE_LIMIT);
+    return seededPage.map(plainDemoLine).filter((line) => line.length > 0).slice(0, PREVIEW_LINE_LIMIT);
   }
 
   const page = getDemoDocument(id)?.pages[0];

@@ -3,75 +3,451 @@
 << /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<< /Type /Pages /Kids [4 0 R 6 0 R] /Count 2 >>
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R] /Count 4 >>
 endobj
 3 0 obj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 4 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 5 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
 endobj
 5 0 obj
-<< /Length 228 >>
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 6 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
+endobj
+6 0 obj
+<< /Length 1567 >>
 stream
 BT
-/F1 11 Tf
-54 740 Td
-16 TL
+0 0 0 rg
+/F2 18 Tf
+1 0 0 1 54 730.00 Tm
 (SAMPLE INVOICE) Tj
-T*
-(From: Northwind Studio) Tj
-T*
+ET
+0.75 0.75 0.75 RG
+0.8 w
+54 700.00 m 558 700.00 l S
+0 0 0 RG
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 682.00 Tm
+(From: Northwind Studio, 120 Sample Avenue, Portland, OR 97204) Tj
+ET
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 667.00 Tm
 (Invoice number: INV-1044) Tj
-T*
+ET
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 652.00 Tm
 (Invoice date: May 2, 2026) Tj
-T*
+ET
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 637.00 Tm
+(Agreement: SSA-2026-014) Tj
+ET
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 622.00 Tm
 (Bill to: Harbor Supplies) Tj
-T*
+ET
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 607.00 Tm
+(Attention: Chris Patel, purchasing manager) Tj
+ET
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 592.00 Tm
 (488 Market Street, Portland, OR 97204) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 569.00 Tm
+(This sample invoice bills the May 2026 catalog layout under the sample services agreement. It) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 553.00 Tm
+(is not a request for a real payment. The figures below are the ones a reader can ask about.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 515.00 Tm
+(Account) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 492.00 Tm
+(Customer account: HS-4418. Prepared by Elena Voss on May 2, 2026. The purchase order on) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 476.00 Tm
+(Client's April 20 list is PO-7781. Quote the invoice number INV-1044 on any question about) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 460.00 Tm
+(these figures.) Tj
+ET
+BT
+0.35 0.35 0.35 rg
+/F1 9 Tf
+1 0 0 1 54 36 Tm
+(Sample document - Page 1 of 4) Tj
 ET
 endstream
 endobj
-6 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 7 0 R /Resources << /Font << /F1 3 0 R >> >> >>
-endobj
 7 0 obj
-<< /Length 272 >>
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 8 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
+endobj
+8 0 obj
+<< /Length 1481 >>
 stream
 BT
-/F1 11 Tf
-54 740 Td
-16 TL
-(Description: Monthly catalog layout) Tj
-T*
-(Quantity: 1) Tj
-T*
-(Amount: 2400.00 USD) Tj
-T*
-(Subtotal: 2400.00 USD) Tj
-T*
-(Tax: 0.00 USD) Tj
-T*
-(Total due: 2400.00 USD) Tj
-T*
-(Payment due date: May 16, 2026) Tj
-T*
-(Pay by bank transfer.) Tj
+0 0 0 rg
+/F2 18 Tf
+1 0 0 1 54 730.00 Tm
+(SAMPLE INVOICE) Tj
+ET
+0.75 0.75 0.75 RG
+0.8 w
+54 700.00 m 558 700.00 l S
+0 0 0 RG
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 682.00 Tm
+(INV-1044, page 2. Invoice date May 2, 2026.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 651.00 Tm
+(Charges) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 628.00 Tm
+(Description: Monthly catalog layout, May 2026, 24 pages, 186 items from the April 20, 2026) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 612.00 Tm
+(list. Quantity: 1. Rate: 2400.00 USD. Amount: 2400.00 USD.) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 582.00 Tm
+(Description: Cover revision round included in the monthly fee. Quantity: 1. Amount: 0.00 USD.) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 552.00 Tm
+(Description: Proof courier to 488 Market Street on May 4, 2026. Quantity: 1. Amount: 40.00) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 536.00 Tm
+(USD. This courier is inside the 150.00 USD monthly expense cap.) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 506.00 Tm
+(Subtotal: 2440.00 USD.) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 484.00 Tm
+(Tax: 0.00 USD. No tax is charged on this sample.) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 462.00 Tm
+(Total due: 2440.00 USD.) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 432.00 Tm
+(The amount to pay is the layout fee of 2400.00 USD plus the 40.00 USD courier. Total due:) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 416.00 Tm
+(2440.00 USD.) Tj
+ET
+BT
+0.35 0.35 0.35 rg
+/F1 9 Tf
+1 0 0 1 54 36 Tm
+(Sample document - Page 2 of 4) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 10 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
+endobj
+10 0 obj
+<< /Length 2016 >>
+stream
+BT
+0 0 0 rg
+/F2 18 Tf
+1 0 0 1 54 730.00 Tm
+(SAMPLE INVOICE) Tj
+ET
+0.75 0.75 0.75 RG
+0.8 w
+54 700.00 m 558 700.00 l S
+0 0 0 RG
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 682.00 Tm
+(INV-1044, page 3. Payment instructions.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 651.00 Tm
+(Payment) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 628.00 Tm
+(Payment due date: May 16, 2026. That is 14 days after the invoice date of May 2, 2026. Pay) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 612.00 Tm
+(by bank transfer to the sample account named Northwind Studio Demo, routing 000000000,) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 596.00 Tm
+(account 000000000. Those numbers are not a real bank account.) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 566.00 Tm
+(Write INV-1044 and PO-7781 on the transfer. A transfer that omits the invoice number is still) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 550.00 Tm
+(credited to Harbor Supplies account HS-4418 if the amount is 2440.00 USD and the date is in) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 534.00 Tm
+(May 2026.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 496.00 Tm
+(Late amount) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 473.00 Tm
+(If the 2440.00 USD is still unpaid on May 31, 2026, the sample late charge is 1.5 percent of) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 457.00 Tm
+(2440.00 USD, which is 36.60 USD, and is then due together with the invoice. The agreement) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 441.00 Tm
+(allows Provider to stop the June layout until INV-1044 is paid.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 403.00 Tm
+(What was delivered) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 380.00 Tm
+(Elena Voss delivered the print-ready file on Monday, May 4, 2026. Chris Patel had until May) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 364.00 Tm
+(11, 2026 to send corrections. No correction list was received, so the May catalog is accepted) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 348.00 Tm
+(under section 6 of SSA-2026-014.) Tj
+ET
+BT
+0.35 0.35 0.35 rg
+/F1 9 Tf
+1 0 0 1 54 36 Tm
+(Sample document - Page 3 of 4) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 12 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
+endobj
+12 0 obj
+<< /Length 1674 >>
+stream
+BT
+0 0 0 rg
+/F2 18 Tf
+1 0 0 1 54 730.00 Tm
+(SAMPLE INVOICE) Tj
+ET
+0.75 0.75 0.75 RG
+0.8 w
+54 700.00 m 558 700.00 l S
+0 0 0 RG
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 682.00 Tm
+(INV-1044, page 4. Notes.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 651.00 Tm
+(Related documents) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 628.00 Tm
+(This invoice belongs with sample agreement SSA-2026-014, effective April 1, 2026, between) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 612.00 Tm
+(Northwind Studio and Harbor Supplies. The monthly fee in that agreement is 2400.00 USD,) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 596.00 Tm
+(and invoices are due on the 5th day of the month. This invoice was issued on May 2, 2026, a) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 580.00 Tm
+(Saturday, and the due date was moved to May 16, 2026.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 542.00 Tm
+(Questions about a line) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 519.00 Tm
+(Questions about a line on INV-1044 go to Elena Voss at billing@example.com. A question) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 503.00 Tm
+(about the 186 items on the April 20 list goes to Chris Patel at chris.patel@example.com.) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 487.00 Tm
+(Neither address receives real mail.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 449.00 Tm
+(Sample notice) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 426.00 Tm
+(Harbor Supplies, Northwind Studio, Chris Patel, and Elena Voss are fictional. Do not send) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 410.00 Tm
+(money. The only amount due on this sample is Total due: 2440.00 USD, by May 16, 2026.) Tj
+ET
+BT
+0.35 0.35 0.35 rg
+/F1 9 Tf
+1 0 0 1 54 36 Tm
+(Sample document - Page 4 of 4) Tj
 ET
 endstream
 endobj
 xref
-0 8
+0 13
 0000000000 65535 f 
 0000000009 00000 n 
 0000000058 00000 n 
-0000000121 00000 n 
-0000000191 00000 n 
-0000000317 00000 n 
-0000000596 00000 n 
-0000000722 00000 n 
+0000000134 00000 n 
+0000000204 00000 n 
+0000000279 00000 n 
+0000000415 00000 n 
+0000002034 00000 n 
+0000002170 00000 n 
+0000003703 00000 n 
+0000003840 00000 n 
+0000005909 00000 n 
+0000006047 00000 n 
 trailer
-<< /Size 8 /Root 1 0 R >>
+<< /Size 13 /Root 1 0 R >>
 startxref
-1045
+7774
 %%EOF

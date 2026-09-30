@@ -2,10 +2,12 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { config } from "dotenv";
 import { neon } from "@neondatabase/serverless";
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { demoPdfs } from "../lib/demo/pdf-catalog";
 import { embedWithClient, prepareDocumentChunks } from "../lib/documents/ingest";
+import { chunkPages } from "../lib/pdf/chunk";
+import { parsePdfPages } from "../lib/pdf/parse";
 import { createGeminiEmbeddingClient } from "../lib/embeddings/gemini";
 import { chunks, documents, settings } from "./schema";
 
@@ -44,14 +46,42 @@ async function seed() {
       .from(documents)
       .where(and(eq(documents.isDemo, true), eq(documents.fileName, demo.fileName)))
       .limit(1);
-    if (existing.length > 0) {
-      console.log(`Demo already seeded: ${demo.fileName}`);
-      continue;
-    }
-
     const bytes = new Uint8Array(
       await readFile(path.join(process.cwd(), "public", "demo", demo.diskName)),
     );
+    const freshText = chunkPages(await parsePdfPages(bytes)).map((piece) => piece.content);
+
+    const current = existing[0];
+    if (current) {
+      const stored = await db
+        .select({ content: chunks.content })
+        .from(chunks)
+        .where(eq(chunks.documentId, current.id))
+        .orderBy(asc(chunks.chunkIndex));
+      const same =
+        stored.length === freshText.length &&
+        stored.every((row, index) => row.content === freshText[index]);
+      if (same) {
+        console.log(`Demo already current: ${demo.fileName}`);
+        continue;
+      }
+      const prepared = await prepareDocumentChunks(bytes, embed);
+      await db.delete(chunks).where(eq(chunks.documentId, current.id));
+      await db.insert(chunks).values(
+        prepared.map((piece) => ({
+          documentId: current.id,
+          content: piece.content,
+          embedding: piece.embedding,
+          chunkIndex: piece.chunkIndex,
+          page: piece.page,
+          metadata: piece.metadata,
+        })),
+      );
+      inserted += 1;
+      console.log(`Refreshed ${demo.fileName} (${prepared.length} chunks)`);
+      continue;
+    }
+
     const prepared = await prepareDocumentChunks(bytes, embed);
     const [doc] = await db
       .insert(documents)

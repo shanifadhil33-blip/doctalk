@@ -1,15 +1,17 @@
 import { ChatConfigError, completePrompt } from "@/lib/ai/chat";
 import { demoLimitMessage } from "@/lib/ai/limits";
 import { decideDocumentAccess } from "@/lib/auth/access";
+import { passagesForDemoFile } from "@/lib/demo/pdf-catalog";
 import { takeDemoQuestionSlot } from "@/lib/demo/quota-store";
 import { lookupDocument } from "@/lib/documents/lookup";
 import { embedText, embeddingModelFromEnv } from "@/lib/embeddings/embed";
 import { createGeminiEmbeddingClient } from "@/lib/embeddings/gemini";
 import {
   answerFromPassages,
+  isDocumentOverviewQuestion,
   type RetrievalCitation,
 } from "@/lib/retrieval/answer";
-import { searchDocumentChunks } from "@/lib/retrieval/search";
+import { loadDocumentPassages, searchDocumentChunks } from "@/lib/retrieval/search";
 
 const QUESTION_MAX = 2000;
 
@@ -67,9 +69,21 @@ export async function askDocument(input: {
   }
 
   try {
-    const client = createGeminiEmbeddingClient({ apiKey });
-    const embedding = await embedText(question, client, embeddingModelFromEnv(env));
-    const passages = await searchDocumentChunks(input.documentId, embedding);
+    const demoPassages = lookup.document.isDemo
+      ? passagesForDemoFile(lookup.document.fileName)
+      : null;
+    const passages = demoPassages
+      ? demoPassages
+      : isDocumentOverviewQuestion(question)
+        ? await loadDocumentPassages(input.documentId)
+        : await searchDocumentChunks(
+            input.documentId,
+            await embedText(
+              question,
+              createGeminiEmbeddingClient({ apiKey }),
+              embeddingModelFromEnv(env),
+            ),
+          );
     const result = await answerFromPassages(question, passages, (prompt) =>
       completePrompt(env, prompt),
     );

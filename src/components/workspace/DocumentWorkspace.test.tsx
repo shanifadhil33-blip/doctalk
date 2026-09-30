@@ -35,6 +35,11 @@ describe("DocumentWorkspace citations", () => {
       />,
     );
 
+    expect(screen.getByRole("link", { name: "Documents" })).toHaveAttribute(
+      "href",
+      "/documents",
+    );
+    expect(screen.getByRole("link", { name: "DocTalk" })).toHaveAttribute("href", "/");
     expect(screen.getByText("3 / 11")).toBeInTheDocument();
     expect(screen.getByText("11 pages")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Export" })).not.toBeInTheDocument();

@@ -9,6 +9,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
 import { TopBar } from "@/components/TopBar";
 import { AssistantAnswer } from "@/components/workspace/AnswerBlock";
+import { DocumentHeading } from "@/components/workspace/DocumentHeading";
 import { LiveDocumentWorkspace } from "@/components/workspace/LiveDocumentWorkspace";
 import { PdfPageViewer } from "@/components/workspace/PdfPageViewer";
 import { answerQuestion } from "@/lib/answer-question";
@@ -243,7 +244,7 @@ function UnindexedWorkspace({
           </div>
         )}
       </div>
-      <aside className="flex w-full shrink-0 flex-col border-t border-slate-200 bg-white lg:w-[420px] lg:border-l lg:border-t-0">
+      <aside className="flex w-full min-w-0 max-w-full shrink-0 flex-col border-t border-slate-200 bg-white lg:w-[420px] lg:border-l lg:border-t-0">
         <div className="border-b border-slate-200 px-5 py-4">
           <h2 className="text-base font-semibold text-slate-950">Ask this document</h2>
           <p className="mt-1 text-sm text-slate-500">Not indexed yet</p>
@@ -312,7 +313,7 @@ function StoredDocumentShell({
           </p>
         ) : null}
       </div>
-      <aside className="flex w-full shrink-0 flex-col border-t border-slate-200 bg-white lg:w-[420px] lg:border-l lg:border-t-0">
+      <aside className="flex w-full min-w-0 max-w-full shrink-0 flex-col border-t border-slate-200 bg-white lg:w-[420px] lg:border-l lg:border-t-0">
         <div className="border-b border-slate-200 px-5 py-4">
           <h2 className="text-base font-semibold text-slate-950">Ask this document</h2>
           <p className="mt-1 text-sm text-slate-500">Not indexed yet</p>
@@ -339,20 +340,10 @@ function WorkspaceFrame({
   children: ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col bg-[#f5f6f8] lg:h-dvh">
+    <div className="flex min-h-screen w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8] lg:h-dvh">
       <SkipLink />
       <TopBar
-        leading={
-          <div className="flex min-w-0 items-center gap-2 text-sm">
-            <span className="text-slate-300" aria-hidden="true">
-              /
-            </span>
-            <h1 className="truncate font-medium text-slate-950">{title}</h1>
-            <span className="hidden shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 sm:inline">
-              {pageCountLabel}
-            </span>
-          </div>
-        }
+        leading={<DocumentHeading title={title} meta={pageCountLabel} />}
         actions={
           <>
             <Link href="/documents?upload=1" className={secondaryButtonClass}>
@@ -363,7 +354,7 @@ function WorkspaceFrame({
           </>
         }
       />
-      <main id="main" className="flex w-full min-w-0 flex-1 flex-col lg:min-h-0 lg:flex-row">
+      <main id="main" className="flex w-full min-w-0 max-w-full flex-1 flex-col overflow-x-hidden lg:min-h-0 lg:flex-row">
         {children}
       </main>
       <SiteFooter />
@@ -391,7 +382,7 @@ function ChatColumn({
   onSelectCitation: (citation: Citation) => void;
 }) {
   return (
-    <aside className="flex min-h-[28rem] w-full shrink-0 flex-col border-t border-slate-200 bg-white lg:min-h-0 lg:w-[420px] lg:border-l lg:border-t-0">
+    <aside className="flex min-h-[28rem] w-full min-w-0 max-w-full shrink-0 flex-col border-t border-slate-200 bg-white lg:min-h-0 lg:w-[420px] lg:border-l lg:border-t-0">
       <div className="border-b border-slate-200 px-5 py-4">
         <h2 className="text-base font-semibold text-slate-950">Ask this document</h2>
         <p className="mt-1 text-sm text-slate-500">{pageCount} pages</p>
@@ -423,7 +414,7 @@ function ChatColumn({
           )}
         </ol>
       </div>
-      <form onSubmit={onSubmit} className="border-t border-slate-200 p-4">
+      <form onSubmit={onSubmit} className="min-w-0 border-t border-slate-200 p-4">
         <label htmlFor="question" className="sr-only">
           Ask a question about this document
         </label>

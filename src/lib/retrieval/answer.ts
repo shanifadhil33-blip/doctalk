@@ -28,8 +28,10 @@ export function buildRetrievalPrompt(
     'Return JSON only: {"answer":"your answer","used":[1,3]}',
     "used lists the passage numbers that support the answer, in the order you used them.",
     "Do not put those numbers in the answer text.",
-    `If the passages do not contain the answer, set answer to exactly: ${NOT_IN_DOCUMENT_ANSWER}`,
-    "and set used to [].",
+    "If the question asks what the document contains, what it is about, or for a summary, summarize the passages in the answer and list those passage numbers in used.",
+    "Do not use the sentence below for that kind of question.",
+    `Use this sentence only when the question asks for a specific fact that none of the passages state: ${NOT_IN_DOCUMENT_ANSWER}`,
+    "When you use that sentence, set used to [].",
     "Do not use outside knowledge.",
     "",
     `Question: ${question}`,
@@ -37,6 +39,59 @@ export function buildRetrievalPrompt(
     "Passages:",
     blocks,
   ].join("\n");
+}
+
+const OVERVIEW_QUESTION =
+  /^(?:please |can you |could you )?(?:what(?: is|'s) (?:the |this )?(?:content|contents)(?: of (?:this|the) (?:document|pdf|file))?|what(?: is|'s) (?:this|the) (?:document|pdf|file) about|what(?: is|'s) this about|what does (?:this|the) (?:document|pdf|file) (?:say|contain|cover)|summari[sz]e(?: this| the (?:document|pdf|file))?|(?:give me |provide )?(?:a )?summary(?: of (?:this|the) (?:document|pdf|file))?|tell me (?:what(?: is|'s) )?(?:this|the) (?:document|pdf|file)(?: about)?|describe (?:this|the) (?:document|pdf|file))$/;
+
+/** A question about the document as a whole, not a specific fact inside it. */
+export function isDocumentOverviewQuestion(question: string): boolean {
+  const normalized = question
+    .trim()
+    .toLowerCase()
+    .replace(/[.!?]+$/g, "")
+    .replace(/\s+/g, " ");
+  return OVERVIEW_QUESTION.test(normalized);
+}
+
+export function summaryFromPassages(passages: readonly Passage[]): {
+  answer: string;
+  citations: RetrievalCitation[];
+} {
+  const citedPages = new Set<number>();
+  const sentences: string[] = [];
+  const citations: RetrievalCitation[] = [];
+
+  for (const passage of passages) {
+    if (citedPages.has(passage.page)) continue;
+    const text = openingSentences(passage.content);
+    if (!text) continue;
+    citedPages.add(passage.page);
+    sentences.push(text);
+    citations.push({ page: passage.page, excerpt: excerpt(passage.content) });
+    if (sentences.length >= 2) break;
+  }
+
+  if (sentences.length === 0) {
+    return { answer: NOT_IN_DOCUMENT_ANSWER, citations: [] };
+  }
+
+  return { answer: sentences.join(" "), citations };
+}
+
+export function resolveAnswer(
+  question: string,
+  modelText: string,
+  passages: readonly Passage[],
+): { answer: string; citations: RetrievalCitation[] } {
+  const result = finalizeAnswer(modelText, passages);
+  if (!isDocumentOverviewQuestion(question) || passages.length === 0) {
+    return result;
+  }
+  if (isNotInDocumentAnswer(result.answer) || result.citations.length === 0) {
+    return summaryFromPassages(passages);
+  }
+  return result;
 }
 
 export function isNotInDocumentAnswer(text: string): boolean {
@@ -73,7 +128,7 @@ export async function answerFromPassages(
     return { answer: NOT_IN_DOCUMENT_ANSWER, citations: [] };
   }
   const text = await complete(buildRetrievalPrompt(question, passages));
-  return finalizeAnswer(text, passages);
+  return resolveAnswer(question, text, passages);
 }
 
 export function pageNumberFromChunk(row: {
@@ -236,6 +291,31 @@ function citationsForUsed(
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function openingSentences(content: string): string {
+  const trimmed = content.replace(/\s+/g, " ").trim();
+  if (!trimmed) return "";
+  const stops: number[] = [];
+  for (let index = 0; index < trimmed.length; index += 1) {
+    const char = trimmed[index];
+    const next = trimmed[index + 1];
+    if ((char === "." || char === "?") && (next === " " || next === undefined)) {
+      stops.push(index);
+    }
+  }
+
+  let end = trimmed.length;
+  for (const stop of stops) {
+    end = stop + 1;
+    if (stop >= 240) break;
+  }
+  if (end > 480) {
+    const slice = trimmed.slice(0, 480);
+    const space = slice.lastIndexOf(" ");
+    return `${(space > 80 ? slice.slice(0, space) : slice).trim()}...`;
+  }
+  return trimmed.slice(0, end).trim();
 }
 
 function excerpt(content: string): string {
