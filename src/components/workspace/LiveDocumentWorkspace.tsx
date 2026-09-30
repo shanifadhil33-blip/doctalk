@@ -168,7 +168,7 @@ export function LiveDocumentWorkspace({
           </div>
           <div
             ref={answerScrollRef}
-            className="min-h-0 flex-1 touch-pan-y space-y-4 overflow-y-auto overscroll-y-contain px-4 py-4 [overflow-anchor:none]"
+            className="min-h-0 flex-1 touch-pan-y space-y-4 overflow-y-auto px-4 py-4 [overflow-anchor:none]"
           >
             <p className="sr-only" aria-live="polite">
               {liveStatus}

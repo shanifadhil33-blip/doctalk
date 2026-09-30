@@ -76,7 +76,7 @@ describe("LiveDocumentWorkspace question column", () => {
     const regionClass = descriptionRegion.className.split(/\s+/);
     expect(regionClass).toContain("flex-1");
     expect(regionClass).toContain("overflow-y-auto");
-    expect(regionClass).toContain("overscroll-y-contain");
+    expect(regionClass).not.toContain("overscroll-y-contain");
     expect(regionClass).toContain("[overflow-anchor:none]");
     expect(regionClass).not.toContain("max-h-36");
     const main = document.getElementById("main");

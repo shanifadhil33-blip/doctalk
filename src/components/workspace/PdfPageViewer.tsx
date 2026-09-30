@@ -170,7 +170,7 @@ export function PdfPageViewer({
       <div
         id="pdf-scroll"
         ref={paneRef}
-        className="min-h-0 w-full min-w-0 max-w-full flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-y-contain bg-[#eef0f3] px-3 py-4 [overflow-anchor:none] sm:px-6 sm:py-6"
+        className="min-h-0 w-full min-w-0 max-w-full flex-1 touch-pan-y overflow-x-hidden overflow-y-auto bg-[#eef0f3] px-3 py-4 [overflow-anchor:none] sm:px-6 sm:py-6"
       >
         <article
           aria-label={`Page ${current.number}`}
