@@ -121,8 +121,8 @@ function ProductPreview({ sourceHref }: { sourceHref: string }) {
             <span className="font-medium text-slate-800">4.1 Initial term. </span>
             This Agreement commences on the Effective Date and continues for twenty-four (24) months.
           </p>
-          <div className="mt-3 rounded-lg border border-[#f3e2a6] bg-[#fff8df] p-3">
-            <p className="text-[11px] font-medium text-[#8a5a12]">
+          <div className="mt-3 rounded-lg border border-[#c7c9f5] bg-[#f5f4ff] p-3">
+            <p className="text-[11px] font-medium text-[#3730a3]">
               4.2 Termination for convenience
             </p>
             <p className="mt-1">

@@ -53,8 +53,8 @@ describe("LiveDocumentWorkspace question column", () => {
     expect(shell?.className.split(/\s+/)).not.toContain("overflow-hidden");
     const aside = heading.closest("aside");
     const asideClass = aside?.className.split(/\s+/) ?? [];
-    expect(asideClass).toContain("h-[58dvh]");
-    expect(asideClass).toContain("min-h-[22rem]");
+    expect(asideClass).toContain("h-[85dvh]");
+    expect(asideClass).toContain("max-h-[85dvh]");
     expect(asideClass).toContain("lg:min-h-0");
     expect(asideClass).toContain("shrink-0");
 

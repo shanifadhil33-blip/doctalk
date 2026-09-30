@@ -60,7 +60,7 @@ export function RealPdfViewer({
   }, [safePage, pageCount, pageWidth]);
 
   return (
-    <div className="flex h-[70dvh] min-h-[28rem] w-full min-w-0 max-w-full shrink-0 flex-col overflow-hidden lg:h-full lg:min-h-0 lg:flex-1">
+    <div className="flex h-[50dvh] max-h-[50dvh] w-full min-w-0 max-w-full shrink-0 flex-col overflow-hidden lg:h-full lg:max-h-none lg:min-h-0 lg:flex-1">
       <div className="flex w-full min-w-0 max-w-full flex-wrap items-center gap-2 border-b border-slate-200 bg-white px-3 py-2">
         <button
           type="button"
@@ -87,7 +87,7 @@ export function RealPdfViewer({
         id="pdf-scroll"
         ref={paneRef}
         className={[
-          "min-h-0 w-full min-w-0 max-w-full flex-1 contain-paint overflow-y-auto overscroll-contain bg-[#eef0f3] px-3 py-3 sm:px-6 sm:py-4",
+          "h-0 min-h-0 w-full min-w-0 max-w-full flex-1 contain-paint touch-pan-y overflow-y-auto overscroll-y-contain bg-[#eef0f3] px-3 py-3 sm:px-6 sm:py-4",
           zoom > 100 ? "overflow-x-auto" : "overflow-x-hidden",
         ].join(" ")}
       >

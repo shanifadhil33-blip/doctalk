@@ -21,10 +21,13 @@ describe("CitationChip", () => {
 
   it("keeps a visible hover and press state when the chip is selected", () => {
     expect(citationChipClass(false)).toContain("cursor-pointer");
-    expect(citationChipClass(false)).toContain("hover:bg-[#ffe08a]");
-    expect(citationChipClass(false)).toContain("active:bg-[#ffd15a]");
-    expect(citationChipClass(true)).toContain("hover:bg-[#ffd15a]");
-    expect(citationChipClass(true)).toContain("active:bg-[#f5c14a]");
+    expect(citationChipClass(false)).toContain("bg-slate-100");
+    expect(citationChipClass(false)).toContain("hover:bg-slate-200");
+    expect(citationChipClass(false)).toContain("active:bg-slate-300");
+    expect(citationChipClass(true)).toContain("bg-[#eef0ff]");
+    expect(citationChipClass(true)).toContain("hover:bg-[#e0e4ff]");
+    expect(citationChipClass(true)).toContain("active:bg-[#d4d8fb]");
     expect(citationChipClass(true)).toContain("focus-visible:outline");
+    expect(`${citationChipClass(false)} ${citationChipClass(true)}`).not.toMatch(/#f[0-9a-f]{5}|amber|yellow|gold/i);
   });
 });
