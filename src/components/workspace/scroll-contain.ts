@@ -8,6 +8,7 @@ export function useContainedScroll(ref: RefObject<HTMLElement | null>) {
   useEffect(() => {
     const scroller = ref.current;
     if (!scroller) return;
+    const node: HTMLElement = scroller;
 
     let lastY = 0;
 
@@ -23,9 +24,9 @@ export function useContainedScroll(ref: RefObject<HTMLElement | null>) {
       lastY = touch.clientY;
       if (deltaY === 0) return;
 
-      const limit = scroller.scrollHeight - scroller.clientHeight;
-      const atTop = scroller.scrollTop <= 0;
-      const atBottom = limit <= 0 || scroller.scrollTop >= limit - 1;
+      const limit = node.scrollHeight - node.clientHeight;
+      const atTop = node.scrollTop <= 0;
+      const atBottom = limit <= 0 || node.scrollTop >= limit - 1;
       const pullingPastTop = atTop && deltaY > 0;
       const pullingPastBottom = atBottom && deltaY < 0;
       if (pullingPastTop || pullingPastBottom) {
@@ -33,11 +34,11 @@ export function useContainedScroll(ref: RefObject<HTMLElement | null>) {
       }
     }
 
-    scroller.addEventListener("touchstart", onStart, { passive: true });
-    scroller.addEventListener("touchmove", onMove, { passive: false });
+    node.addEventListener("touchstart", onStart, { passive: true });
+    node.addEventListener("touchmove", onMove, { passive: false });
     return () => {
-      scroller.removeEventListener("touchstart", onStart);
-      scroller.removeEventListener("touchmove", onMove);
+      node.removeEventListener("touchstart", onStart);
+      node.removeEventListener("touchmove", onMove);
     };
   }, [ref]);
 }
