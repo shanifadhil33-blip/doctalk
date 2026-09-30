@@ -51,6 +51,45 @@ function formatAdded(date: Date): { addedOn: string; addedLabel: string } {
   };
 }
 
+function listedFromRow(row: {
+  id: string;
+  fileName: string;
+  isDemo: boolean;
+  status: string;
+  createdAt: Date;
+}): ListedDocument {
+  const { addedOn, addedLabel } = formatAdded(row.createdAt);
+  return {
+    id: row.id,
+    title: row.fileName.replace(/\.pdf$/i, ""),
+    counterparty: row.isDemo ? "Sample" : "Your document",
+    kindLabel: "PDF",
+    meta: `Added ${addedLabel}`,
+    status: row.isDemo ? "Sample" : libraryStatusLabel(row.status),
+    preview: "file",
+    fileName: row.fileName,
+    addedOn,
+    pageCount: 0,
+  };
+}
+
+/** Own uploads stay separate from public samples. */
+export function partitionLibraryRows<T extends { userId: string | null; isDemo: boolean }>(
+  rows: readonly T[],
+  viewerUserId: string,
+): { owned: T[]; samples: T[] } {
+  const owned: T[] = [];
+  const samples: T[] = [];
+  for (const row of rows) {
+    if (!row.isDemo && row.userId === viewerUserId) {
+      owned.push(row);
+    } else if (row.isDemo || row.userId === null) {
+      samples.push(row);
+    }
+  }
+  return { owned, samples };
+}
+
 export function demoListedDocuments(): ListedDocument[] {
   return demoDocuments.map((document) => ({
     id: document.id,
@@ -91,20 +130,40 @@ export async function loadVisibleDocuments(
 
   return {
     source: "library",
-    documents: rows.map((row) => {
-      const { addedOn, addedLabel } = formatAdded(row.createdAt);
-      return {
-        id: row.id,
-        title: row.fileName.replace(/\.pdf$/i, ""),
-        counterparty: row.isDemo ? "Sample" : "Your document",
-        kindLabel: "PDF",
-        meta: `Added ${addedLabel}`,
-        status: row.isDemo ? "Sample" : libraryStatusLabel(row.status),
-        preview: "file",
-        fileName: row.fileName,
-        addedOn,
-        pageCount: 0,
-      };
-    }),
+    documents: rows.map((row) => listedFromRow(row)),
+  };
+}
+
+/**
+ * The signed-in home lists the viewer's own PDFs apart from public samples.
+ * Without DATABASE_URL, own documents stay empty and the samples remain available.
+ */
+export async function loadAccountHome(viewerUserId: string): Promise<{
+  source: "demo" | "library";
+  owned: ListedDocument[];
+  samples: ListedDocument[];
+}> {
+  if (!process.env.DATABASE_URL) {
+    return { source: "demo", owned: [], samples: demoListedDocuments() };
+  }
+
+  const rows = await getDb()
+    .select({
+      id: documents.id,
+      userId: documents.userId,
+      fileName: documents.fileName,
+      isDemo: documents.isDemo,
+      status: documents.status,
+      createdAt: documents.createdAt,
+    })
+    .from(documents)
+    .where(visibleDocumentsWhere(viewerUserId))
+    .orderBy(desc(documents.createdAt));
+
+  const { owned, samples } = partitionLibraryRows(rows, viewerUserId);
+  return {
+    source: "library",
+    owned: owned.map((row) => listedFromRow(row)),
+    samples: samples.map((row) => listedFromRow(row)),
   };
 }

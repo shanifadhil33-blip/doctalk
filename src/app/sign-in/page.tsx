@@ -21,7 +21,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
             DocTalk
           </h1>
           <p className="mt-2 text-sm text-slate-600">
-            Sign in with Google to view the demo.
+            Sign in with Google to open your documents.
           </p>
         </div>
         <form

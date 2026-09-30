@@ -70,3 +70,24 @@ export const settings = pgTable("settings", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),
 });
+
+/** Questions a signed-in account has asked. The title stays if the document is deleted. */
+export const questions = pgTable(
+  "questions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id").notNull(),
+    documentId: uuid("document_id").references(() => documents.id, {
+      onDelete: "set null",
+    }),
+    documentTitle: text("document_title").notNull(),
+    question: text("question").notNull(),
+    answer: text("answer").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index("questions_user_id_created_at_idx").on(table.userId, table.createdAt),
+  ],
+);

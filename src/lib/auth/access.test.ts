@@ -30,8 +30,10 @@ describe("classifyPath", () => {
     });
   });
 
-  it("protects the upload page", () => {
+  it("protects the upload page and account settings", () => {
     expect(classifyPath("/upload")).toEqual({ kind: "protected" });
+    expect(classifyPath("/settings")).toEqual({ kind: "protected" });
+    expect(classifyPath("/settings/")).toEqual({ kind: "protected" });
   });
 
   it("leaves the PDF.js worker and demo PDFs public", () => {

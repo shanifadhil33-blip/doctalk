@@ -11,6 +11,7 @@ import {
   isDocumentOverviewQuestion,
   type RetrievalCitation,
 } from "@/lib/retrieval/answer";
+import { documentTitleFromFileName, recordAskedQuestion } from "@/lib/questions/history";
 import { loadDocumentPassages, searchDocumentChunks } from "@/lib/retrieval/search";
 
 const QUESTION_MAX = 2000;
@@ -87,6 +88,15 @@ export async function askDocument(input: {
     const result = await answerFromPassages(question, passages, (prompt) =>
       completePrompt(env, prompt),
     );
+    if (input.viewerUserId) {
+      await recordAskedQuestion({
+        userId: input.viewerUserId,
+        documentId: input.documentId,
+        documentTitle: documentTitleFromFileName(lookup.document.fileName),
+        question,
+        answer: result.answer,
+      });
+    }
     return { status: 200, body: result };
   } catch (error) {
     if (error instanceof ChatConfigError) {
