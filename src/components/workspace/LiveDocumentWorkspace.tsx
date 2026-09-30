@@ -18,7 +18,7 @@ const RealPdfViewer = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[70dvh] min-h-[28rem] w-full shrink-0 items-start lg:h-full lg:min-h-0 lg:flex-1">
+      <div className="flex h-[50dvh] max-h-[50dvh] w-full shrink-0 items-start lg:h-full lg:max-h-none lg:min-h-0 lg:flex-1">
         <p className="p-6 text-sm text-slate-600">Loading PDF...</p>
       </div>
     ),
@@ -155,7 +155,7 @@ export function LiveDocumentWorkspace({
           page={page}
           onPageCount={setPageCount}
         />
-        <aside className="flex h-[58dvh] min-h-[22rem] w-full min-w-0 max-w-full shrink-0 flex-col border-t border-slate-200 bg-white lg:h-auto lg:min-h-0 lg:w-[420px] lg:shrink-0 lg:overflow-hidden lg:border-l lg:border-t-0">
+        <aside className="flex h-[85dvh] max-h-[85dvh] w-full min-w-0 max-w-full shrink-0 flex-col overflow-hidden border-t border-slate-200 bg-white lg:h-full lg:max-h-none lg:min-h-0 lg:w-[420px] lg:shrink-0 lg:border-l lg:border-t-0">
           <div className="border-b border-slate-200 px-5 py-4">
             <h2 className="text-base font-semibold text-slate-950">Ask this document</h2>
             <p className="mt-1 text-sm text-slate-500">

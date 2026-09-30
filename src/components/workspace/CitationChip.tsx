@@ -10,8 +10,8 @@ export function citationChipClass(active = false): string {
   return [
     chipBase,
     active
-      ? "border-[#d4a017] bg-[#ffe08a] text-[#6b4a08] hover:border-[#c49212] hover:bg-[#ffd15a] active:bg-[#f5c14a]"
-      : "border-[#e6c56a] bg-[#fff6d8] text-[#7a5410] hover:border-[#d4a017] hover:bg-[#ffe08a] active:bg-[#ffd15a]",
+      ? "border-[#4f46e5] bg-[#eef0ff] text-[#312e81] hover:border-[#3730a3] hover:bg-[#e0e4ff] active:bg-[#d4d8fb]"
+      : "border-slate-200 bg-slate-100 text-slate-700 hover:border-slate-400 hover:bg-slate-200 active:bg-slate-300",
   ].join(" ");
 }
 
