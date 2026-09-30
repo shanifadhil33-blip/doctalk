@@ -2,12 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
-import {
-  ChevronLeftGlyph,
-  ChevronRightGlyph,
-  MinusGlyph,
-  PlusGlyph,
-} from "@/components/icons";
+import { MinusGlyph, PlusGlyph } from "@/components/icons";
 import { iconButtonClass, toolbarButtonClass } from "@/components/button-styles";
 import { fittedPageWidth } from "@/components/workspace/pdf-fit";
 
@@ -17,13 +12,11 @@ export function RealPdfViewer({
   fileUrl,
   fileName,
   page,
-  onPageChange,
   onPageCount,
 }: {
   fileUrl: string;
   fileName: string;
   page: number;
-  onPageChange: (page: number) => void;
   onPageCount?: (count: number) => void;
 }) {
   const [pageCount, setPageCount] = useState(0);
@@ -31,8 +24,9 @@ export function RealPdfViewer({
   const [paneWidth, setPaneWidth] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const paneRef = useRef<HTMLDivElement>(null);
-  const safePage = pageCount > 0 ? Math.min(Math.max(page, 1), pageCount) : Math.max(page, 1);
+  const scrolledPage = useRef<number | null>(null);
   const pageWidth = fittedPageWidth(paneWidth, zoom);
+  const safePage = pageCount > 0 ? Math.min(Math.max(page, 1), pageCount) : Math.max(page, 1);
 
   useLayoutEffect(() => {
     const node = paneRef.current;
@@ -44,41 +38,27 @@ export function RealPdfViewer({
       setPaneWidth(next > 0 ? next : 0);
     };
     measure();
+    if (typeof ResizeObserver !== "function") return;
     const observer = new ResizeObserver(measure);
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
-    paneRef.current?.scrollTo({ top: 0, left: 0 });
-  }, [safePage]);
+    const node = document.getElementById(`pdf-page-${safePage}`);
+    if (!node || scrolledPage.current === safePage) return;
+    const openingOnFirstPage = scrolledPage.current === null && safePage <= 1;
+    scrolledPage.current = safePage;
+    if (openingOnFirstPage) return;
+    const reduce =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    node.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
+  }, [safePage, pageCount, pageWidth]);
 
   return (
-    <div className="flex h-full min-h-[70vh] w-full min-w-0 max-w-full flex-1 flex-col overflow-x-hidden lg:min-h-0">
+    <div className="flex w-full min-w-0 max-w-full flex-col lg:h-full lg:min-h-0 lg:flex-1 lg:overflow-hidden">
       <div className="flex w-full min-w-0 max-w-full flex-wrap items-center gap-2 border-b border-slate-200 bg-white px-3 py-2">
-        <button
-          type="button"
-          className={iconButtonClass}
-          aria-label="Previous page"
-          disabled={safePage <= 1}
-          onClick={() => onPageChange(safePage - 1)}
-        >
-          <ChevronLeftGlyph />
-        </button>
-        <p className="min-w-16 text-center text-sm tabular-nums text-slate-700" aria-live="polite">
-          <span className="sr-only">Page </span>
-          {pageCount > 0 ? `${safePage} / ${pageCount}` : safePage}
-        </p>
-        <button
-          type="button"
-          className={iconButtonClass}
-          aria-label="Next page"
-          disabled={pageCount > 0 && safePage >= pageCount}
-          onClick={() => onPageChange(safePage + 1)}
-        >
-          <ChevronRightGlyph />
-        </button>
-        <span className="mx-1 hidden h-6 w-px bg-slate-200 sm:block" aria-hidden="true" />
         <button
           type="button"
           className={iconButtonClass}
@@ -96,22 +76,17 @@ export function RealPdfViewer({
         >
           <PlusGlyph />
         </button>
-        <button
-          type="button"
-          className={toolbarButtonClass}
-          onClick={() => setZoom(100)}
-        >
+        <button type="button" className={toolbarButtonClass} onClick={() => setZoom(100)}>
           Fit width
         </button>
       </div>
       <div
         id="pdf-scroll"
         ref={paneRef}
-        className={
-          zoom > 100
-            ? "min-h-0 w-full min-w-0 max-w-full flex-1 overflow-auto bg-[#eef0f3] px-3 py-4 sm:px-6 sm:py-6"
-            : "min-h-0 w-full min-w-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto bg-[#eef0f3] px-3 py-4 sm:px-6 sm:py-6"
-        }
+        className={[
+          "w-full min-w-0 max-w-full contain-paint bg-[#eef0f3] px-3 py-3 sm:px-6 sm:py-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto",
+          zoom > 100 ? "overflow-x-auto" : "overflow-x-hidden",
+        ].join(" ")}
       >
         {error ? (
           <p className="mx-auto max-w-md rounded-xl bg-white p-6 text-sm text-slate-600" role="alert">
@@ -127,22 +102,38 @@ export function RealPdfViewer({
             }}
             onLoadError={() => setError("This PDF could not be displayed.")}
           >
-            <article
-              aria-label={`Page ${safePage}`}
-              className="mx-auto max-w-full bg-white shadow-sm ring-1 ring-slate-200"
-            >
-              {pageWidth > 0 ? (
-                <Page
-                  pageNumber={safePage}
-                  width={pageWidth}
-                  renderTextLayer={false}
-                  renderAnnotationLayer={false}
-                  loading={<p className="p-6 text-sm text-slate-600">Loading page...</p>}
-                />
-              ) : (
-                <p className="p-6 text-sm text-slate-600">Loading page...</p>
-              )}
-            </article>
+            {pageCount > 0 && pageWidth > 0 ? (
+              <div
+                className={
+                  zoom > 100
+                    ? "mx-auto flex w-max flex-col gap-3"
+                    : "mx-auto flex w-full max-w-full flex-col gap-3"
+                }
+              >
+                {Array.from({ length: pageCount }, (_, index) => {
+                  const pageNumber = index + 1;
+                  return (
+                    <article
+                      key={pageNumber}
+                      id={`pdf-page-${pageNumber}`}
+                      aria-label={`Page ${pageNumber}`}
+                      className="bg-white shadow-sm ring-1 ring-slate-200 outline-none focus:outline-none focus-visible:outline-none"
+                    >
+                      <Page
+                        pageNumber={pageNumber}
+                        width={pageWidth}
+                        renderTextLayer={false}
+                        renderAnnotationLayer={false}
+                        loading={<p className="p-6 text-sm text-slate-600">Loading page...</p>}
+                        className="outline-none focus:outline-none focus-visible:outline-none [&_canvas]:outline-none [&_canvas]:focus:outline-none [&_canvas]:focus-visible:outline-none"
+                      />
+                    </article>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-600">Loading page...</p>
+            )}
           </Document>
         )}
         <p className="sr-only">{fileName}</p>

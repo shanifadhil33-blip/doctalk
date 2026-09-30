@@ -147,20 +147,16 @@ export function LiveDocumentWorkspace({
           fileUrl={pdfSrc}
           fileName={fileName}
           page={page}
-          onPageChange={(nextPage) => {
-            setPage(nextPage);
-            setActivePassageId(null);
-          }}
           onPageCount={setPageCount}
         />
-        <aside className="flex min-h-[28rem] w-full min-w-0 max-w-full shrink-0 flex-col border-t border-slate-200 bg-white lg:min-h-0 lg:w-[420px] lg:border-l lg:border-t-0">
+        <aside className="flex w-full min-w-0 max-w-full flex-col border-t border-slate-200 bg-white lg:min-h-0 lg:w-[420px] lg:shrink-0 lg:overflow-hidden lg:border-l lg:border-t-0">
           <div className="border-b border-slate-200 px-5 py-4">
             <h2 className="text-base font-semibold text-slate-950">Ask this document</h2>
             <p className="mt-1 text-sm text-slate-500">
               {pageCount > 0 ? `${pageCount} pages` : "PDF"}
             </p>
           </div>
-          <div className="flex-1 space-y-4 overflow-auto px-4 py-4">
+          <div className="space-y-4 px-4 py-4 lg:min-h-0 lg:flex-1 lg:overflow-auto">
             <p className="sr-only" aria-live="polite">
               {liveStatus}
             </p>
