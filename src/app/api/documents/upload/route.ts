@@ -42,7 +42,8 @@ export async function POST(request: Request) {
           throw new UploadTokenError(decision.message, decision.status);
         }
         return {
-          allowedContentTypes: ["application/pdf"],
+          allowedContentTypes:
+            decision.extension === "pdf" ? ["application/pdf"] : ["text/markdown"],
           maximumSizeInBytes: MAX_PDF_BYTES,
           addRandomSuffix: true,
           tokenPayload: JSON.stringify({

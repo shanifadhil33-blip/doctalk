@@ -3,11 +3,15 @@ export const NOT_IN_DOCUMENT_ANSWER = "That is not in this document.";
 export type Passage = {
   page: number;
   content: string;
+  /** Heading or section for a markdown passage. Absent on a PDF page. */
+  label?: string;
 };
 
 export type RetrievalCitation = {
   page: number;
   excerpt: string;
+  /** Heading or section. When set, the chip names this instead of a PDF page. */
+  label?: string;
 };
 
 const EXCERPT_CHARS = 400;
@@ -17,10 +21,10 @@ export function buildRetrievalPrompt(
   passages: readonly Passage[],
 ): string {
   const blocks = passages
-    .map(
-      (passage, index) =>
-        `[${index + 1}] page ${passage.page}\n${passage.content}`,
-    )
+    .map((passage, index) => {
+      const where = passage.label ? `section ${passage.label}` : `page ${passage.page}`;
+      return `[${index + 1}] ${where}\n${passage.content}`;
+    })
     .join("\n\n");
 
   return [
@@ -68,7 +72,7 @@ export function summaryFromPassages(passages: readonly Passage[]): {
     if (!text) continue;
     citedPages.add(passage.page);
     sentences.push(text);
-    citations.push({ page: passage.page, excerpt: excerpt(passage.content) });
+    citations.push(citationFor(passage));
     if (sentences.length >= 2) break;
   }
 
@@ -129,6 +133,16 @@ export async function answerFromPassages(
   }
   const text = await complete(buildRetrievalPrompt(question, passages));
   return resolveAnswer(question, text, passages);
+}
+
+export function labelFromChunk(row: { metadata: unknown }): string | undefined {
+  if (!row.metadata || typeof row.metadata !== "object" || !("heading" in row.metadata)) {
+    return undefined;
+  }
+  const heading = row.metadata.heading;
+  if (typeof heading !== "string") return undefined;
+  const trimmed = heading.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
 }
 
 export function pageNumberFromChunk(row: {
@@ -272,21 +286,29 @@ function citationsForUsed(
   passages: readonly Passage[],
   used: readonly number[],
 ): RetrievalCitation[] {
-  const seenPages = new Set<number>();
+  const seen = new Set<string>();
   const citations: RetrievalCitation[] = [];
 
   for (const id of used) {
     if (!Number.isInteger(id) || id < 1 || id > passages.length) continue;
     const passage = passages[id - 1];
-    if (!passage || seenPages.has(passage.page)) continue;
-    seenPages.add(passage.page);
-    citations.push({
-      page: passage.page,
-      excerpt: excerpt(passage.content),
-    });
+    if (!passage) continue;
+    const key = passage.label ? `label:${passage.label}` : `page:${passage.page}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    citations.push(citationFor(passage));
   }
 
   return citations;
+}
+
+function citationFor(passage: Passage): RetrievalCitation {
+  const citation: RetrievalCitation = {
+    page: passage.page,
+    excerpt: excerpt(passage.content),
+  };
+  if (passage.label) citation.label = passage.label;
+  return citation;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { demoDocuments } from "@/lib/demo-documents";
+import { DEMO_MARKDOWN_ID } from "@/lib/demo/markdown-catalog";
 import { loadAccountHome, loadVisibleDocuments, partitionLibraryRows } from "@/lib/documents/list";
 
 describe("loadVisibleDocuments", () => {
@@ -9,9 +10,10 @@ describe("loadVisibleDocuments", () => {
     try {
       const result = await loadVisibleDocuments(null);
       expect(result.source).toBe("demo");
-      expect(result.documents.map((document) => document.id)).toEqual(
-        demoDocuments.map((document) => document.id),
-      );
+      expect(result.documents.map((document) => document.id)).toEqual([
+        ...demoDocuments.map((document) => document.id),
+        DEMO_MARKDOWN_ID,
+      ]);
     } finally {
       if (previous === undefined) {
         delete process.env.DATABASE_URL;
@@ -30,9 +32,10 @@ describe("loadAccountHome", () => {
       const result = await loadAccountHome("google-sub");
       expect(result.source).toBe("demo");
       expect(result.owned).toEqual([]);
-      expect(result.samples.map((document) => document.id)).toEqual(
-        demoDocuments.map((document) => document.id),
-      );
+      expect(result.samples.map((document) => document.id)).toEqual([
+        ...demoDocuments.map((document) => document.id),
+        DEMO_MARKDOWN_ID,
+      ]);
     } finally {
       if (previous === undefined) {
         delete process.env.DATABASE_URL;

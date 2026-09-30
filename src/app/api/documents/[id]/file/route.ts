@@ -5,6 +5,7 @@ import { decideDocumentAccess } from "@/lib/auth/access";
 import { userIdFromTokenSub } from "@/lib/auth/user-id";
 import { classifyStoredFileUrl } from "@/lib/documents/blob-url";
 import { lookupDocument } from "@/lib/documents/lookup";
+import { isMarkdownFileName } from "@/lib/markdown/sections";
 
 export const runtime = "nodejs";
 
@@ -32,9 +33,10 @@ export async function GET(req: Request, context: RouteContext) {
   }
 
   const fileName = lookup.document.fileName.replace(/[^a-zA-Z0-9._-]+/g, "_").slice(0, 120);
+  const markdown = isMarkdownFileName(lookup.document.fileName);
   const headers = {
-    "Content-Type": "application/pdf",
-    "Content-Disposition": `inline; filename="${fileName || "document.pdf"}"`,
+    "Content-Type": markdown ? "text/markdown; charset=utf-8" : "application/pdf",
+    "Content-Disposition": `inline; filename="${fileName || (markdown ? "document.md" : "document.pdf")}"`,
     "Cache-Control": "private, max-age=60",
     "X-Content-Type-Options": "nosniff",
   };

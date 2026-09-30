@@ -1,15 +1,19 @@
 import { upload } from "@vercel/blob/client";
+import { isMarkdownFileName, markdownExtension } from "@/lib/markdown/sections";
 
 const HANDLE_UPLOAD_URL = "/api/documents/upload";
 
-export async function uploadPdfFromBrowser(file: File): Promise<{ id: string }> {
+export async function uploadDocumentFromBrowser(file: File): Promise<{ id: string }> {
   const uploadId = crypto.randomUUID();
-  const pathname = `uploads/${uploadId}.pdf`;
+  const markdown = isMarkdownFileName(file.name);
+  const extension = markdown ? (markdownExtension(file.name) ?? "md") : "pdf";
+  const pathname = `uploads/${uploadId}.${extension}`;
+  const contentType = markdown ? "text/markdown" : "application/pdf";
   const clientPayload = JSON.stringify({
     uploadId,
     fileName: file.name,
     size: file.size,
-    type: file.type || "application/pdf",
+    type: file.type || contentType,
   });
 
   const tokenResponse = await fetch(HANDLE_UPLOAD_URL, {
@@ -31,7 +35,7 @@ export async function uploadPdfFromBrowser(file: File): Promise<{ id: string }> 
     blob = await upload(pathname, file, {
       access: "private",
       handleUploadUrl: HANDLE_UPLOAD_URL,
-      contentType: "application/pdf",
+      contentType,
       clientPayload,
     });
   } catch (error) {
@@ -62,6 +66,9 @@ export async function uploadPdfFromBrowser(file: File): Promise<{ id: string }> 
   }
   return { id };
 }
+
+/** @deprecated Use uploadDocumentFromBrowser. Kept so older imports still compile. */
+export const uploadPdfFromBrowser = uploadDocumentFromBrowser;
 
 async function releasePending(uploadId: string): Promise<void> {
   await fetch("/api/documents/pending", {

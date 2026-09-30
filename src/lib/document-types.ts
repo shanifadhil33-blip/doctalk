@@ -21,6 +21,8 @@ export type Citation = {
   page: number;
   passageId: string;
   quote: string;
+  /** Heading or section. Shown instead of a PDF page when the source is markdown. */
+  label?: string;
 };
 
 export type StoredAnswer = {

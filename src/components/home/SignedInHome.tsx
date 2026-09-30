@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UploadGlyph } from "@/components/icons";
+import { RollingMark } from "@/components/RollingMark";
 import { controlFocusClass, primaryButtonClass } from "@/components/button-styles";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
@@ -11,7 +12,8 @@ import { TopBar } from "@/components/TopBar";
 import { DocumentCard } from "@/components/documents/DocumentCard";
 import { documentPreviewSrc } from "@/lib/documents/preview";
 import type { ListedDocument } from "@/lib/document-types";
-import { uploadPdfFromBrowser } from "@/lib/documents/client-upload";
+import { uploadDocumentFromBrowser } from "@/lib/documents/client-upload";
+import { isMarkdownFileName } from "@/lib/markdown/sections";
 import type { AskedQuestion } from "@/lib/questions/history";
 import {
   readSessionUploads,
@@ -21,7 +23,7 @@ import {
   stampUpload,
   type SessionUpload,
 } from "@/lib/session-uploads";
-import { validatePdfFile } from "@/lib/upload-validation";
+import { validateDocumentFile } from "@/lib/upload-validation";
 
 export function SignedInHome({
   source,
@@ -71,9 +73,9 @@ export function SignedInHome({
       ? []
       : uploads.map((upload) => ({
           id: upload.id,
-          title: upload.fileName.replace(/\.pdf$/i, ""),
+          title: upload.fileName.replace(/\.(pdf|markdown|md)$/i, ""),
           counterparty: "Uploaded in this browser",
-          kindLabel: "PDF",
+          kindLabel: isMarkdownFileName(upload.fileName) ? "Markdown" : "PDF",
           meta: `Added ${upload.addedLabel}`,
           status: "Not indexed yet",
           preview: "file",
@@ -103,9 +105,9 @@ export function SignedInHome({
   async function uploadToServer(file: File) {
     setBusy(true);
     setError(null);
-    setStatus("Uploading the PDF.");
+    setStatus("Uploading.");
     try {
-      const { id } = await uploadPdfFromBrowser(file);
+      const { id } = await uploadDocumentFromBrowser(file);
       setStatus("Opening the document.");
       router.push(`/documents/${id}`);
       router.refresh();
@@ -122,7 +124,7 @@ export function SignedInHome({
   function takeFile(file: File | undefined) {
     if (!file || busy) return;
     if (inputRef.current) inputRef.current.value = "";
-    const result = validatePdfFile(file);
+    const result = validateDocumentFile(file);
     if (!result.ok) {
       setError(result.message);
       setStatus(result.message);
@@ -149,7 +151,7 @@ export function SignedInHome({
               disabled={busy}
             >
               <UploadGlyph />
-              Upload PDF
+              Upload PDF or Markdown
             </button>
             {headerAccount}
           </>
@@ -158,7 +160,7 @@ export function SignedInHome({
       <main id="main" className="mx-auto w-full min-w-0 max-w-6xl flex-1 px-4 py-8 sm:px-6">
         <h1 className="text-3xl font-semibold tracking-tight text-slate-950">Your documents</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
-          Upload a PDF, then ask a question and open the page it came from.
+          Upload a PDF or Markdown file, then ask a question and open where it came from.
         </p>
 
         <div className="mt-6">
@@ -178,6 +180,7 @@ export function SignedInHome({
               setDragOver(false);
               takeFile(event.dataTransfer.files[0]);
             }}
+            aria-busy={busy}
             className={[
               "flex min-w-0 cursor-pointer flex-col items-center rounded-2xl border border-dashed px-4 py-10 text-center transition-colors duration-150",
               "focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#4f46e5]",
@@ -189,25 +192,27 @@ export function SignedInHome({
                   : "",
             ].join(" ")}
           >
-            <span className="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white text-slate-700">
-              <UploadGlyph className="h-5 w-5" />
+            <span className="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white text-slate-600">
+              {busy ? <RollingMark className="h-5 w-5" /> : <UploadGlyph className="h-5 w-5" />}
             </span>
-            <span className="mt-3 text-base font-semibold text-slate-950">Upload a PDF</span>
+            <span className="mt-3 text-base font-semibold text-slate-950">
+              {busy ? "Uploading" : "Upload a PDF or Markdown file"}
+            </span>
             <span className="mt-1 max-w-md text-sm text-slate-600">
-              Drop a PDF here, or choose a file.
+              {busy ? "Keep this page open until the file is ready to open." : "Drop a PDF or Markdown file here, or choose a file."}
             </span>
             <span id="home-upload-hint" className="mt-2 text-xs text-slate-500">
               {source === "library"
-                ? "PDF only, up to 10 MB. 5 documents per account."
-                : "PDF only, up to 10 MB."}
+                ? "PDF or Markdown, up to 10 MB. 5 documents per account."
+                : "PDF or Markdown, up to 10 MB."}
             </span>
             <input
               ref={inputRef}
               id="home-pdf"
               type="file"
-              accept="application/pdf,.pdf"
+              accept="application/pdf,.pdf,text/markdown,.md,.markdown"
               className="sr-only"
-              aria-label="Choose a PDF"
+              aria-label="Choose a PDF or Markdown file"
               aria-describedby={error ? "home-upload-error" : "home-upload-hint"}
               aria-invalid={error ? true : undefined}
               disabled={busy}
@@ -223,8 +228,9 @@ export function SignedInHome({
             </p>
           ) : null}
           {busy ? (
-            <p className="mt-3 text-sm text-slate-600" aria-hidden="true">
-              Uploading the PDF.
+            <p className="mt-3 flex items-center gap-2 text-sm text-slate-600" role="status">
+              <RollingMark />
+              Uploading
             </p>
           ) : null}
         </div>

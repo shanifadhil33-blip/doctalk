@@ -7,8 +7,10 @@ import {
   primaryButtonClass,
   secondaryButtonClass,
 } from "@/components/button-styles";
+import { RollingMark } from "@/components/RollingMark";
 import { CheckGlyph, CloseGlyph, UploadGlyph } from "@/components/icons";
-import { formatFileSize, validatePdfFile } from "@/lib/upload-validation";
+import { isMarkdownFileName } from "@/lib/markdown/sections";
+import { formatFileSize, validateDocumentFile } from "@/lib/upload-validation";
 
 type UploadPhase = "idle" | "uploading" | "reading" | "ready";
 
@@ -125,7 +127,7 @@ export function UploadDialog({
 
   function takeFile(next: File | undefined) {
     if (!next) return;
-    const result = validatePdfFile(next);
+    const result = validateDocumentFile(next);
     if (!result.ok) {
       setError(result.message);
       return;
@@ -145,7 +147,7 @@ export function UploadDialog({
     phase === "uploading"
       ? "Uploading"
       : phase === "reading"
-        ? "Reading the PDF"
+        ? "Reading the file"
         : phase === "ready"
           ? "Ready to open"
           : "";
@@ -167,7 +169,7 @@ export function UploadDialog({
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
           <h2 id={titleId} className="text-lg font-semibold text-slate-950">
-            Upload a PDF
+            Upload a PDF or Markdown file
           </h2>
           <button
             type="button"
@@ -182,7 +184,7 @@ export function UploadDialog({
         <div className="space-y-4 px-5 py-5">
           {serverMode && !signedIn ? (
             <div className="rounded-xl border border-slate-200 bg-[#f8f9fb] px-4 py-8 text-center">
-              <p className="text-sm text-slate-700">Sign in to upload a PDF.</p>
+              <p className="text-sm text-slate-700">Sign in to upload a PDF or Markdown file.</p>
               <Link href="/sign-in?callbackUrl=%2Fdocuments" className={`${primaryButtonClass} mt-4`}>
                 Sign in
               </Link>
@@ -215,18 +217,21 @@ export function UploadDialog({
               <UploadGlyph />
             </span>
             <span className="mt-3 text-sm text-slate-700">
-              Drop a PDF here or <span className="font-medium text-[#4338ca] underline">browse</span>
+              Drop a PDF or Markdown file here or{" "}
+              <span className="font-medium text-[#4338ca] underline">browse</span>
             </span>
             <span id="upload-hint" className="mt-1 text-xs text-slate-500">
-              {serverMode ? "PDF only, up to 10 MB. 5 documents per account." : "Up to 10 MB"}
+              {serverMode
+                ? "PDF or Markdown, up to 10 MB. 5 documents per account."
+                : "PDF or Markdown, up to 10 MB."}
             </span>
             <input
               ref={inputRef}
               id="pdf-file"
               type="file"
-              accept="application/pdf,.pdf"
+              accept="application/pdf,.pdf,text/markdown,.md,.markdown"
               className="sr-only"
-              aria-label="Choose a PDF"
+              aria-label="Choose a PDF or Markdown file"
               aria-describedby={error ? "upload-error" : "upload-hint"}
               aria-invalid={error ? true : undefined}
               onChange={(event) => takeFile(event.target.files?.[0])}
@@ -244,7 +249,7 @@ export function UploadDialog({
             <div className="rounded-xl border border-slate-200 p-3">
               <div className="flex items-center gap-3">
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-slate-100 text-[10px] font-semibold tracking-wide text-slate-600">
-                  PDF
+                  {file && isMarkdownFileName(file.name) ? "MD" : "PDF"}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium text-slate-900">
@@ -270,8 +275,9 @@ export function UploadDialog({
               </div>
 
               {serverMode ? (
-                <p className="mt-3 text-sm text-slate-600" aria-live="polite">
-                  {busy ? "Uploading and reading the PDF." : "Ready to upload."}
+                <p className="mt-3 flex items-center gap-2 text-sm text-slate-600" aria-live="polite">
+                  {busy ? <RollingMark /> : null}
+                  {busy ? "Uploading" : "Ready to upload."}
                 </p>
               ) : (
               <div className="mt-3 space-y-2" aria-live="polite">
@@ -283,7 +289,7 @@ export function UploadDialog({
                 {phase !== "uploading" ? (
                   <ProgressRow
                     done={phase === "ready"}
-                    label="Reading the PDF"
+                    label="Reading the file"
                     percent={readPercent}
                   />
                 ) : null}
@@ -321,7 +327,7 @@ export function UploadDialog({
               if (file && ready) onOpenDocument(file);
             }}
           >
-            {serverMode ? (busy ? "Uploading" : "Upload") : "Open document"}
+            {serverMode ? "Upload" : "Open document"}
           </button>
         </div>
       </div>

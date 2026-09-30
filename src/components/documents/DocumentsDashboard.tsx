@@ -11,7 +11,8 @@ import { DocumentCard } from "@/components/documents/DocumentCard";
 import { documentPreviewSrc } from "@/lib/documents/preview";
 import { UploadDialog } from "@/components/documents/UploadDialog";
 import type { ListedDocument } from "@/lib/document-types";
-import { uploadPdfFromBrowser } from "@/lib/documents/client-upload";
+import { uploadDocumentFromBrowser } from "@/lib/documents/client-upload";
+import { isMarkdownFileName } from "@/lib/markdown/sections";
 import { isListedDocumentList } from "@/lib/documents/list";
 import {
   readSessionUploads,
@@ -91,9 +92,9 @@ export function DocumentsDashboard({
         ? []
         : uploads.map((upload) => ({
         id: upload.id,
-        title: upload.fileName.replace(/\.pdf$/i, ""),
+        title: upload.fileName.replace(/\.(pdf|markdown|md)$/i, ""),
         counterparty: "Uploaded in this browser",
-        kindLabel: "PDF",
+        kindLabel: isMarkdownFileName(upload.fileName) ? "Markdown" : "PDF",
         meta: `Added ${upload.addedLabel}`,
         status: "Not indexed yet",
         preview: "file",
@@ -128,7 +129,7 @@ export function DocumentsDashboard({
   }
 
   async function uploadToServer(file: File) {
-    const { id } = await uploadPdfFromBrowser(file);
+    const { id } = await uploadDocumentFromBrowser(file);
     setUploadOpen(false);
     setReloadToken((value) => value + 1);
     router.push(`/documents/${id}`);
@@ -165,7 +166,7 @@ export function DocumentsDashboard({
               onClick={() => setUploadOpen(true)}
             >
               <UploadGlyph />
-              Upload PDF
+              Upload PDF or Markdown
             </button>
           </>
         }
@@ -259,7 +260,7 @@ export function DocumentsDashboard({
             <p className="mx-auto mt-2 max-w-sm text-sm text-slate-600">
               {query
                 ? "Try a different name or counterparty."
-                : "Upload a PDF to open it here."}
+                : "Upload a PDF or Markdown file to open it here."}
             </p>
             {query ? (
               <button
@@ -275,7 +276,7 @@ export function DocumentsDashboard({
                 className={`${primaryButtonClass} mt-5`}
                 onClick={() => setUploadOpen(true)}
               >
-                Upload PDF
+                Upload PDF or Markdown
               </button>
             )}
           </div>

@@ -3,7 +3,13 @@ import { getDb } from "@/db";
 import { documents } from "@/db/schema";
 import type { ListedDocument } from "@/lib/document-types";
 import { demoDocuments } from "@/lib/demo-documents";
+import {
+  DEMO_MARKDOWN_FILE,
+  DEMO_MARKDOWN_ID,
+  markdownSampleListing,
+} from "@/lib/demo/markdown-catalog";
 import { visibleDocumentsWhere } from "@/lib/documents/visibility";
+import { isMarkdownFileName } from "@/lib/markdown/sections";
 
 function libraryStatusLabel(status: string): string {
   if (status === "processing") return "Processing";
@@ -61,9 +67,9 @@ function listedFromRow(row: {
   const { addedOn, addedLabel } = formatAdded(row.createdAt);
   return {
     id: row.id,
-    title: row.fileName.replace(/\.pdf$/i, ""),
+    title: titleFromFileName(row.fileName),
     counterparty: row.isDemo ? "Sample" : "Your document",
-    kindLabel: "PDF",
+    kindLabel: isMarkdownFileName(row.fileName) ? "Markdown" : "PDF",
     meta: `Added ${addedLabel}`,
     status: row.isDemo ? "Sample" : libraryStatusLabel(row.status),
     preview: "file",
@@ -90,8 +96,23 @@ export function partitionLibraryRows<T extends { userId: string | null; isDemo: 
   return { owned, samples };
 }
 
+function titleFromFileName(fileName: string): string {
+  return fileName.replace(/\.(pdf|markdown|md)$/i, "");
+}
+
+function withMarkdownSample(documents: ListedDocument[]): ListedDocument[] {
+  if (
+    documents.some(
+      (item) => item.id === DEMO_MARKDOWN_ID || item.fileName === DEMO_MARKDOWN_FILE,
+    )
+  ) {
+    return documents;
+  }
+  return [...documents, markdownSampleListing()];
+}
+
 export function demoListedDocuments(): ListedDocument[] {
-  return demoDocuments.map((document) => ({
+  return withMarkdownSample(demoDocuments.map((document) => ({
     id: document.id,
     title: document.title,
     counterparty: document.counterparty,
@@ -102,7 +123,7 @@ export function demoListedDocuments(): ListedDocument[] {
     fileName: document.fileName,
     addedOn: document.addedOn,
     pageCount: document.pageCount,
-  }));
+  })));
 }
 
 /**
@@ -130,7 +151,7 @@ export async function loadVisibleDocuments(
 
   return {
     source: "library",
-    documents: rows.map((row) => listedFromRow(row)),
+    documents: withMarkdownSample(rows.map((row) => listedFromRow(row))),
   };
 }
 
@@ -164,6 +185,6 @@ export async function loadAccountHome(viewerUserId: string): Promise<{
   return {
     source: "library",
     owned: owned.map((row) => listedFromRow(row)),
-    samples: samples.map((row) => listedFromRow(row)),
+    samples: withMarkdownSample(samples.map((row) => listedFromRow(row))),
   };
 }

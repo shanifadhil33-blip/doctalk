@@ -1,17 +1,21 @@
 "use client";
 
-import { useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UploadGlyph } from "@/components/icons";
+import { RollingMark } from "@/components/RollingMark";
 import { primaryButtonClass, secondaryButtonClass } from "@/components/button-styles";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
 import { TopBar } from "@/components/TopBar";
 import { AssistantAnswer } from "@/components/workspace/AnswerBlock";
 import { DocumentHeading } from "@/components/workspace/DocumentHeading";
+import { MarkdownPane } from "@/components/workspace/MarkdownPane";
 import type { Citation } from "@/lib/document-types";
+import { answerMarkdownLocally } from "@/lib/markdown/local-answer";
+import { isMarkdownFileName } from "@/lib/markdown/sections";
 import { useContainedScroll, useStableDocumentScroll } from "@/components/workspace/scroll-contain";
 
 const RealPdfViewer = dynamic(
@@ -40,6 +44,7 @@ export function LiveDocumentWorkspace({
   headerAccount,
   documentStatus,
   canDelete,
+  localAnswers = false,
 }: {
   documentId: string;
   fileName: string;
@@ -48,6 +53,8 @@ export function LiveDocumentWorkspace({
   headerAccount: ReactNode;
   documentStatus: DocumentStatus;
   canDelete: boolean;
+  /** Answer from the file text in the browser. Used when no database is configured. */
+  localAnswers?: boolean;
 }) {
   const router = useRouter();
   const answerScrollRef = useRef<HTMLDivElement>(null);
@@ -61,7 +68,22 @@ export function LiveDocumentWorkspace({
   const [pending, setPending] = useState(false);
   const [liveStatus, setLiveStatus] = useState("");
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const ready = documentStatus === "ready";
+  const [noteText, setNoteText] = useState<string | null>(null);
+  const markdown = isMarkdownFileName(fileName);
+  const ready = documentStatus === "ready" && (!localAnswers || !markdown || noteText !== null);
+
+  useEffect(() => {
+    if (!markdown) return;
+    const controller = new AbortController();
+    void fetch(pdfSrc, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const body = await response.text();
+        if (body.trim()) setNoteText(body);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [markdown, pdfSrc]);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -73,6 +95,28 @@ export function LiveDocumentWorkspace({
     setPending(true);
     setMessages((current) => [...current, { id: userId, role: "user", text: question }]);
     setLiveStatus("Looking through the document.");
+
+    if (localAnswers && markdown && noteText) {
+      const result = answerMarkdownLocally(noteText, question);
+      const citations = result.citations.map((citation, index) => ({
+        page: citation.page,
+        passageId: `${assistantId}-${index}`,
+        quote: citation.excerpt,
+        label: citation.label,
+      }));
+      setMessages((current) => [
+        ...current,
+        { id: assistantId, role: "assistant", text: result.answer, citations },
+      ]);
+      setLiveStatus(result.answer);
+      const first = citations[0];
+      if (first) {
+        setPage(first.page);
+        setActivePassageId(first.passageId);
+      }
+      setPending(false);
+      return;
+    }
 
     try {
       const response = await fetch("/api/chat", {
@@ -128,7 +172,7 @@ export function LiveDocumentWorkspace({
     router.refresh();
   }
 
-  const pageCountLabel = pageCount > 0 ? `${pageCount} pages · PDF` : "PDF";
+  const pageCountLabel = markdown ? "Markdown" : pageCount > 0 ? `${pageCount} pages · PDF` : "PDF";
 
   return (
     <div className="flex min-h-screen w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8] [overflow-anchor:none] lg:h-dvh lg:overflow-hidden">
@@ -145,7 +189,7 @@ export function LiveDocumentWorkspace({
               ) : null}
               <Link href="/documents?upload=1" className={secondaryButtonClass}>
                 <UploadGlyph />
-                <span className="hidden sm:inline">Upload PDF</span>
+                <span className="hidden sm:inline">Upload PDF or Markdown</span>
               </Link>
               {headerAccount}
             </>
@@ -153,17 +197,21 @@ export function LiveDocumentWorkspace({
         />
       </div>
       <main id="main" className="flex w-full min-w-0 max-w-full flex-col lg:min-h-0 lg:flex-1 lg:flex-row lg:overflow-hidden">
-        <RealPdfViewer
-          fileUrl={pdfSrc}
-          fileName={fileName}
-          page={page}
-          onPageCount={setPageCount}
-        />
+        {markdown ? (
+          <MarkdownPane fileUrl={pdfSrc} section={page} source={noteText} />
+        ) : (
+          <RealPdfViewer
+            fileUrl={pdfSrc}
+            fileName={fileName}
+            page={page}
+            onPageCount={setPageCount}
+          />
+        )}
         <aside className="flex h-[85dvh] max-h-[85dvh] w-full min-w-0 max-w-full shrink-0 flex-col overflow-hidden border-t border-slate-200 bg-white lg:h-full lg:max-h-none lg:min-h-0 lg:w-[420px] lg:shrink-0 lg:border-l lg:border-t-0">
           <div className="border-b border-slate-200 px-5 py-4">
             <h2 className="text-base font-semibold text-slate-950">Ask this document</h2>
             <p className="mt-1 text-sm text-slate-500">
-              {pageCount > 0 ? `${pageCount} pages` : "PDF"}
+              {markdown ? "Markdown" : pageCount > 0 ? `${pageCount} pages` : "PDF"}
             </p>
           </div>
           <div
@@ -187,7 +235,9 @@ export function LiveDocumentWorkspace({
             ) : null}
             {messages.length === 0 && ready ? (
               <p className="text-sm leading-relaxed text-slate-600">
-                Ask a question about this document. Sources point at the page they came from.
+                {markdown
+                  ? "Ask a question about this document. Sources point at the section they came from."
+                  : "Ask a question about this document. Sources point at the page they came from."}
               </p>
             ) : null}
             <ol aria-label="Conversation" className="space-y-4">
@@ -234,11 +284,19 @@ export function LiveDocumentWorkspace({
                 disabled={!ready || pending || !draft.trim()}
                 aria-busy={pending}
               >
-                {pending ? <SendingSpinner /> : null}
-                {pending ? "Sending" : "Send"}
+                Send
               </button>
             </div>
-            <p className="mt-2 text-xs text-slate-500">Press Enter to send</p>
+            <div className="mt-2 flex h-4 items-center justify-between gap-3">
+              <p className="text-xs text-slate-500">Press Enter to send</p>
+              <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-slate-500">
+                {pending ? (
+                  <span role="status" aria-label="Waiting for an answer">
+                    <RollingMark />
+                  </span>
+                ) : null}
+              </span>
+            </div>
           </form>
         </aside>
       </main>
@@ -247,25 +305,6 @@ export function LiveDocumentWorkspace({
         <SiteFooter />
       </div>
     </div>
-  );
-}
-
-function SendingSpinner() {
-  return (
-    <svg
-      className="h-4 w-4 animate-spin motion-reduce:animate-none"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" className="opacity-25" />
-      <path
-        d="M12 3a9 9 0 0 1 9 9"
-        stroke="currentColor"
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
-    </svg>
   );
 }
 
@@ -288,12 +327,14 @@ function readCitations(payload: unknown, assistantId: string): Citation[] {
     if (!item || typeof item !== "object") return;
     const page = "page" in item ? item.page : undefined;
     const excerpt = "excerpt" in item ? item.excerpt : undefined;
+    const label = "label" in item && typeof item.label === "string" ? item.label.trim() : "";
     if (typeof page !== "number" || !Number.isInteger(page) || page < 1) return;
     if (typeof excerpt !== "string" || !excerpt.trim()) return;
     parsed.push({
       page,
       passageId: `${assistantId}-${index}`,
       quote: excerpt,
+      ...(label ? { label } : {}),
     });
   });
   return parsed;

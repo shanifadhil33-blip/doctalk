@@ -1,3 +1,7 @@
+import {
+  DEMO_MARKDOWN_PREVIEW_LINES,
+  isDemoMarkdownFile,
+} from "@/lib/demo/markdown-catalog";
 import { demoPdfs, plainDemoLine } from "@/lib/demo/pdf-catalog";
 import { getDemoDocument } from "@/lib/demo-documents";
 import { blockText } from "@/lib/document-types";
@@ -20,6 +24,7 @@ export function documentPreviewSrc(
   fileName: string,
   status?: string,
 ): string | null {
+  if (isDemoMarkdownFile(fileName) && isSampleStatus(status)) return null;
   const seeded = demoPdfs.find((pdf) => pdf.fileName === fileName);
   if (seeded && isSampleStatus(status)) return seeded.fileUrl;
   if (UUID_PATTERN.test(id)) return `/api/documents/${id}/file`;
@@ -42,6 +47,9 @@ export function documentPreviewLines(
   fileName: string,
   status?: string,
 ): string[] {
+  if (isDemoMarkdownFile(fileName) && isSampleStatus(status)) {
+    return DEMO_MARKDOWN_PREVIEW_LINES;
+  }
   const seeded = demoPdfs.find((pdf) => pdf.fileName === fileName);
   const seededPage = seeded?.pages[0];
   if (seeded && isSampleStatus(status) && seededPage && seededPage.length > 0) {

@@ -9,7 +9,14 @@ import {
   isUploadId,
   isUuid,
 } from "@/lib/documents/blob-url";
-import { embedWithClient, IngestError, prepareDocumentChunks } from "@/lib/documents/ingest";
+import {
+  decodeMarkdownBytes,
+  embedWithClient,
+  IngestError,
+  prepareDocumentChunks,
+  prepareMarkdownChunks,
+} from "@/lib/documents/ingest";
+import { isMarkdownFileName } from "@/lib/markdown/sections";
 import {
   deleteOwnedDocumentRow,
   releasePendingUpload,
@@ -116,13 +123,21 @@ export async function finishUploadedPdf(input: {
 
   try {
     const bytes = await readPrivatePdf(input.url, token);
-    if (!hasPdfMagic(bytes)) {
+    const markdown = isMarkdownFileName(claimedRow.fileName);
+    if (markdown && (hasPdfMagic(bytes) || bytes.includes(0))) {
+      await discardUpload(input.userId, claimedRow.id, input.url, token);
+      return { ok: false, status: 400, error: "That file is not a Markdown file." };
+    }
+    if (!markdown && !hasPdfMagic(bytes)) {
       await discardUpload(input.userId, claimedRow.id, input.url, token);
       return { ok: false, status: 400, error: "That file is not a PDF." };
     }
 
     const client = createGeminiEmbeddingClient({ apiKey });
-    const prepared = await prepareDocumentChunks(bytes, embedWithClient(client, process.env));
+    const embed = embedWithClient(client, process.env);
+    const prepared = markdown
+      ? await prepareMarkdownChunks(decodeMarkdownBytes(bytes), embed)
+      : await prepareDocumentChunks(bytes, embed);
     await db.insert(chunks).values(
       prepared.map((piece) => ({
         documentId: claimedRow.id,
@@ -146,7 +161,11 @@ export async function finishUploadedPdf(input: {
       },
     };
   } catch (error) {
-    if (demoLimitMessage(error) || (error instanceof IngestError && error.message === "PDF must be 10 MB or smaller.")) {
+    const tooLarge =
+      error instanceof IngestError && error.message === "PDF must be 10 MB or smaller.";
+    const notMarkdown =
+      error instanceof IngestError && error.message === "That file is not a Markdown file.";
+    if (demoLimitMessage(error) || tooLarge || notMarkdown) {
       await discardUpload(input.userId, claimedRow.id, input.url, token);
       if (demoLimitMessage(error)) {
         return {
@@ -155,7 +174,11 @@ export async function finishUploadedPdf(input: {
           error: "Demo limit reached, try again later",
         };
       }
-      return { ok: false, status: 400, error: "PDF must be 10 MB or smaller." };
+      return {
+        ok: false,
+        status: 400,
+        error: tooLarge ? "PDF must be 10 MB or smaller." : "That file is not a Markdown file.",
+      };
     }
 
     await db

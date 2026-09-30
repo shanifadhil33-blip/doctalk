@@ -27,14 +27,14 @@ export function formatAskedAt(date: Date): { askedOn: string; askedLabel: string
 
 export function documentTitleFromFileName(fileName: string): string {
   const trimmed = fileName.trim();
-  const withoutExtension = trimmed.replace(/\.pdf$/i, "");
+  const withoutExtension = trimmed.replace(/\.(pdf|markdown|md)$/i, "");
   return withoutExtension.length > 0 ? withoutExtension : trimmed;
 }
 
 /** Saves a signed-in question. A missing table does not fail the answer. */
 export async function recordAskedQuestion(input: {
   userId: string;
-  documentId: string;
+  documentId: string | null;
   documentTitle: string;
   question: string;
   answer: string;

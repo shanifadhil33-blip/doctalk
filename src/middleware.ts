@@ -7,6 +7,7 @@ import {
 } from "@/lib/auth/access";
 import { userIdFromTokenSub } from "@/lib/auth/user-id";
 import { isOfflineSampleId } from "@/lib/demo-documents";
+import { isDemoMarkdownId } from "@/lib/demo/markdown-catalog";
 import { lookupDocument } from "@/lib/documents/lookup";
 
 export default auth(async (req) => {
@@ -22,6 +23,10 @@ export default auth(async (req) => {
       return NextResponse.next();
     }
     return redirectToSignIn(req);
+  }
+
+  if (isDemoMarkdownId(kind.documentId)) {
+    return NextResponse.next();
   }
 
   if (!process.env.DATABASE_URL && isOfflineSampleId(kind.documentId)) {
@@ -56,9 +61,10 @@ function redirectToSignIn(req: {
 export const config = {
   // Static files in public/ must not be treated as protected routes.
   // The PDF.js worker is .mjs (the default list only skips .js). Demo PDFs
-  // are .pdf. Private documents are streamed from /api/documents/:id/file.
+  // are .pdf and the demo note is .md. Private documents are streamed
+  // from /api/documents/:id/file.
   matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|mjs|pdf|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|mjs|pdf|md|markdown|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     "/(api|trpc)(.*)",
   ],
 };

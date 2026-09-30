@@ -1,6 +1,15 @@
-import { clientUploadPath, isUploadId } from "@/lib/documents/blob-url";
-import { safePdfFileName } from "@/lib/documents/upload-policy";
-import { MAX_PDF_BYTES } from "@/lib/upload-validation";
+import {
+  clientUploadPath,
+  isUploadId,
+  type UploadExtension,
+} from "@/lib/documents/blob-url";
+import { uploadExtensionFor, safeUploadFileName } from "@/lib/documents/upload-policy";
+import { isMarkdownFileName } from "@/lib/markdown/sections";
+import {
+  FILE_TOO_LARGE_MESSAGE,
+  MAX_PDF_BYTES,
+  UNSUPPORTED_UPLOAD_MESSAGE,
+} from "@/lib/upload-validation";
 
 export class UploadTokenError extends Error {
   readonly status: number;
@@ -19,7 +28,13 @@ type ReserveUpload = (input: {
 }) => Promise<{ ok: true; documentId: string } | { ok: false; message: string }>;
 
 export type UploadTokenDecision =
-  | { ok: true; uploadId: string; documentId: string; fileName: string }
+  | {
+      ok: true;
+      uploadId: string;
+      documentId: string;
+      fileName: string;
+      extension: UploadExtension;
+    }
   | { ok: false; status: number; message: string };
 
 export async function authorizeUploadToken(input: {
@@ -37,12 +52,12 @@ export async function authorizeUploadToken(input: {
     return { ok: false, status: 400, message: payload.message };
   }
 
-  if (input.pathname !== clientUploadPath(payload.uploadId)) {
+  if (input.pathname !== clientUploadPath(payload.uploadId, payload.extension)) {
     return { ok: false, status: 400, message: "Invalid request" };
   }
 
-  if (payload.type !== "application/pdf") {
-    return { ok: false, status: 400, message: "Only PDF files can be uploaded." };
+  if (!contentTypeAllowed(payload.extension, payload.type)) {
+    return { ok: false, status: 400, message: UNSUPPORTED_UPLOAD_MESSAGE };
   }
 
   if (!Number.isFinite(payload.size) || payload.size <= 0) {
@@ -50,7 +65,11 @@ export async function authorizeUploadToken(input: {
   }
 
   if (payload.size > MAX_PDF_BYTES) {
-    return { ok: false, status: 400, message: "PDF must be 10 MB or smaller." };
+    return {
+      ok: false,
+      status: 400,
+      message: payload.extension === "pdf" ? "PDF must be 10 MB or smaller." : FILE_TOO_LARGE_MESSAGE,
+    };
   }
 
   const reserved = await input.reserve({
@@ -67,13 +86,34 @@ export async function authorizeUploadToken(input: {
     uploadId: payload.uploadId,
     documentId: reserved.documentId,
     fileName: payload.fileName,
+    extension: payload.extension,
   };
+}
+
+function contentTypeAllowed(extension: UploadExtension, type: string): boolean {
+  if (extension === "pdf") {
+    return type === "" || type === "application/pdf";
+  }
+  return (
+    type === "" ||
+    type === "text/markdown" ||
+    type === "text/x-markdown" ||
+    type === "text/plain" ||
+    type === "application/octet-stream"
+  );
 }
 
 function parseUploadClientPayload(
   raw: string | null,
 ):
-  | { ok: true; uploadId: string; fileName: string; size: number; type: string }
+  | {
+      ok: true;
+      uploadId: string;
+      fileName: string;
+      size: number;
+      type: string;
+      extension: UploadExtension;
+    }
   | { ok: false; message: string } {
   if (!raw) return { ok: false, message: "Invalid request" };
   let parsed: unknown;
@@ -90,17 +130,22 @@ function parseUploadClientPayload(
     return { ok: false, message: "Invalid request" };
   }
   if (typeof record.fileName !== "string" || record.fileName.trim().length === 0) {
-    return { ok: false, message: "Choose a PDF." };
+    return { ok: false, message: "Choose a PDF or Markdown file." };
   }
   if (typeof record.size !== "number") {
     return { ok: false, message: "Invalid request" };
+  }
+  const fileName = safeUploadFileName(record.fileName);
+  if (!fileName.toLowerCase().endsWith(".pdf") && !isMarkdownFileName(fileName)) {
+    return { ok: false, message: UNSUPPORTED_UPLOAD_MESSAGE };
   }
   const type = typeof record.type === "string" ? record.type.trim().toLowerCase() : "";
   return {
     ok: true,
     uploadId: record.uploadId,
-    fileName: safePdfFileName(record.fileName),
+    fileName,
     size: record.size,
     type,
+    extension: uploadExtensionFor(fileName),
   };
 }

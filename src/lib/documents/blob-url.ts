@@ -14,8 +14,13 @@ export function isUploadId(value: string): boolean {
   return isUuid(value);
 }
 
-export function clientUploadPath(uploadId: string): string {
-  return `uploads/${uploadId}.pdf`;
+export type UploadExtension = "pdf" | "md" | "markdown";
+
+export function clientUploadPath(
+  uploadId: string,
+  extension: UploadExtension = "pdf",
+): string {
+  return `uploads/${uploadId}.${extension}`;
 }
 
 export function pathnameMatchesUpload(pathname: string, uploadId: string): boolean {
@@ -24,7 +29,7 @@ export function pathnameMatchesUpload(pathname: string, uploadId: string): boole
     return false;
   }
   const pattern = new RegExp(
-    `^uploads/${uploadId}(?:-[A-Za-z0-9_-]{1,80})?\\.pdf$`,
+    `^uploads/${uploadId}(?:-[A-Za-z0-9_-]{1,80})?\\.(?:pdf|markdown|md)$`,
     "i",
   );
   return pattern.test(pathname);

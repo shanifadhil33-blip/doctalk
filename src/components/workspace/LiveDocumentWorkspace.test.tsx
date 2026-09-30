@@ -122,10 +122,12 @@ describe("LiveDocumentWorkspace question column", () => {
     );
     await user.click(screen.getByRole("button", { name: "Send" }));
 
-    const sending = screen.getByRole("button", { name: "Sending" });
+    const sending = screen.getByRole("button", { name: "Send" });
     expect(sending).toBeDisabled();
     expect(sending).toHaveAttribute("aria-busy", "true");
-    const spinner = sending.querySelector("svg");
+    expect(screen.queryByText("Sending")).not.toBeInTheDocument();
+    const waiting = screen.getByRole("status", { name: "Waiting for an answer" });
+    const spinner = waiting.querySelector("svg");
     expect(spinner).toHaveClass("animate-spin");
     expect(spinner).toHaveAttribute("aria-hidden", "true");
 
@@ -167,7 +169,8 @@ describe("LiveDocumentWorkspace question column", () => {
       "Who owns an uploaded file?",
     );
     await user.click(screen.getByRole("button", { name: "Send" }));
-    expect(screen.getByRole("button", { name: "Sending" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
+    expect(screen.getByRole("status", { name: "Waiting for an answer" })).toBeInTheDocument();
 
     finish(
       new Response(JSON.stringify({ error: "Could not answer that question. Try again later." }), {
@@ -179,7 +182,8 @@ describe("LiveDocumentWorkspace question column", () => {
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Send" })).toBeInTheDocument();
     });
-    expect(screen.queryByRole("button", { name: "Sending" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("status", { name: "Waiting for an answer" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Sending")).not.toBeInTheDocument();
     expect(screen.getAllByText("Could not answer that question. Try again later.")).toHaveLength(2);
   });
 });
