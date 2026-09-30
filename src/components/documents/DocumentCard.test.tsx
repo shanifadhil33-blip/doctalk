@@ -62,7 +62,7 @@ describe("DocumentCard", () => {
 
     expect(screen.getByText("SAMPLE INVOICE")).toBeInTheDocument();
     expect(screen.getByText("Invoice number: INV-1044")).toBeInTheDocument();
-    expect(screen.getByText("2 pages · Added May 2")).toBeInTheDocument();
+    expect(screen.getByText("4 pages · Added May 2")).toBeInTheDocument();
     expect(screen.getByTestId("pdf-thumbnail")).toHaveAttribute(
       "data-src",
       "/demo/sample-invoice.pdf",

@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
+import { passagesForDemoFile } from "@/lib/demo/pdf-catalog";
 import {
   NOT_IN_DOCUMENT_ANSWER,
   answerFromPassages,
   buildRetrievalPrompt,
   finalizeAnswer,
+  isDocumentOverviewQuestion,
   pageNumberFromChunk,
+  summaryFromPassages,
 } from "@/lib/retrieval/answer";
 
 const passages = [
@@ -20,6 +23,75 @@ describe("retrieval prompt", () => {
     expect(prompt).toContain("Total due: 2400.00 USD");
     expect(prompt).toContain('"used":[1,3]');
     expect(prompt).toContain(NOT_IN_DOCUMENT_ANSWER);
+    expect(prompt.toLowerCase()).toContain("summary");
+  });
+});
+
+describe("overview questions", () => {
+  it("treats a content question as a summary and a missing fact as a refusal", () => {
+    expect(isDocumentOverviewQuestion("What is the content")).toBe(true);
+    expect(isDocumentOverviewQuestion("what is this document about?")).toBe(true);
+    expect(isDocumentOverviewQuestion("summarize this")).toBe(true);
+    expect(isDocumentOverviewQuestion("Who is the mayor?")).toBe(false);
+    expect(isDocumentOverviewQuestion("What is the total due?")).toBe(false);
+  });
+
+  it("answers from the passages and cites a page when the model refuses a summary", async () => {
+    const result = await answerFromPassages(
+      "What is the content",
+      passages,
+      async () => NOT_IN_DOCUMENT_ANSWER,
+    );
+    expect(result.answer).not.toBe(NOT_IN_DOCUMENT_ANSWER);
+    expect(result.answer).toContain("Total due: 2400.00 USD");
+    expect(result.citations[0]?.page).toBe(2);
+    expect(result.citations.length).toBeGreaterThan(0);
+  });
+
+  it("keeps a model summary that already cites a page", async () => {
+    const result = await answerFromPassages(
+      "summarize this",
+      passages,
+      async () =>
+        JSON.stringify({
+          answer: "The document states a total due of 2400.00 USD.",
+          used: [1],
+        }),
+    );
+    expect(result).toEqual({
+      answer: "The document states a total due of 2400.00 USD.",
+      citations: [{ page: 2, excerpt: "Total due: 2400.00 USD" }],
+    });
+  });
+
+  it("summarizes the sample policy from its own pages", async () => {
+    const passages = passagesForDemoFile("Sample_Data_Policy.pdf");
+    if (!passages) throw new Error("Missing sample policy");
+    const result = await answerFromPassages(
+      "What is the content",
+      passages,
+      async () => NOT_IN_DOCUMENT_ANSWER,
+    );
+    expect(result.answer.toLowerCase()).not.toContain("that is not in this document");
+    expect(result.answer).toContain("June 1, 2026");
+    expect(result.answer).toContain("Mara Ellison");
+    expect(result.citations.some((citation) => citation.page === 1)).toBe(true);
+  });
+
+  it("still refuses a fact the passages do not contain", async () => {
+    const result = await answerFromPassages(
+      "Who is the mayor?",
+      passages,
+      async () => JSON.stringify({ answer: NOT_IN_DOCUMENT_ANSWER, used: [] }),
+    );
+    expect(result).toEqual({
+      answer: NOT_IN_DOCUMENT_ANSWER,
+      citations: [],
+    });
+    expect(summaryFromPassages([])).toEqual({
+      answer: NOT_IN_DOCUMENT_ANSWER,
+      citations: [],
+    });
   });
 });
 

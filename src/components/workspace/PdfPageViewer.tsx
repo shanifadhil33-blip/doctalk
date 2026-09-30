@@ -91,8 +91,8 @@ export function PdfPageViewer({
   }
 
   return (
-    <div className="flex h-full min-h-[70vh] w-full min-w-0 flex-1 flex-col lg:min-h-0">
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 bg-white px-3 py-2">
+    <div className="flex h-full min-h-[70vh] w-full min-w-0 max-w-full flex-1 flex-col overflow-x-hidden lg:min-h-0">
+      <div className="flex w-full min-w-0 max-w-full flex-wrap items-center gap-2 border-b border-slate-200 bg-white px-3 py-2">
         <button
           type="button"
           className={iconButtonClass}
@@ -140,7 +140,7 @@ export function PdfPageViewer({
         >
           Fit width
         </button>
-        <form onSubmit={search} className="ml-auto flex min-w-[180px] flex-1 items-center gap-2 sm:max-w-xs" role="search">
+        <form onSubmit={search} className="flex w-full min-w-0 basis-full items-center gap-2 sm:ml-auto sm:w-auto sm:max-w-xs sm:basis-auto sm:flex-1" role="search">
           <label htmlFor="pdf-find" className="sr-only">
             Search in document
           </label>
@@ -164,10 +164,10 @@ export function PdfPageViewer({
           {searchNote}
         </p>
       ) : null}
-      <div id="pdf-scroll" className="min-h-0 flex-1 overflow-auto bg-[#eef0f3] px-3 py-6 sm:px-6">
+      <div id="pdf-scroll" className="min-h-0 w-full min-w-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto bg-[#eef0f3] px-3 py-4 sm:px-6 sm:py-6">
         <article
           aria-label={`Page ${current.number}`}
-          className="mx-auto w-full max-w-3xl bg-white px-5 py-8 text-slate-800 shadow-sm ring-1 ring-slate-200 sm:px-10"
+          className="mx-auto w-full min-w-0 max-w-3xl bg-white px-4 py-8 text-slate-800 shadow-sm ring-1 ring-slate-200 sm:px-10"
           style={{ fontSize: `${zoom / 100}rem` }}
         >
           <header className="flex items-start justify-between gap-4 border-b border-slate-200 pb-3 text-[0.72em] font-medium uppercase tracking-wide text-slate-400">

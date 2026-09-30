@@ -3,67 +3,603 @@
 << /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<< /Type /Pages /Kids [4 0 R 6 0 R] /Count 2 >>
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R 13 0 R] /Count 5 >>
 endobj
 3 0 obj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 4 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 5 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
 endobj
 5 0 obj
-<< /Length 308 >>
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 6 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
+endobj
+6 0 obj
+<< /Length 2009 >>
 stream
 BT
-/F1 11 Tf
-54 740 Td
-16 TL
+0 0 0 rg
+/F2 18 Tf
+1 0 0 1 54 730.00 Tm
 (SAMPLE DATA POLICY) Tj
-T*
+ET
+0.75 0.75 0.75 RG
+0.8 w
+54 700.00 m 558 700.00 l S
+0 0 0 RG
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 682.00 Tm
+(Northwind Studio sample workspace) Tj
+ET
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 667.00 Tm
+(Document number: POL-2026-018) Tj
+ET
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 652.00 Tm
 (Effective date: June 1, 2026) Tj
-T*
-(This policy describes how sample documents are handled in this workspace.) Tj
-T*
-(An uploaded PDF belongs to the account that uploaded it.) Tj
-T*
-(Demo PDFs in the public demo folder can be opened by anyone.) Tj
+ET
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 637.00 Tm
+(Prepared by: Mara Ellison, Privacy Lead) Tj
+ET
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 622.00 Tm
+(Status: Sample only. Not a client policy and not legal advice.) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 599.00 Tm
+(This policy describes how sample documents are handled in this workspace. It is the text a) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 583.00 Tm
+(visitor can ask about: who owns a file, who can open it, how long it is kept, and how a question) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 567.00 Tm
+(is answered.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 529.00 Tm
+(1. Purpose) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 506.00 Tm
+(Northwind Studio published this sample on June 1, 2026. It covers demo PDFs in the public) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 490.00 Tm
+(folder and PDFs a signed-in account uploads. Harbor Supplies and the people named in the) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 474.00 Tm
+(sample agreement are examples in those other files. They are not the operator of this) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 458.00 Tm
+(workspace.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 420.00 Tm
+(2. Who it covers) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 397.00 Tm
+(It covers a visitor who opens a demo PDF, and an account that uploads its own PDF. The) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 381.00 Tm
+(privacy lead named on this sample is Mara Ellison. Policy questions go to) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 365.00 Tm
+(privacy@example.com.) Tj
+ET
+BT
+0.35 0.35 0.35 rg
+/F1 9 Tf
+1 0 0 1 54 36 Tm
+(Sample document - Page 1 of 5) Tj
 ET
 endstream
 endobj
-6 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 7 0 R /Resources << /Font << /F1 3 0 R >> >> >>
-endobj
 7 0 obj
-<< /Length 332 >>
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 8 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
+endobj
+8 0 obj
+<< /Length 1967 >>
 stream
 BT
-/F1 11 Tf
-54 740 Td
-16 TL
-(Questions use only the text of the open document.) Tj
-T*
-(If the open document does not include the answer, the reply says so.) Tj
-T*
-(You can keep up to 5 uploaded PDFs.) Tj
-T*
-(Delete an upload when you no longer need it.) Tj
-T*
-(Questions about this policy can be sent to privacy@example.com.) Tj
+0 0 0 rg
+/F2 18 Tf
+1 0 0 1 54 730.00 Tm
+(SAMPLE DATA POLICY) Tj
+ET
+0.75 0.75 0.75 RG
+0.8 w
+54 700.00 m 558 700.00 l S
+0 0 0 RG
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 682.00 Tm
+(POL-2026-018, continued. Effective June 1, 2026.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 651.00 Tm
+(3. Ownership) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 628.00 Tm
+(An uploaded PDF belongs to the account that uploaded it. The owner is the account on the) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 612.00 Tm
+(upload record. The name printed inside the file does not change the owner.) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 582.00 Tm
+(On May 12, 2026, Jordan Hale uploaded Harbor-packing-list.pdf, 842 KB, to a sample account.) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 566.00 Tm
+(That file belongs to Jordan Hale's account. Deleting it removes it from that account.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 528.00 Tm
+(4. Demo files) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 505.00 Tm
+(Demo PDFs in the public demo folder can be opened by anyone. They have no owner) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 489.00 Tm
+(account. The folder holds three samples: this policy \(POL-2026-018\), services agreement) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 473.00 Tm
+(SSA-2026-014, and invoice INV-1044. Opening a sample does not count toward an account's) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 457.00 Tm
+(file limit.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 419.00 Tm
+(5. Private files) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 396.00 Tm
+(A signed-in visitor sees the samples plus the PDFs on that visitor's own account. One account) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 380.00 Tm
+(cannot open another account's upload. A link to someone else's file does not show the file.) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 364.00 Tm
+(The server checks the account before it returns the PDF or answers a question about it.) Tj
+ET
+BT
+0.35 0.35 0.35 rg
+/F1 9 Tf
+1 0 0 1 54 36 Tm
+(Sample document - Page 2 of 5) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 10 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
+endobj
+10 0 obj
+<< /Length 1976 >>
+stream
+BT
+0 0 0 rg
+/F2 18 Tf
+1 0 0 1 54 730.00 Tm
+(SAMPLE DATA POLICY) Tj
+ET
+0.75 0.75 0.75 RG
+0.8 w
+54 700.00 m 558 700.00 l S
+0 0 0 RG
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 682.00 Tm
+(POL-2026-018, continued.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 651.00 Tm
+(6. How long files are kept) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 628.00 Tm
+(Demo PDFs stay in the public folder while this sample workspace is published. An uploaded) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 612.00 Tm
+(PDF stays until the account deletes it. After deletion the workspace does not keep a separate) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 596.00 Tm
+(archive. Jordan Hale's packing list from May 12, 2026 would leave the account when that) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 580.00 Tm
+(account deletes it.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 542.00 Tm
+(7. How many files) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 519.00 Tm
+(An account can keep up to 5 uploaded PDFs. Each file must be a PDF of 10 MB or smaller.) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 503.00 Tm
+(The three public samples do not count toward the 5. Delete an upload when you no longer) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 487.00 Tm
+(need it if you want room for another file.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 449.00 Tm
+(8. Questions about a document) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 426.00 Tm
+(A question is answered from the text of the open document, and the reply cites the page the) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 410.00 Tm
+(words came from. A question about what the document contains, what it is about, or a request) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 394.00 Tm
+(to summarize it is answered from that text. If the document does not state a specific fact, the) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 378.00 Tm
+(reply says that it is not in the document. The demo does not fill a gap with outside knowledge.) Tj
+ET
+BT
+0.35 0.35 0.35 rg
+/F1 9 Tf
+1 0 0 1 54 36 Tm
+(Sample document - Page 3 of 5) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 12 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
+endobj
+12 0 obj
+<< /Length 1873 >>
+stream
+BT
+0 0 0 rg
+/F2 18 Tf
+1 0 0 1 54 730.00 Tm
+(SAMPLE DATA POLICY) Tj
+ET
+0.75 0.75 0.75 RG
+0.8 w
+54 700.00 m 558 700.00 l S
+0 0 0 RG
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 682.00 Tm
+(POL-2026-018, continued.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 651.00 Tm
+(9. What this sample does not collect) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 628.00 Tm
+(This policy does not describe a real customer database. The demo does not ask for a phone) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 612.00 Tm
+(number, a payment card, or a home address. The invoice sample uses the fictional address) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 596.00 Tm
+(488 Market Street, Portland, OR 97204. Do not send a payment there.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 558.00 Tm
+(10. Notices) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 535.00 Tm
+(Write to privacy@example.com. Mara Ellison reads sample messages on business days. A) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 519.00 Tm
+(message received after 5:00 p.m. Pacific Time counts as received at 9:00 a.m. Pacific Time) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 503.00 Tm
+(the next business day. The sample office is closed Saturday and Sunday.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 465.00 Tm
+(11. Related sample documents) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 442.00 Tm
+(The services agreement is effective April 1, 2026, between Northwind Studio and Harbor) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 426.00 Tm
+(Supplies. The monthly layout fee is 2400.00 USD. Invoice INV-1044 is dated May 2, 2026,) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 410.00 Tm
+(adds a 40.00 USD courier, shows Total due: 2440.00 USD, and asks for payment by May 16,) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 394.00 Tm
+(2026. Those figures live in that invoice. This policy only points at them.) Tj
+ET
+BT
+0.35 0.35 0.35 rg
+/F1 9 Tf
+1 0 0 1 54 36 Tm
+(Sample document - Page 4 of 5) Tj
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 14 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
+endobj
+14 0 obj
+<< /Length 1709 >>
+stream
+BT
+0 0 0 rg
+/F2 18 Tf
+1 0 0 1 54 730.00 Tm
+(SAMPLE DATA POLICY) Tj
+ET
+0.75 0.75 0.75 RG
+0.8 w
+54 700.00 m 558 700.00 l S
+0 0 0 RG
+BT
+0.25 0.28 0.33 rg
+/F1 10 Tf
+1 0 0 1 54 682.00 Tm
+(POL-2026-018, continued.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 651.00 Tm
+(12. Changes) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 628.00 Tm
+(Northwind Studio may replace this sample text when the demo is updated. The effective date) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 612.00 Tm
+(on page 1 changes when the text changes. A copy a visitor saved earlier is not updated. The) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 596.00 Tm
+(version in the public folder is document POL-2026-018, effective June 1, 2026, prepared by) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 580.00 Tm
+(Mara Ellison.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 542.00 Tm
+(13. Contact for this version) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 519.00 Tm
+(Privacy lead: Mara Ellison, privacy@example.com. Sample mailing address: Northwind Studio,) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 503.00 Tm
+(120 Sample Avenue, Portland, OR 97204. The street address is fictional, like the rest of this) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 487.00 Tm
+(file.) Tj
+ET
+BT
+0 0 0 rg
+/F2 13 Tf
+1 0 0 1 54 449.00 Tm
+(14. Sample notice) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 426.00 Tm
+(This document is a sample. The names, dates, amounts, and addresses in it are fictional. It is) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 410.00 Tm
+(not legal advice and it is not the policy of a real organization. The sections above are the) Tj
+ET
+BT
+0 0 0 rg
+/F1 12 Tf
+1 0 0 1 54 394.00 Tm
+(content of the file.) Tj
+ET
+BT
+0.35 0.35 0.35 rg
+/F1 9 Tf
+1 0 0 1 54 36 Tm
+(Sample document - Page 5 of 5) Tj
 ET
 endstream
 endobj
 xref
-0 8
+0 15
 0000000000 65535 f 
 0000000009 00000 n 
 0000000058 00000 n 
-0000000121 00000 n 
-0000000191 00000 n 
-0000000317 00000 n 
-0000000676 00000 n 
-0000000802 00000 n 
+0000000141 00000 n 
+0000000211 00000 n 
+0000000286 00000 n 
+0000000422 00000 n 
+0000002483 00000 n 
+0000002619 00000 n 
+0000004638 00000 n 
+0000004775 00000 n 
+0000006804 00000 n 
+0000006942 00000 n 
+0000008868 00000 n 
+0000009006 00000 n 
 trailer
-<< /Size 8 /Root 1 0 R >>
+<< /Size 15 /Root 1 0 R >>
 startxref
-1185
+10768
 %%EOF
