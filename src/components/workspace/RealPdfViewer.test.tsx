@@ -93,7 +93,7 @@ describe("RealPdfViewer", () => {
     expect(frameClass).toContain("h-[50dvh]");
     expect(frameClass).toContain("max-h-[50dvh]");
     expect(frameClass).toContain("overflow-hidden");
-    expect(pane?.className.split(/\s+/)).toContain("overscroll-y-contain");
+    expect(pane?.className.split(/\s+/)).not.toContain("overscroll-y-contain");
     expect(pane?.className).toContain("[overflow-anchor:none]");
 
     const user = userEvent.setup();
