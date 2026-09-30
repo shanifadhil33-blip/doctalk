@@ -64,9 +64,9 @@ export function CitationExcerpt({
   quote: string;
 }) {
   return (
-    <blockquote className="mt-3 border-l-4 border-[#f3e2a6] bg-[#fff8df] px-3 py-2 text-sm text-slate-800">
+    <blockquote className="mt-3 border-l-4 border-[#4f46e5] bg-[#f5f4ff] px-3 py-2 text-sm text-slate-800">
       <div className="flex items-start justify-between gap-3">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-[#8a5a12]">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-[#3730a3]">
           Passage · Page {page}
         </p>
         <CopyTextButton text={quote} label="Copy passage" />

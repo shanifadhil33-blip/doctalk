@@ -270,11 +270,11 @@ function BlockView({ block, active }: { block: PageBlock; active: boolean }) {
 
 function CitedLabel() {
   return (
-    <span className="mb-2 block text-[0.72em] font-medium uppercase tracking-wide text-[#8a5a12]">
+    <span className="mb-2 block text-[0.72em] font-medium uppercase tracking-wide text-[#3730a3]">
       Cited in this answer
     </span>
   );
 }
 
 const highlightClass =
-  "rounded-lg border border-[#f3e2a6] bg-[#fff8df] px-3 py-3 text-slate-900";
+  "rounded-lg border border-[#c7c9f5] bg-[#f5f4ff] px-3 py-3 text-slate-900";
