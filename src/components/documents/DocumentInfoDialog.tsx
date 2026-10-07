@@ -2,6 +2,7 @@
 
 import { useId, useRef } from "react";
 import { dialogBackdropClass, dialogPanelClass, secondaryButtonClass } from "@/components/button-styles";
+import { OverlayPortal } from "@/components/OverlayPortal";
 import { useDialog } from "@/components/useDialog";
 
 export type DocumentInfo = {
@@ -40,9 +41,10 @@ export function DocumentInfoDialog({
   }
 
   return (
+    <OverlayPortal>
     <div
       className={dialogBackdropClass}
-      onMouseDown={(event) => {
+      onPointerDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
     >
@@ -74,6 +76,7 @@ export function DocumentInfoDialog({
         </div>
       </div>
     </div>
+    </OverlayPortal>
   );
 }
 

@@ -8,6 +8,7 @@ import {
   secondaryButtonClass,
   textButtonClass,
 } from "@/components/button-styles";
+import { OverlayPortal } from "@/components/OverlayPortal";
 import { RollingMark } from "@/components/RollingMark";
 import { useDialog } from "@/components/useDialog";
 
@@ -97,6 +98,7 @@ function SignOutDialog({
   }
 
   return (
+    <OverlayPortal>
     <div
       className={`${dialogBackdropClass} sign-out-dialog`}
       data-state={leaving ? "close" : "open"}
@@ -151,5 +153,6 @@ function SignOutDialog({
         </div>
       </div>
     </div>
+    </OverlayPortal>
   );
 }

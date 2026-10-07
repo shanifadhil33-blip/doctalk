@@ -2,6 +2,7 @@
 
 import { useId, useRef } from "react";
 import { dangerButtonClass, dialogBackdropClass, dialogPanelClass, secondaryButtonClass } from "@/components/button-styles";
+import { OverlayPortal } from "@/components/OverlayPortal";
 import { RollingMark } from "@/components/RollingMark";
 import { useDialog } from "@/components/useDialog";
 
@@ -34,9 +35,10 @@ export function DeleteDocumentDialog({
   if (!open) return null;
 
   return (
+    <OverlayPortal>
     <div
       className={dialogBackdropClass}
-      onMouseDown={(event) => {
+      onPointerDown={(event) => {
         if (pending) return;
         if (event.target === event.currentTarget) onCancel();
       }}
@@ -93,5 +95,6 @@ export function DeleteDocumentDialog({
         </div>
       </div>
     </div>
+    </OverlayPortal>
   );
 }

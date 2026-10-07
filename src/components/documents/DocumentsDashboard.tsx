@@ -19,6 +19,7 @@ import type { ListedDocument } from "@/lib/document-types";
 import { uploadDocumentFromBrowser } from "@/lib/documents/client-upload";
 import { isMarkdownFileName } from "@/lib/markdown/sections";
 import { isListedDocumentList } from "@/lib/documents/list";
+import { ownDocumentsHref } from "@/lib/documents/list-destination";
 import {
   readSessionUploads,
   recallUploadFile,
@@ -169,7 +170,7 @@ export function DocumentsDashboard({
 
   function closeUpload() {
     setUploadOpen(false);
-    if (initialUploadOpen) router.replace("/documents");
+    if (initialUploadOpen) router.replace(signedIn ? ownDocumentsHref() : "/documents");
   }
 
   async function uploadToServer(file: File) {
@@ -205,15 +206,17 @@ export function DocumentsDashboard({
         actions={
           <>
             {headerAccount}
-            <button
-              type="button"
-              className={primaryButtonClass}
-              aria-label="Upload PDF or Markdown"
-              onClick={() => setUploadOpen(true)}
-            >
-              <UploadGlyph />
-              <span className="hidden sm:inline">Upload PDF or Markdown</span>
-            </button>
+            {signedIn ? null : (
+              <button
+                type="button"
+                className={primaryButtonClass}
+                aria-label="Upload PDF or Markdown"
+                onClick={() => setUploadOpen(true)}
+              >
+                <UploadGlyph />
+                <span className="hidden sm:inline">Upload PDF or Markdown</span>
+              </button>
+            )}
           </>
         }
       />
@@ -236,23 +239,14 @@ export function DocumentsDashboard({
       <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
         <h1 className="text-3xl font-semibold tracking-tight text-slate-950">Documents</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
-          Inspect contracts, billing statements, and medical invoices.
+          {signedIn && source === "library"
+            ? "PDF and Markdown files in your account."
+            : "Inspect contracts, billing statements, and medical invoices."}
         </p>
-        {signedIn && source === "library" ? (
-          <p className="mt-3">
-            <Link
-              href="/documents?demo=1"
-              prefetch={true}
-              className="inline-flex min-h-11 items-center text-sm font-medium text-slate-600 underline-offset-2 hover:text-slate-950 hover:underline"
-            >
-              Try the public demo
-            </Link>
-          </p>
-        ) : null}
         {signedIn && source === "demo" ? (
           <p className="mt-3">
             <Link
-              href="/documents"
+              href={ownDocumentsHref()}
               prefetch={true}
               className="inline-flex min-h-11 items-center text-sm font-medium text-slate-600 underline-offset-2 hover:text-slate-950 hover:underline"
             >
@@ -354,9 +348,9 @@ export function DocumentsDashboard({
             <p className="mx-auto mt-2 max-w-sm text-sm text-slate-600">
               {query
                 ? "Try a different name or counterparty."
-                : signedIn && source === "library"
-                  ? "Upload a PDF or Markdown file to ask a question about it."
-                  : "Upload a PDF or Markdown file to open it here."}
+                : signedIn
+                  ? "Use the upload box on your documents page to add a PDF or Markdown file."
+                  : "Use Upload PDF or Markdown in the header to add a file."}
             </p>
             {query ? (
               <button
@@ -366,15 +360,7 @@ export function DocumentsDashboard({
               >
                 Clear search
               </button>
-            ) : (
-              <button
-                type="button"
-                className={`${primaryButtonClass} mt-5`}
-                onClick={() => setUploadOpen(true)}
-              >
-                {signedIn && source === "library" ? "Upload your first document" : "Upload PDF or Markdown"}
-              </button>
-            )}
+            ) : null}
           </div>
         ) : (
           <ul

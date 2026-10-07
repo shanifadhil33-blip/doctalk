@@ -9,5 +9,6 @@ describe("tap focus", () => {
     expect(css).toContain("-webkit-tap-highlight-color: transparent");
     expect(css).toContain(':where(html[data-input="keyboard"]) :focus-visible');
     expect(css).toContain("outline: 1px solid var(--brand)");
+    expect(css).not.toContain("view-transition-name");
   });
 });

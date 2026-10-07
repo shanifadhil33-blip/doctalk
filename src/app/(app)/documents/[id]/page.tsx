@@ -13,6 +13,7 @@ import {
   isDemoMarkdownId,
 } from "@/lib/demo/markdown-catalog";
 import { lookupDocument } from "@/lib/documents/lookup";
+import { backToDocumentsHref } from "@/lib/documents/list-destination";
 import { pdfSrcFor } from "@/lib/documents/upload-policy";
 
 type DocumentPageProps = {
@@ -51,6 +52,9 @@ export default async function DocumentPage({
   const { id } = await params;
   const { page } = await searchParams;
   const parsed = page ? Number.parseInt(page, 10) : undefined;
+  const session = await auth();
+  const viewerUserId = userIdFromTokenSub(session?.user?.id);
+  const listHref = backToDocumentsHref(viewerUserId !== null);
   const headerAccount = (
     <AccountMenu variant="text" redirectTo={`/documents/${id}`} />
   );
@@ -67,6 +71,7 @@ export default async function DocumentPage({
         documentStatus="ready"
         canDelete={false}
         localAnswers={!process.env.DATABASE_URL}
+        listHref={listHref}
       />
     );
   }
@@ -78,12 +83,11 @@ export default async function DocumentPage({
         documentId={id}
         initialPage={parsed}
         headerAccount={headerAccount}
+        listHref={listHref}
       />
     );
   }
 
-  const session = await auth();
-  const viewerUserId = userIdFromTokenSub(session?.user?.id);
   const lookup = await lookupDocument(id);
   const decision = decideDocumentAccess(viewerUserId, lookup);
 
@@ -117,6 +121,7 @@ export default async function DocumentPage({
         lookup.document.userId === viewerUserId &&
         !lookup.document.isDemo
       }
+      listHref={listHref}
     />
   );
 }

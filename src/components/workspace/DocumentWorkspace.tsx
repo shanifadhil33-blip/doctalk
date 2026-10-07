@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { UploadGlyph } from "@/components/icons";
 import { primaryButtonClass, secondaryButtonClass } from "@/components/button-styles";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
@@ -34,6 +33,7 @@ export function DocumentWorkspace({
   documentStatus,
   canDelete,
   localAnswers,
+  listHref = "/documents",
 }: {
   document: DemoDocument | null;
   documentId: string;
@@ -44,6 +44,7 @@ export function DocumentWorkspace({
   documentStatus?: "processing" | "ready" | "failed";
   canDelete?: boolean;
   localAnswers?: boolean;
+  listHref?: string;
 }) {
   if (document) {
     return (
@@ -51,6 +52,7 @@ export function DocumentWorkspace({
         document={document}
         initialPage={initialPage}
         headerAccount={headerAccount}
+        listHref={listHref}
       />
     );
   }
@@ -66,6 +68,7 @@ export function DocumentWorkspace({
         documentStatus={documentStatus ?? "ready"}
         canDelete={canDelete ?? false}
         localAnswers={localAnswers}
+        listHref={listHref}
       />
     );
   }
@@ -78,21 +81,24 @@ export function DocumentWorkspace({
         headerAccount={headerAccount}
         canDelete={canDelete ?? false}
         documentStatus={documentStatus}
+        listHref={listHref}
       />
     );
   }
 
-  return <UnindexedWorkspace documentId={documentId} headerAccount={headerAccount} />;
+  return <UnindexedWorkspace documentId={documentId} headerAccount={headerAccount} listHref={listHref} />;
 }
 
 function IndexedWorkspace({
   document,
   initialPage,
   headerAccount,
+  listHref,
 }: {
   document: DemoDocument;
   initialPage?: number;
   headerAccount: ReactNode;
+  listHref: string;
 }) {
   const startingPage = clampPage(initialPage, document.pageCount) ?? document.intro.citations[0]?.page ?? 1;
   const startingPassage =
@@ -157,6 +163,7 @@ function IndexedWorkspace({
       title={`${document.title} (${document.counterparty})`}
       pageCountLabel={`${document.pageCount} pages · PDF`}
       headerAccount={headerAccount}
+      listHref={listHref}
     >
       <PdfPageViewer
         fileName={document.fileName}
@@ -185,9 +192,11 @@ function IndexedWorkspace({
 function UnindexedWorkspace({
   documentId,
   headerAccount,
+  listHref,
 }: {
   documentId: string;
   headerAccount: ReactNode;
+  listHref: string;
 }) {
   const [upload, setUpload] = useState<SessionUpload | null | undefined>(undefined);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
@@ -224,6 +233,7 @@ function UnindexedWorkspace({
         documentStatus="ready"
         canDelete={false}
         localAnswers
+        listHref={listHref}
       />
     );
   }
@@ -232,13 +242,13 @@ function UnindexedWorkspace({
     return (
       <div className="flex min-h-dvh min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8]">
         <SkipLink />
-        <TopBar back={<BackLink href="/documents">Documents</BackLink>} actions={headerAccount} />
+        <TopBar back={<BackLink href={listHref}>Documents</BackLink>} actions={headerAccount} />
         <main id="main" className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-4 py-16 text-center">
           <h1 className="text-2xl font-semibold text-slate-950">Document not found</h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-600">
             This demo does not have a document with that link.
           </p>
-          <Link href="/documents" className={`${primaryButtonClass} mt-6 self-center`}>
+          <Link href={listHref} className={`${primaryButtonClass} mt-6 self-center`}>
             Back to documents
           </Link>
         </main>
@@ -252,6 +262,7 @@ function UnindexedWorkspace({
       title={upload.fileName}
       pageCountLabel="PDF"
       headerAccount={headerAccount}
+      listHref={listHref}
     >
       <div className="flex h-[50dvh] max-h-[50dvh] w-full min-w-0 shrink-0 flex-col bg-[#eef0f3] lg:h-full lg:max-h-none lg:min-h-0 lg:flex-1">
         {fileUrl ? (
@@ -289,12 +300,14 @@ function StoredDocumentShell({
   headerAccount,
   canDelete,
   documentStatus,
+  listHref,
 }: {
   documentId: string;
   fileName: string;
   headerAccount: ReactNode;
   canDelete: boolean;
   documentStatus?: "processing" | "ready" | "failed";
+  listHref: string;
 }) {
   const router = useRouter();
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -323,13 +336,13 @@ function StoredDocumentShell({
       setDeletePending(false);
       return;
     }
-    router.push("/documents");
+    router.push(listHref);
     router.refresh();
   }
 
   return (
     <>
-    <WorkspaceFrame title={fileName} pageCountLabel="PDF" headerAccount={headerAccount}>
+    <WorkspaceFrame title={fileName} pageCountLabel="PDF" headerAccount={headerAccount} listHref={listHref}>
       <div className="flex h-[50dvh] max-h-[50dvh] w-full min-w-0 shrink-0 flex-col items-center justify-center bg-[#eef0f3] px-6 text-center lg:h-full lg:max-h-none lg:min-h-0 lg:flex-1">
         <h2 className="text-base font-semibold text-slate-950">{fileName}</h2>
         <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-600">{note}</p>
@@ -371,11 +384,13 @@ function WorkspaceFrame({
   title,
   pageCountLabel,
   headerAccount,
+  listHref,
   children,
 }: {
   title: string;
   pageCountLabel: string;
   headerAccount: ReactNode;
+  listHref: string;
   children: ReactNode;
 }) {
   useStableDocumentScroll();
@@ -383,22 +398,10 @@ function WorkspaceFrame({
     <div className="flex min-h-dvh w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8] [overflow-anchor:none] lg:h-dvh">
       <SkipLink />
       <TopBar
-        back={<BackLink href="/documents">Documents</BackLink>}
+        back={<BackLink href={listHref}>Documents</BackLink>}
         title={title}
         meta={pageCountLabel}
-        actions={
-          <>
-            <Link
-              href="/documents?upload=1"
-              className={secondaryButtonClass}
-              aria-label="Upload PDF or Markdown"
-            >
-              <UploadGlyph />
-              <span className="hidden sm:inline">Upload PDF or Markdown</span>
-            </Link>
-            {headerAccount}
-          </>
-        }
+        actions={headerAccount}
       />
       <main id="main" className="flex w-full min-w-0 max-w-full flex-1 flex-col overflow-x-hidden lg:min-h-0 lg:flex-row">
         {children}

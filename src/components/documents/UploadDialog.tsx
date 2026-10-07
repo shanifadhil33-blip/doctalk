@@ -10,6 +10,7 @@ import {
   primaryButtonClass,
   secondaryButtonClass,
 } from "@/components/button-styles";
+import { OverlayPortal } from "@/components/OverlayPortal";
 import { RollingMark } from "@/components/RollingMark";
 import { CloseGlyph, UploadGlyph } from "@/components/icons";
 import { useDialog } from "@/components/useDialog";
@@ -124,9 +125,10 @@ export function UploadDialog({
   const ready = phase === "ready";
 
   return (
+    <OverlayPortal>
     <div
       className={dialogBackdropClass}
-      onMouseDown={(event) => {
+      onPointerDown={(event) => {
         if (busy) return;
         if (event.target === event.currentTarget) onClose();
       }}
@@ -296,6 +298,7 @@ export function UploadDialog({
         </div>
       </div>
     </div>
+    </OverlayPortal>
   );
 }
 

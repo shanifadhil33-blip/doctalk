@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { overlayZ } from "@/components/button-styles";
 import { Logo } from "@/components/Logo";
 
 export function TopBar({
@@ -13,7 +14,7 @@ export function TopBar({
   actions?: ReactNode;
 }) {
   return (
-    <header className="site-header flex w-full min-w-0 max-w-full flex-wrap items-center gap-x-1 gap-y-1 overflow-x-hidden border-b border-slate-200 bg-white px-2 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] sm:px-4 sm:pb-3 sm:pt-[max(0.75rem,env(safe-area-inset-top))]">
+    <header className={`site-header relative ${overlayZ.header} flex w-full min-w-0 max-w-full flex-wrap items-center gap-x-1 gap-y-1 overflow-x-hidden border-b border-slate-200 bg-white px-2 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] sm:px-4 sm:pb-3 sm:pt-[max(0.75rem,env(safe-area-inset-top))]`}>
       {back ? <div className="order-1 shrink-0">{back}</div> : null}
       <div className="order-2 shrink-0">
         <Logo compact={Boolean(back)} />

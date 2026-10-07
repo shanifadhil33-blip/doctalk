@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
-import { controlFocusClass } from "@/components/button-styles";
+import { controlFocusClass, overlayZ } from "@/components/button-styles";
 import { CheckGlyph, ChevronDownGlyph } from "@/components/icons";
 
 export type MenuOption<T extends string> = {
@@ -203,7 +203,7 @@ export function OptionMenu<T extends string>({
             <div
               ref={menuRef}
               data-state={phase === "open" ? "open" : "close"}
-              className="option-menu fixed z-40 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
+              className={`option-menu fixed ${overlayZ.dropdown} overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.08)]`}
               style={{ top: box.top, left: box.left, width: box.width, maxHeight: box.maxHeight }}
             >
               <ul
