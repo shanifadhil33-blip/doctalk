@@ -86,7 +86,10 @@ describe("SignedInHome", () => {
     renderHome();
 
     expect(screen.getByRole("heading", { name: "Your documents" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Upload PDF or Markdown" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Upload PDF or Markdown" })).not.toBeInTheDocument();
+    const uploadBox = screen.getByText("Upload a PDF or Markdown file").closest("label");
+    expect(uploadBox).not.toBeNull();
+    expect(uploadBox?.className).toContain("focus-within:outline");
     expect(screen.getByText("Drop a PDF or Markdown file here, or choose a file.")).toBeInTheDocument();
     expect(screen.getByText("PDF or Markdown, up to 10 MB. 5 documents per account.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open Warehouse lease" })).toHaveAttribute(
@@ -170,7 +173,9 @@ describe("SignedInHome", () => {
     );
 
     expect(screen.getByRole("heading", { name: "No documents yet" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Upload your first document" })).toBeInTheDocument();
+    expect(screen.getByText("Use the upload box above to add a PDF or Markdown file.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Upload your first document" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Upload PDF or Markdown" })).not.toBeInTheDocument();
     expect(screen.queryByText("Master Services Agreement")).not.toBeInTheDocument();
     expect(
       screen.getByText(/Questions you ask will show up here\. Open a document and ask a question\./),
