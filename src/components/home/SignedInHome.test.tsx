@@ -74,8 +74,7 @@ function renderHome() {
   return render(
     <SignedInHome
       source="library"
-      owned={[owned]}
-      samples={[sample]}
+      owned={[owned, sample]}
       questions={[question]}
       headerAccount={<a href="/settings">Settings</a>}
     />,
@@ -102,10 +101,12 @@ describe("SignedInHome", () => {
       "href",
       "/documents/owned-1",
     );
-    expect(screen.getByRole("heading", { name: "Sample documents" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Master Services Agreement/ })).toHaveAttribute(
+    expect(screen.queryByRole("heading", { name: "Sample documents" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Master Services Agreement")).not.toBeInTheDocument();
+    expect(screen.queryByText("Sample")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Try the public demo" })).toHaveAttribute(
       "href",
-      "/documents/sample-1",
+      "/documents?demo=1",
     );
     expect(screen.getByRole("link", { name: "Settings" })).toHaveAttribute("href", "/settings");
     expect(screen.queryByRole("link", { name: "Try the demo" })).not.toBeInTheDocument();
@@ -162,14 +163,15 @@ describe("SignedInHome", () => {
     render(
       <SignedInHome
         source="library"
-        owned={[]}
-        samples={[]}
+        owned={[sample]}
         questions={[]}
         headerAccount={<span>Ada</span>}
       />,
     );
 
-    expect(screen.getByText("You have no documents yet.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "No documents yet" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Upload your first document" })).toBeInTheDocument();
+    expect(screen.queryByText("Master Services Agreement")).not.toBeInTheDocument();
     expect(
       screen.getByText(/Questions you ask will show up here\. Open a document and ask a question\./),
     ).toBeInTheDocument();

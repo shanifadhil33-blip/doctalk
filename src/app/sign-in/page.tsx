@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { signIn } from "@/auth";
-import { secondaryButtonClass } from "@/components/button-styles";
+import { BackLink } from "@/components/BackLink";
+import { secondaryButtonClass, textButtonClass } from "@/components/button-styles";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
-import { Logo } from "@/components/Logo";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
+import { TopBar } from "@/components/TopBar";
 import { safeCallbackPath } from "@/lib/auth/access";
 
 type SignInPageProps = {
@@ -21,9 +22,14 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
   return (
     <div className="flex min-h-dvh min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8]">
       <SkipLink />
-      <header className="px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6">
-        <Logo />
-      </header>
+      <TopBar
+        back={<BackLink href="/">Home</BackLink>}
+        actions={
+          <Link href="/documents" prefetch={true} className={textButtonClass}>
+            Documents
+          </Link>
+        }
+      />
       <main id="main" className="flex flex-1 items-center justify-center px-4 py-8">
         <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
           <h1 className="text-2xl font-semibold tracking-tight text-slate-950">Sign in</h1>
@@ -39,7 +45,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
           >
             <GoogleSignInButton type="submit" className="w-full" />
           </form>
-          <Link href="/documents" className={`${secondaryButtonClass} mt-2 w-full`}>
+          <Link href="/documents" prefetch={true} className={`${secondaryButtonClass} mt-2 w-full`}>
             Try the demo
           </Link>
         </div>

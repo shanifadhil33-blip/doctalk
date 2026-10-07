@@ -113,6 +113,14 @@ export function ChevronRightGlyph({ className }: IconProps) {
   );
 }
 
+export function ChevronDownGlyph({ className }: IconProps) {
+  return (
+    <svg {...stroke(className)}>
+      <path d="m6 9.5 6 6 6-6" />
+    </svg>
+  );
+}
+
 export function DownloadGlyph({ className }: IconProps) {
   return (
     <svg {...stroke(className)}>

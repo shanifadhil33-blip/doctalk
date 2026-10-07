@@ -7,10 +7,10 @@ import { UploadGlyph } from "@/components/icons";
 import { primaryButtonClass, secondaryButtonClass } from "@/components/button-styles";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
+import { BackLink } from "@/components/BackLink";
 import { TopBar } from "@/components/TopBar";
 import { DeleteDocumentDialog } from "@/components/documents/DeleteDocumentDialog";
 import { AssistantAnswer } from "@/components/workspace/AnswerBlock";
-import { DocumentHeading } from "@/components/workspace/DocumentHeading";
 import { LiveDocumentWorkspace } from "@/components/workspace/LiveDocumentWorkspace";
 import { PdfPageViewer } from "@/components/workspace/PdfPageViewer";
 import { QuestionField } from "@/components/workspace/QuestionField";
@@ -232,7 +232,7 @@ function UnindexedWorkspace({
     return (
       <div className="flex min-h-dvh min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8]">
         <SkipLink />
-        <TopBar actions={headerAccount} />
+        <TopBar back={<BackLink href="/documents">Documents</BackLink>} actions={headerAccount} />
         <main id="main" className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-4 py-16 text-center">
           <h1 className="text-2xl font-semibold text-slate-950">Document not found</h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-600">
@@ -383,7 +383,9 @@ function WorkspaceFrame({
     <div className="flex min-h-dvh w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8] [overflow-anchor:none] lg:h-dvh">
       <SkipLink />
       <TopBar
-        leading={<DocumentHeading title={title} meta={pageCountLabel} />}
+        back={<BackLink href="/documents">Documents</BackLink>}
+        title={title}
+        meta={pageCountLabel}
         actions={
           <>
             <Link

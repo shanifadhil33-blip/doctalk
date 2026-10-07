@@ -1,4 +1,4 @@
-import { secondaryButtonClass } from "@/components/button-styles";
+import { SignOutButton } from "@/components/SignOutButton";
 
 export function AccountSettings({
   name,
@@ -34,11 +34,9 @@ export function AccountSettings({
             <dd className="min-w-0 text-sm font-medium text-slate-950">Google</dd>
           </div>
         </dl>
-        <form action={signOutAction} className="mt-6">
-          <button type="submit" className={secondaryButtonClass}>
-            Sign out
-          </button>
-        </form>
+        <div className="mt-6">
+          <SignOutButton action={signOutAction} variant="button" />
+        </div>
       </section>
     </div>
   );

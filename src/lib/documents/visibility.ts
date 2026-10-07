@@ -1,5 +1,6 @@
-import { eq, isNull, or, type SQL } from "drizzle-orm";
+import { and, eq, isNull, notInArray, or, type SQL } from "drizzle-orm";
 import { documents } from "@/db/schema";
+import { sampleFileNames } from "@/lib/documents/samples";
 
 export type DocumentVisibility = {
   userId: string | null;
@@ -55,5 +56,16 @@ export function visibleDocumentsWhere(viewerUserId: string | null): SQL {
 
   return requireCondition(
     or(publicDocuments, eq(documents.userId, viewerUserId)),
+  );
+}
+
+/** Rows that belong to this account. Public samples stay out of signed-in lists. */
+export function ownedDocumentsWhere(viewerUserId: string): SQL {
+  return requireCondition(
+    and(
+      eq(documents.userId, viewerUserId),
+      eq(documents.isDemo, false),
+      notInArray(documents.fileName, sampleFileNames),
+    ),
   );
 }

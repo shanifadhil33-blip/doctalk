@@ -146,6 +146,7 @@ export function DocumentCard({
       <div className="relative">
         <Link
           href={`/documents/${item.id}`}
+          prefetch={true}
           aria-label={`Open ${item.title}`}
           onClick={() => {
             if (listKey) rememberListScroll(listKey);
@@ -174,6 +175,7 @@ export function DocumentCard({
     <div className="relative h-full">
       <Link
         href={`/documents/${item.id}`}
+        prefetch={true}
         aria-label={`Open ${item.title}`}
         onClick={() => {
           if (listKey) rememberListScroll(listKey);

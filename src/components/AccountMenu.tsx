@@ -1,6 +1,5 @@
-import Link from "next/link";
 import { auth } from "@/auth";
-import { textButtonClass } from "@/components/button-styles";
+import { AccountControls } from "@/components/AccountControls";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { safeCallbackPath } from "@/lib/auth/access";
 import { signInWithGoogle, signOutToHome } from "@/lib/auth/actions";
@@ -27,21 +26,12 @@ export async function AccountMenu({
     const name = session?.user?.name?.trim() || "Signed in";
 
     return (
-      <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
-        <span className="max-w-[10rem] min-w-0 truncate px-2 text-sm text-slate-600" aria-label={name}>
-          {name}
-        </span>
-        {showSettings ? (
-          <Link href="/settings" className={textButtonClass}>
-            Settings
-          </Link>
-        ) : null}
-        <form action={signOutToHome}>
-          <button type="submit" className={textButtonClass}>
-            Sign out
-          </button>
-        </form>
-      </div>
+      <AccountControls
+        name={name}
+        email={session?.user?.email?.trim() || null}
+        showSettings={showSettings}
+        signOutAction={signOutToHome}
+      />
     );
   }
 

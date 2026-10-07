@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { FocusInputMode } from "@/components/FocusInputMode";
+import { NavMemory } from "@/components/NavMemory";
+import { RouteTransition } from "@/components/RouteTransition";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -30,11 +33,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-dvh antialiased`}
-      >
-        {children}
+    <html lang="en" data-input="pointer" className={`${geistSans.variable} ${geistMono.variable} bg-[#f5f6f8]`}>
+      <body className="min-h-dvh bg-[#f5f6f8] text-[#1c1e21] antialiased">
+        <FocusInputMode />
+        <NavMemory />
+        <RouteTransition>{children}</RouteTransition>
       </body>
     </html>
   );

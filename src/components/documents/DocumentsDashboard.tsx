@@ -1,15 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GridGlyph, ListGlyph, SearchGlyph, UploadGlyph } from "@/components/icons";
 import { controlFocusClass, fieldClass, primaryButtonClass } from "@/components/button-styles";
+import { OptionMenu } from "@/components/OptionMenu";
 import { useRestoreListScroll } from "@/components/list-scroll";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
+import { BackLink } from "@/components/BackLink";
 import { TopBar } from "@/components/TopBar";
 import { DocumentCard } from "@/components/documents/DocumentCard";
 import { documentPreviewSrc } from "@/lib/documents/preview";
+import { isPublicSample } from "@/lib/documents/samples";
 import { UploadDialog } from "@/components/documents/UploadDialog";
 import type { ListedDocument } from "@/lib/document-types";
 import { uploadDocumentFromBrowser } from "@/lib/documents/client-upload";
@@ -100,7 +104,11 @@ export function DocumentsDashboard({
   }, [source, reloadToken]);
 
   const cards = useMemo(() => {
-    const samples = source === "library" ? (remoteDocuments ?? documents) : documents;
+    const loaded = source === "library" ? (remoteDocuments ?? documents) : documents;
+    const samples =
+      signedIn && source === "library"
+        ? loaded.filter((item) => !isPublicSample(item))
+        : loaded;
 
     const local: ListedDocument[] =
       source === "library"
@@ -137,7 +145,7 @@ export function DocumentsDashboard({
     });
 
     return filtered;
-  }, [documents, remoteDocuments, source, uploads, query, sort, hiddenIds]);
+  }, [documents, remoteDocuments, source, signedIn, uploads, query, sort, hiddenIds]);
 
   async function deleteOwnedDocument(id: string) {
     const response = await fetch(`/api/documents/${id}`, { method: "DELETE" });
@@ -193,16 +201,18 @@ export function DocumentsDashboard({
     <div className="flex min-h-dvh min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8]">
       <SkipLink />
       <TopBar
+        back={<BackLink href="/">Home</BackLink>}
         actions={
           <>
             {headerAccount}
             <button
               type="button"
               className={primaryButtonClass}
+              aria-label="Upload PDF or Markdown"
               onClick={() => setUploadOpen(true)}
             >
               <UploadGlyph />
-              Upload PDF or Markdown
+              <span className="hidden sm:inline">Upload PDF or Markdown</span>
             </button>
           </>
         }
@@ -228,6 +238,28 @@ export function DocumentsDashboard({
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
           Inspect contracts, billing statements, and medical invoices.
         </p>
+        {signedIn && source === "library" ? (
+          <p className="mt-3">
+            <Link
+              href="/documents?demo=1"
+              prefetch={true}
+              className="inline-flex min-h-11 items-center text-sm font-medium text-slate-600 underline-offset-2 hover:text-slate-950 hover:underline"
+            >
+              Try the public demo
+            </Link>
+          </p>
+        ) : null}
+        {signedIn && source === "demo" ? (
+          <p className="mt-3">
+            <Link
+              href="/documents"
+              prefetch={true}
+              className="inline-flex min-h-11 items-center text-sm font-medium text-slate-600 underline-offset-2 hover:text-slate-950 hover:underline"
+            >
+              Your documents
+            </Link>
+          </p>
+        ) : null}
 
         <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center">
           <div className="relative min-w-0 flex-1">
@@ -249,19 +281,21 @@ export function DocumentsDashboard({
           </div>
           <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
             <div className="flex min-w-0 items-center gap-2">
-            <label htmlFor="document-sort" className="shrink-0 text-sm text-slate-500">
+            <span id="document-sort-label" className="shrink-0 text-sm text-slate-500">
               Sort by
-            </label>
-            <select
+            </span>
+            <OptionMenu
               id="document-sort"
+              labelledBy="document-sort-label"
               value={sort}
-              onChange={(event) => setSort(event.target.value as SortKey)}
-              className={`h-11 min-w-0 flex-1 cursor-pointer rounded-lg border border-slate-200 bg-white py-0 pl-3 text-sm text-slate-800 transition-colors duration-150 hover:border-slate-400 hover:bg-slate-50 active:bg-slate-100 sm:w-44 sm:flex-none ${controlFocusClass}`}
-            >
-              <option value="recent">Recently added</option>
-              <option value="name">Name</option>
-              <option value="pages">Page count</option>
-            </select>
+              onChange={setSort}
+              options={[
+                { value: "recent", label: "Recently added" },
+                { value: "name", label: "Name" },
+                { value: "pages", label: "Page count" },
+              ]}
+              className="min-w-0 flex-1 sm:w-44 sm:flex-none"
+            />
             </div>
             <div className="flex w-fit gap-2 rounded-lg border border-slate-200 bg-white p-1" role="group" aria-label="Layout">
               <button
@@ -320,7 +354,9 @@ export function DocumentsDashboard({
             <p className="mx-auto mt-2 max-w-sm text-sm text-slate-600">
               {query
                 ? "Try a different name or counterparty."
-                : "Upload a PDF or Markdown file to open it here."}
+                : signedIn && source === "library"
+                  ? "Upload a PDF or Markdown file to ask a question about it."
+                  : "Upload a PDF or Markdown file to open it here."}
             </p>
             {query ? (
               <button
@@ -336,7 +372,7 @@ export function DocumentsDashboard({
                 className={`${primaryButtonClass} mt-5`}
                 onClick={() => setUploadOpen(true)}
               >
-                Upload PDF or Markdown
+                {signedIn && source === "library" ? "Upload your first document" : "Upload PDF or Markdown"}
               </button>
             )}
           </div>

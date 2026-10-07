@@ -87,4 +87,45 @@ describe("DocumentsDashboard", () => {
     expect(screen.queryByRole("button", { name: /Actions for/ })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open Desk note" })).toBeInTheDocument();
   });
+
+  it("hides sample files from a signed-in library and offers an upload on an empty list", () => {
+    vi.stubGlobal("fetch", vi.fn(() => new Promise(() => undefined)));
+    const { rerender } = render(
+      <DocumentsDashboard
+        documents={[
+          owned,
+          {
+            ...owned,
+            id: "sample-services",
+            title: "Sample_Services_Agreement",
+            fileName: "Sample_Services_Agreement.pdf",
+            status: "Sample",
+          },
+        ]}
+        source="library"
+        signedIn
+        headerAccount={<span>Account</span>}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Open Desk note" })).toBeInTheDocument();
+    expect(screen.queryByText("Sample_Services_Agreement")).not.toBeInTheDocument();
+    expect(screen.queryByText("You're viewing demo documents.")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Try the public demo" })).toHaveAttribute(
+      "href",
+      "/documents?demo=1",
+    );
+
+    rerender(
+      <DocumentsDashboard
+        documents={[]}
+        source="library"
+        signedIn
+        headerAccount={<span>Account</span>}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "No documents yet" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Upload your first document" })).toBeInTheDocument();
+  });
 });

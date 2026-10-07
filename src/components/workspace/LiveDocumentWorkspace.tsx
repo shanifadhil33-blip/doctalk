@@ -9,10 +9,10 @@ import { RollingMark } from "@/components/RollingMark";
 import { secondaryButtonClass } from "@/components/button-styles";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
+import { BackLink } from "@/components/BackLink";
 import { TopBar } from "@/components/TopBar";
 import { DeleteDocumentDialog } from "@/components/documents/DeleteDocumentDialog";
 import { AssistantAnswer } from "@/components/workspace/AnswerBlock";
-import { DocumentHeading } from "@/components/workspace/DocumentHeading";
 import { MarkdownPane } from "@/components/workspace/MarkdownPane";
 import { QuestionField } from "@/components/workspace/QuestionField";
 import type { Citation } from "@/lib/document-types";
@@ -256,7 +256,9 @@ export function LiveDocumentWorkspace({
       <div className="shrink-0">
         <SkipLink />
         <TopBar
-          leading={<DocumentHeading title={fileName} meta={pageCountLabel} />}
+          back={<BackLink href="/documents">Documents</BackLink>}
+          title={fileName}
+          meta={pageCountLabel}
           actions={
             <>
               {canDelete ? (

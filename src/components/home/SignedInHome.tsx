@@ -25,18 +25,17 @@ import {
   stampUpload,
   type SessionUpload,
 } from "@/lib/session-uploads";
+import { isPublicSample } from "@/lib/documents/samples";
 import { validateDocumentFile } from "@/lib/upload-validation";
 
 export function SignedInHome({
   source,
   owned,
-  samples,
   questions,
   headerAccount,
 }: {
   source: "demo" | "library";
   owned: ListedDocument[];
-  samples: ListedDocument[];
   questions: AskedQuestion[];
   headerAccount: ReactNode;
 }) {
@@ -90,7 +89,7 @@ export function SignedInHome({
           pageCount: 0,
         }));
 
-  const yourDocuments = [...localDocuments, ...owned];
+  const yourDocuments = [...localDocuments, ...owned].filter((item) => !isPublicSample(item));
 
   function openUploadedFile(file: File) {
     const id = `local-${crypto.randomUUID()}`;
@@ -225,11 +224,12 @@ export function SignedInHome({
             <button
               type="button"
               className={primaryButtonClass}
+              aria-label="Upload PDF or Markdown"
               onClick={() => inputRef.current?.click()}
               disabled={busy}
             >
               <UploadGlyph />
-              Upload PDF or Markdown
+              <span className="hidden sm:inline">Upload PDF or Markdown</span>
             </button>
             {headerAccount}
           </>
@@ -333,7 +333,21 @@ export function SignedInHome({
             Documents
           </h2>
           {yourDocuments.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-600">You have no documents yet.</p>
+            <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
+              <h3 className="text-base font-semibold text-slate-950">No documents yet</h3>
+              <p className="mx-auto mt-2 max-w-sm text-sm text-slate-600">
+                Upload a PDF or Markdown file to ask a question about it.
+              </p>
+              <button
+                type="button"
+                className={`${primaryButtonClass} mt-5`}
+                onClick={() => inputRef.current?.click()}
+                disabled={busy}
+              >
+                <UploadGlyph />
+                Upload your first document
+              </button>
+            </div>
           ) : (
             <ul className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {yourDocuments.map((item) => (
@@ -374,42 +388,15 @@ export function SignedInHome({
           )}
         </section>
 
-        {samples.length > 0 ? (
-          <section className="mt-10" aria-labelledby="samples-heading">
-            <h2 id="samples-heading" className="text-lg font-semibold text-slate-950">
-              Sample documents
-            </h2>
-            <p className="mt-2 max-w-xl text-sm text-slate-600">
-              Public samples you can still open.
-            </p>
-            <ul className="mt-4 divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-              {samples.map((item) => (
-                <li key={item.id} className="min-w-0">
-                  <Link
-                    href={`/documents/${item.id}`}
-                    onClick={() => rememberListScroll("home")}
-                    className={[
-                      "flex min-w-0 items-center justify-between gap-3 px-4 py-3",
-                      "transition-colors duration-150 ease-out motion-reduce:transition-none",
-                      "hover:bg-[#f8f9fb] active:bg-slate-100",
-                      controlFocusClass,
-                    ].join(" ")}
-                  >
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium text-slate-950">
-                        {item.title}
-                      </span>
-                      <span className="mt-0.5 block truncate text-sm text-slate-500">
-                        {item.kindLabel} · Sample
-                      </span>
-                    </span>
-                    <span className="shrink-0 text-sm font-medium text-[#4338ca]">Open</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
+        <p className="mt-6">
+          <Link
+            href="/documents?demo=1"
+            prefetch={true}
+            className="inline-flex min-h-11 items-center text-sm font-medium text-slate-600 underline-offset-2 hover:text-slate-950 hover:underline"
+          >
+            Try the public demo
+          </Link>
+        </p>
       </main>
       <SiteFooter />
     </div>
@@ -434,6 +421,7 @@ function QuestionRow({ item }: { item: AskedQuestion }) {
   return (
     <Link
       href={`/documents/${item.documentId}`}
+      prefetch={true}
       onClick={() => rememberListScroll("home")}
       className={[
         "block min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3",

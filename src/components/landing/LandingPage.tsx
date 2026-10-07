@@ -40,11 +40,11 @@ export function LandingPage({
     <div className="min-h-dvh overflow-x-hidden bg-[#eceef2] sm:p-4 md:p-6">
       <SkipLink />
       <div className="mx-auto flex min-h-dvh max-w-[1180px] flex-col overflow-x-hidden bg-white sm:min-h-[calc(100dvh-3rem)] sm:rounded-[28px] sm:shadow-[0_16px_50px_rgba(15,23,42,0.08)] sm:ring-1 sm:ring-slate-200">
-        <header className="flex flex-wrap items-center justify-between gap-2 px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-8">
+        <header className="site-header flex flex-wrap items-center justify-between gap-2 px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-8">
           <Logo />
           <div className="flex items-center gap-2">
             {headerAccount}
-            <Link href={demoHref} className={primaryButtonClass}>
+            <Link href={demoHref} prefetch={true} className={primaryButtonClass}>
               Try the demo
             </Link>
           </div>
@@ -60,7 +60,7 @@ export function LandingPage({
                 DocTalk answers questions about your documents and highlights the exact passage behind every answer.
               </p>
               <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-                <Link href={demoHref} className={primaryButtonClass}>
+                <Link href={demoHref} prefetch={true} className={primaryButtonClass}>
                   Try the demo
                 </Link>
                 {heroAccount}

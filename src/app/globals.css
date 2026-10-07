@@ -4,7 +4,6 @@
   --background: #f5f6f8;
   --foreground: #1c1e21;
   --brand: #4f46e5;
-  --select-caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23334155' d='M0 0h10L5 6z'/%3E%3C/svg%3E");
 }
 
 @theme inline {
@@ -18,26 +17,165 @@ html,
 body {
   max-width: 100%;
   overflow-x: hidden;
+  background: var(--background);
 }
 
 body {
-  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
-:focus-visible {
+.site-header {
+  view-transition-name: site-header;
+}
+
+.site-footer {
+  view-transition-name: site-footer;
+}
+
+#main {
+  view-transition-name: site-main;
+}
+
+[data-pressed="true"] {
+  transform: scale(0.98);
+}
+
+.route-fade {
+  animation: route-fade 180ms ease-out;
+}
+
+@keyframes route-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+::view-transition-group(site-header),
+::view-transition-group(site-footer),
+::view-transition-old(site-header),
+::view-transition-new(site-header),
+::view-transition-old(site-footer),
+::view-transition-new(site-footer) {
+  animation: none;
+}
+
+::view-transition-old(root),
+::view-transition-old(site-main) {
+  animation: 180ms ease-out both vt-fade-out;
+}
+
+::view-transition-new(root) {
+  animation: 180ms ease-out both vt-fade-in-flat;
+}
+
+::view-transition-new(site-main) {
+  animation: 180ms ease-out both vt-fade-in;
+}
+
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-fade-in-flat {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+:focus {
+  outline: none;
+}
+
+:where(html[data-input="keyboard"]) :focus-visible {
   outline: 1px solid var(--brand);
   outline-offset: 2px;
 }
 
-select {
-  appearance: none;
-  background-image: var(--select-caret);
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 10px 6px;
-  padding-right: 2.25rem;
+html[data-input="pointer"] :focus,
+html[data-input="pointer"] :focus-visible {
+  outline: none !important;
+}
+
+button,
+input,
+select,
+textarea,
+a,
+[role="option"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sign-out-dialog[data-state="open"],
+.sign-out-dialog-panel[data-state="open"] {
+  animation: sign-out-in 150ms ease-out;
+}
+
+.sign-out-dialog[data-state="close"],
+.sign-out-dialog-panel[data-state="close"] {
+  animation: sign-out-out 150ms ease-in forwards;
+}
+
+@keyframes sign-out-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sign-out-out {
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.option-menu[data-state="open"] {
+  animation: option-menu-in 150ms ease-out;
+}
+
+.option-menu[data-state="close"] {
+  animation: option-menu-out 150ms ease-in forwards;
+}
+
+@keyframes option-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes option-menu-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
 }
 
 button:not(:disabled),
@@ -67,5 +205,16 @@ textarea:disabled {
   *::before,
   *::after {
     transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+
+  [data-pressed="true"] {
+    transform: none;
+  }
+
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation: none !important;
   }
 }
