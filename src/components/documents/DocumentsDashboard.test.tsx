@@ -111,10 +111,10 @@ describe("DocumentsDashboard", () => {
     expect(screen.getByRole("link", { name: "Open Desk note" })).toBeInTheDocument();
     expect(screen.queryByText("Sample_Services_Agreement")).not.toBeInTheDocument();
     expect(screen.queryByText("You're viewing demo documents.")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Try the public demo" })).toHaveAttribute(
-      "href",
-      "/documents?demo=1",
-    );
+    expect(screen.queryByRole("link", { name: "Try the public demo" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Inspect contracts, billing statements, and medical invoices.")).not.toBeInTheDocument();
+    expect(screen.getByText("PDF and Markdown files in your account.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Upload PDF or Markdown" })).not.toBeInTheDocument();
 
     rerender(
       <DocumentsDashboard
@@ -126,6 +126,10 @@ describe("DocumentsDashboard", () => {
     );
 
     expect(screen.getByRole("heading", { name: "No documents yet" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Upload your first document" })).toBeInTheDocument();
+    expect(
+      screen.getByText("Use the upload box on your documents page to add a PDF or Markdown file."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Upload your first document" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Upload PDF or Markdown" })).not.toBeInTheDocument();
   });
 });

@@ -99,13 +99,23 @@ export const fieldClass = [
   "disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:hover:border-slate-200",
 ].join(" ");
 
+/** header < dropdown < backdrop < dialog < toast */
+export const overlayZ = {
+  header: "z-20",
+  dropdown: "z-40",
+  backdrop: "z-50",
+  dialog: "z-[60]",
+  toast: "z-[70]",
+} as const;
+
 export const dialogBackdropClass = [
-  "fixed inset-0 z-50 flex items-end justify-center overflow-y-auto overscroll-contain bg-slate-900/45",
+  "fixed inset-0 flex items-center justify-center overflow-y-auto overscroll-contain bg-slate-900/45",
+  overlayZ.backdrop,
   "p-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))]",
-  "sm:items-center",
 ].join(" ");
 
 export const dialogPanelClass = [
-  "my-auto flex max-h-[calc(100dvh-1.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))]",
+  "relative my-auto flex max-h-[calc(100dvh-1.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))]",
+  overlayZ.dialog,
   "w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl outline-none",
 ].join(" ");

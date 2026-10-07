@@ -14,6 +14,9 @@ describe("Sign out confirmation", () => {
     await user.click(screen.getByRole("button", { name: "Sign out" }));
 
     const dialog = screen.getByRole("dialog", { name: "Sign out of DocTalk?" });
+    expect(dialog.parentElement?.parentElement).toBe(document.body);
+    expect(dialog.parentElement?.className).toContain("z-50");
+    expect(dialog.className).toContain("z-[60]");
     expect(
       within(dialog).getByText("You'll need to sign in again to see your documents."),
     ).toBeInTheDocument();

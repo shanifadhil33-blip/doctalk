@@ -88,7 +88,7 @@ describe("account menu", () => {
       />,
     );
 
-    expect(screen.getByRole("link", { name: "Documents" })).toHaveAttribute("href", "/documents");
+    expect(screen.getByRole("link", { name: "Documents" })).toHaveAttribute("href", "/");
     expect(screen.getByRole("link", { name: "Settings" })).toHaveAttribute("href", "/settings");
     await user.click(screen.getByRole("button", { name: "Sign out" }));
     const dialog = screen.getByRole("dialog", { name: "Sign out of DocTalk?" });
@@ -114,7 +114,7 @@ describe("account menu", () => {
     const menu = screen.getByRole("menu", { name: "Account" });
     expect(within(menu).getByRole("menuitem", { name: "Documents" })).toHaveAttribute(
       "href",
-      "/documents",
+      "/",
     );
     expect(within(menu).getByRole("menuitem", { name: "Settings" })).toBeInTheDocument();
     await user.click(within(menu).getByRole("menuitem", { name: "Sign out" }));

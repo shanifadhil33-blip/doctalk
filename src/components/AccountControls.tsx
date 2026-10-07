@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { controlFocusClass, textButtonClass } from "@/components/button-styles";
+import { controlFocusClass, overlayZ, textButtonClass } from "@/components/button-styles";
+import { ownDocumentsHref } from "@/lib/documents/list-destination";
 import { rememberListScroll } from "@/components/list-scroll";
 import { SignOutButton } from "@/components/SignOutButton";
 
@@ -53,7 +54,8 @@ export function AccountControls({
   const signOutOpener = useRef<(() => void) | null>(null);
   const [phase, setPhase] = useState<"closed" | "open" | "closing">("closed");
   const [box, setBox] = useState<{ top: number; left: number; width: number } | null>(null);
-  const onDocuments = pathname === "/documents";
+  const documentsHref = ownDocumentsHref();
+  const onDocuments = pathname === documentsHref;
   const onSettings = pathname === "/settings";
 
   useEffect(() => {
@@ -125,7 +127,7 @@ export function AccountControls({
   const links = (
     <>
       <Link
-        href="/documents"
+        href={documentsHref}
         prefetch={true}
         className={narrow ? rowClass : textButtonClass}
         aria-current={onDocuments ? "page" : undefined}
@@ -193,7 +195,7 @@ export function AccountControls({
               role="menu"
               aria-label="Account"
               data-state={phase === "open" ? "open" : "close"}
-              className="option-menu fixed z-40 rounded-lg border border-slate-200 bg-white p-1 shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
+              className={`option-menu fixed ${overlayZ.dropdown} rounded-lg border border-slate-200 bg-white p-1 shadow-[0_8px_24px_rgba(15,23,42,0.08)]`}
               style={box ? { top: box.top, left: box.left, width: box.width } : { top: 8, right: 8, width: 240 }}
             >
               <div className="px-3 py-2">

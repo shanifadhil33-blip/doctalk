@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type RefObject } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 
 export function useDialog(
   open: boolean,
@@ -9,8 +9,11 @@ export function useDialog(
     locked?: boolean;
     initialFocusRef?: RefObject<HTMLElement | null>;
   },
-): RefObject<HTMLDivElement | null> {
-  const dialogRef = useRef<HTMLDivElement>(null);
+): (node: HTMLDivElement | null) => void {
+  const [dialogNode, setDialogNode] = useState<HTMLDivElement | null>(null);
+  const setDialogRef = useCallback((node: HTMLDivElement | null) => {
+    setDialogNode((current) => (current === node ? current : node));
+  }, []);
   const onCloseRef = useRef(onClose);
   const lockedRef = useRef(options?.locked ?? false);
   const initialFocusRef = options?.initialFocusRef;
@@ -20,14 +23,15 @@ export function useDialog(
     onCloseRef.current = onClose;
   }, [onClose]);
 
-  useEffect(() => {
-    if (!open) return;
-    const dialog = dialogRef.current;
-    if (!dialog) return;
+  useLayoutEffect(() => {
+    if (!open || !dialogNode) return;
+    const dialog = dialogNode;
     const previouslyFocused =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const previousOverflow = document.body.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
     const initial = initialFocusRef?.current;
     if (initial) initial.focus();
     else dialog.focus();
@@ -65,10 +69,11 @@ export function useDialog(
     document.addEventListener("keydown", onKeyDown);
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
       previouslyFocused?.focus();
     };
-  }, [open, initialFocusRef]);
+  }, [open, dialogNode, initialFocusRef]);
 
-  return dialogRef;
+  return setDialogRef;
 }

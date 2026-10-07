@@ -2,9 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { UploadGlyph } from "@/components/icons";
 import { RollingMark } from "@/components/RollingMark";
 import { secondaryButtonClass } from "@/components/button-styles";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -55,6 +53,7 @@ export function LiveDocumentWorkspace({
   documentStatus,
   canDelete,
   localAnswers = false,
+  listHref = "/documents",
 }: {
   documentId: string;
   fileName: string;
@@ -65,6 +64,7 @@ export function LiveDocumentWorkspace({
   canDelete: boolean;
   /** Answer from the file text in the browser. Used when no database is configured. */
   localAnswers?: boolean;
+  listHref?: string;
 }) {
   const router = useRouter();
   const answerScrollRef = useRef<HTMLDivElement>(null);
@@ -245,7 +245,7 @@ export function LiveDocumentWorkspace({
       setDeletePending(false);
       return;
     }
-    router.push("/documents");
+    router.push(listHref);
     router.refresh();
   }
 
@@ -256,7 +256,7 @@ export function LiveDocumentWorkspace({
       <div className="shrink-0">
         <SkipLink />
         <TopBar
-          back={<BackLink href="/documents">Documents</BackLink>}
+          back={<BackLink href={listHref}>Documents</BackLink>}
           title={fileName}
           meta={pageCountLabel}
           actions={
@@ -266,14 +266,6 @@ export function LiveDocumentWorkspace({
                   Delete
                 </button>
               ) : null}
-              <Link
-                href="/documents?upload=1"
-                className={secondaryButtonClass}
-                aria-label="Upload PDF or Markdown"
-              >
-                <UploadGlyph />
-                <span className="hidden sm:inline">Upload PDF or Markdown</span>
-              </Link>
               {headerAccount}
             </>
           }
