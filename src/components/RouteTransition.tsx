@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
 import { applyPendingListScroll, disarmListScroll, rememberListScroll } from "@/components/list-scroll";
 
@@ -25,27 +25,8 @@ function internalAnchor(event: MouseEvent): HTMLAnchorElement | null {
   return anchor;
 }
 
-function waitForRoute(pathname: string, search: string): Promise<void> {
-  const started = performance.now();
-  return new Promise((resolve) => {
-    const check = () => {
-      const arrived =
-        window.location.pathname === pathname && window.location.search === search;
-      if (arrived || performance.now() - started > 2000) {
-        window.requestAnimationFrame(() => resolve());
-        return;
-      }
-      window.requestAnimationFrame(check);
-    };
-    check();
-  });
-}
-
 export function RouteTransition({ children }: { children: ReactNode }) {
-  const router = useRouter();
   const pathname = usePathname();
-  const routerRef = useRef(router);
-  routerRef.current = router;
   const shellRef = useRef<HTMLDivElement>(null);
   const seenPath = useRef<string | null>(null);
   const routeKey = pathname;
@@ -64,10 +45,12 @@ export function RouteTransition({ children }: { children: ReactNode }) {
     }
     if (seenPath.current === routeKey) return;
     seenPath.current = routeKey;
-    if (prefersReducedMotion() || typeof document.startViewTransition === "function") return;
-    shell.classList.remove("route-fade");
-    void shell.offsetWidth;
-    shell.classList.add("route-fade");
+    if (prefersReducedMotion()) return;
+    const main = shell.querySelector("#main");
+    const target = main instanceof HTMLElement ? main : shell;
+    target.classList.remove("route-fade");
+    void target.offsetWidth;
+    target.classList.add("route-fade");
   }, [routeKey]);
 
   useEffect(() => {
@@ -93,25 +76,6 @@ export function RouteTransition({ children }: { children: ReactNode }) {
       const path = window.location.pathname;
       if (path === "/") rememberListScroll("home");
       if (path === "/documents") rememberListScroll("documents");
-      if (prefersReducedMotion() || typeof document.startViewTransition !== "function") return;
-      const url = new URL(anchor.href, window.location.origin);
-      const href = `${url.pathname}${url.search}${url.hash}`;
-      const scroll = anchor.dataset.scroll !== "false";
-      event.preventDefault();
-      const go = () => {
-        routerRef.current.push(href, { scroll });
-      };
-      try {
-        const transition = document.startViewTransition(async () => {
-          go();
-          await waitForRoute(url.pathname, url.search);
-        });
-        void transition.finished.catch(() => {
-          // A skipped transition still leaves the router on the new URL.
-        });
-      } catch {
-        go();
-      }
     }
 
     document.addEventListener("pointerdown", markPressed, true);
