@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState, type RefObject } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { cardLinkClass, controlFocusClass } from "@/components/button-styles";
+import { rememberListScroll } from "@/components/list-scroll";
 import { MoreGlyph } from "@/components/icons";
 import { DeleteDocumentDialog } from "@/components/documents/DeleteDocumentDialog";
 import {
@@ -41,6 +42,7 @@ export function DocumentCard({
   fileSrc,
   menu = false,
   onDelete,
+  listKey,
 }: {
   item: DocumentCardModel;
   layout: "grid" | "list";
@@ -48,6 +50,7 @@ export function DocumentCard({
   /** Signed-in dashboard cards get a menu. The card link still opens the document. */
   menu?: boolean;
   onDelete?: (id: string) => Promise<void>;
+  listKey?: string;
 }) {
   const markdown = isMarkdownFileName(item.fileName);
   const lines = documentPreviewLines(item.id, item.fileName, item.status);
@@ -111,6 +114,7 @@ export function DocumentCard({
       />
       <DeleteDocumentDialog
         open={confirmOpen}
+        documentName={item.title}
         fileName={item.fileName}
         pending={deletePending}
         error={deleteError}
@@ -143,16 +147,19 @@ export function DocumentCard({
         <Link
           href={`/documents/${item.id}`}
           aria-label={`Open ${item.title}`}
-          className={`${cardLinkClass} flex flex-col gap-3 rounded-xl p-4 sm:flex-row sm:items-center ${menu ? "sm:pr-14" : ""}`}
+          onClick={() => {
+            if (listKey) rememberListScroll(listKey);
+          }}
+          className={`${cardLinkClass} flex flex-col gap-3 rounded-xl p-4 sm:flex-row sm:items-center ${menu ? "pr-14" : ""}`}
         >
           <span className="flex min-w-0 items-start gap-3">
             {preview}
             <span className="min-w-0">
               <span className="text-xs font-medium text-slate-500">{item.kindLabel}</span>
-              <span className="mt-1 block text-base font-semibold text-slate-950">
+              <span className="mt-1 block break-words text-base font-semibold text-slate-950">
                 {item.title}
               </span>
-              <span className="mt-0.5 block text-sm text-slate-600">{item.counterparty}</span>
+              <span className="mt-0.5 block break-words text-sm text-slate-600">{item.counterparty}</span>
               <span className="mt-1 block text-sm text-slate-500">{meta}</span>
             </span>
           </span>
@@ -168,6 +175,9 @@ export function DocumentCard({
       <Link
         href={`/documents/${item.id}`}
         aria-label={`Open ${item.title}`}
+        onClick={() => {
+          if (listKey) rememberListScroll(listKey);
+        }}
         className={`${cardLinkClass} flex h-full flex-col overflow-hidden rounded-2xl`}
       >
         {preview}
@@ -175,10 +185,10 @@ export function DocumentCard({
           <span className="w-fit rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
             {item.kindLabel}
           </span>
-          <span className="mt-3 block text-lg font-semibold leading-snug text-slate-950">
+          <span className="mt-3 block break-words text-lg font-semibold leading-snug text-slate-950">
             {item.title}
           </span>
-          <span className="mt-1 block text-sm text-slate-600">{item.counterparty}</span>
+          <span className="mt-1 block break-words text-sm text-slate-600">{item.counterparty}</span>
           <span className="mt-2 block text-sm text-slate-500">{meta}</span>
           <span className="mt-4 block border-t border-slate-100 pt-3 text-sm text-slate-500">
             {item.status}
@@ -212,18 +222,39 @@ function CardMenu({
 }) {
   const menuId = useId();
 
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     if (!open) return;
-    function onPointerDown(event: MouseEvent) {
-      if (!menuRef.current?.contains(event.target as Node)) onClose();
+    const root = menuRef.current;
+    root?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
+    function onPointerDown(event: PointerEvent) {
+      if (!root?.contains(event.target as Node)) onClose();
     }
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        buttonRef.current?.focus();
+        return;
+      }
+      if (event.key !== "Tab" || !root) return;
+      const items = Array.from(root.querySelectorAll<HTMLElement>("button"));
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     }
-    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [open, menuRef, onClose]);
@@ -231,9 +262,10 @@ function CardMenu({
   return (
     <div ref={menuRef} className="absolute right-2 top-2 z-20">
       <button
+        ref={buttonRef}
         type="button"
         className={[
-          "inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm",
+          "inline-flex h-11 w-11 min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm",
           "transition-colors duration-150 ease-out motion-reduce:transition-none",
           "hover:border-slate-400 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200",
           controlFocusClass,
@@ -255,7 +287,7 @@ function CardMenu({
           id={menuId}
           role="menu"
           aria-label={`Actions for ${title}`}
-          className="absolute right-0 top-10 w-36 rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+          className="absolute right-0 top-full z-10 mt-2 w-40 rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
         >
           <button
             type="button"
@@ -273,7 +305,7 @@ function CardMenu({
             <button
               type="button"
               role="menuitem"
-              className={menuItemClass}
+              className={`${menuItemClass} border-t border-slate-200 text-red-700 hover:text-red-800`}
               onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -290,7 +322,7 @@ function CardMenu({
 }
 
 const menuItemClass = [
-  "flex w-full cursor-pointer px-3 py-2 text-left text-sm text-slate-800",
+  "flex min-h-11 w-full cursor-pointer items-center px-3 py-2 text-left text-sm text-slate-800",
   "transition-colors duration-150 ease-out motion-reduce:transition-none",
   "hover:bg-slate-100 active:bg-slate-200",
   controlFocusClass,

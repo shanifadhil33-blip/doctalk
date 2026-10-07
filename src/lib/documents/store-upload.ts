@@ -236,6 +236,107 @@ async function existingUploadResult(userId: string, fileUrl: string): Promise<Sa
   return { ok: false, status: 409, error: "This document is still processing." };
 }
 
+export async function retryFailedDocument(
+  userId: string,
+  documentId: string,
+): Promise<SaveResult> {
+  if (!isUuid(documentId)) {
+    return { ok: false, status: 404, error: "Document not found" };
+  }
+
+  const token = blobToken();
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  if (!token) {
+    return { ok: false, status: 503, error: "File storage is not configured." };
+  }
+  if (!apiKey) {
+    return { ok: false, status: 503, error: "Embeddings are not configured." };
+  }
+
+  const db = getDb();
+  const claimed = await db
+    .update(documents)
+    .set({ status: "processing" })
+    .where(
+      and(
+        eq(documents.id, documentId),
+        eq(documents.userId, userId),
+        eq(documents.isDemo, false),
+        eq(documents.status, "failed"),
+      ),
+    )
+    .returning({
+      id: documents.id,
+      fileName: documents.fileName,
+      fileUrl: documents.fileUrl,
+    });
+  const row = claimed[0];
+  if (!row || !isRemoteBlobUrl(row.fileUrl)) {
+    const current = await db
+      .select({
+        id: documents.id,
+        fileName: documents.fileName,
+        status: documents.status,
+        userId: documents.userId,
+        isDemo: documents.isDemo,
+      })
+      .from(documents)
+      .where(eq(documents.id, documentId))
+      .limit(1);
+    const existing = current[0];
+    if (!existing || existing.userId !== userId || existing.isDemo) {
+      return { ok: false, status: 404, error: "Document not found" };
+    }
+    if (existing.status === "ready") {
+      return {
+        ok: true,
+        document: { id: existing.id, fileName: existing.fileName, status: "ready" },
+      };
+    }
+    if (existing.status === "processing") {
+      return { ok: false, status: 409, error: "This document is still processing." };
+    }
+    return {
+      ok: false,
+      status: 422,
+      error: "This document could not be processed.",
+      documentId,
+    };
+  }
+
+  try {
+    const bytes = await readPrivatePdf(row.fileUrl, token);
+    const markdown = isMarkdownFileName(row.fileName);
+    const client = createGeminiEmbeddingClient({ apiKey });
+    const embed = embedWithClient(client, process.env);
+    const prepared = markdown
+      ? await prepareMarkdownChunks(decodeMarkdownBytes(bytes), embed)
+      : await prepareDocumentChunks(bytes, embed);
+    await db.delete(chunks).where(eq(chunks.documentId, row.id));
+    await db.insert(chunks).values(
+      prepared.map((piece) => ({
+        documentId: row.id,
+        content: piece.content,
+        embedding: piece.embedding,
+        chunkIndex: piece.chunkIndex,
+        page: piece.page,
+        metadata: piece.metadata,
+      })),
+    );
+    await db.update(documents).set({ status: "ready" }).where(eq(documents.id, row.id));
+    return {
+      ok: true,
+      document: { id: row.id, fileName: row.fileName, status: "ready" },
+    };
+  } catch (error) {
+    await db.update(documents).set({ status: "failed" }).where(eq(documents.id, row.id));
+    const message =
+      error instanceof IngestError ? error.message : "This document could not be processed.";
+    console.error("PDF ingest failed");
+    return { ok: false, status: 422, error: message, documentId: row.id };
+  }
+}
+
 async function discardUpload(
   userId: string,
   documentId: string,

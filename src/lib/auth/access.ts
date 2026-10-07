@@ -6,7 +6,8 @@ import {
 export type PathKind =
   | { kind: "public" }
   | { kind: "protected" }
-  | { kind: "document"; documentId: string };
+  | { kind: "document"; documentId: string }
+  | { kind: "unknown" };
 
 export type FoundDocument = DocumentVisibility & {
   fileName: string;
@@ -63,7 +64,11 @@ export function classifyPath(pathname: string): PathKind {
     return { kind: "document", documentId };
   }
 
-  return { kind: "protected" };
+  if (path === "/upload" || path === "/settings") {
+    return { kind: "protected" };
+  }
+
+  return { kind: "unknown" };
 }
 
 export function decideProtectedAccess(

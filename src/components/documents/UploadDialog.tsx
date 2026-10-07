@@ -2,17 +2,22 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
+  dialogBackdropClass,
+  dialogPanelClass,
   ghostIconButtonClass,
   primaryButtonClass,
   secondaryButtonClass,
 } from "@/components/button-styles";
 import { RollingMark } from "@/components/RollingMark";
-import { CheckGlyph, CloseGlyph, UploadGlyph } from "@/components/icons";
+import { CloseGlyph, UploadGlyph } from "@/components/icons";
+import { useDialog } from "@/components/useDialog";
+import { DocumentUploadError } from "@/lib/documents/client-upload";
 import { isMarkdownFileName } from "@/lib/markdown/sections";
 import { formatFileSize, validateDocumentFile } from "@/lib/upload-validation";
 
-type UploadPhase = "idle" | "uploading" | "reading" | "ready";
+type UploadPhase = "idle" | "checking" | "ready";
 
 export function UploadDialog({
   open,
@@ -29,22 +34,20 @@ export function UploadDialog({
   signedIn?: boolean;
   onUpload?: (file: File) => Promise<void>;
 }) {
+  const router = useRouter();
   const titleId = useId();
-  const dialogRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const onCloseRef = useRef(onClose);
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [phase, setPhase] = useState<UploadPhase>("idle");
-  const [uploadPercent, setUploadPercent] = useState(0);
-  const [readPercent, setReadPercent] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [failedReadId, setFailedReadId] = useState<string | null>(null);
   const serverMode = uploadMode === "server";
-
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
+  const dialogRef = useDialog(open, () => {
+    if (busy) return;
+    onClose();
+  }, { locked: busy });
 
   useEffect(() => {
     if (open) return;
@@ -52,78 +55,15 @@ export function UploadDialog({
     setError(null);
     setDragOver(false);
     setPhase("idle");
-    setUploadPercent(0);
-    setReadPercent(0);
     setBusy(false);
+    setFailedReadId(null);
   }, [open]);
 
   useEffect(() => {
-    if (!open) return;
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    const previouslyFocused =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    dialog.focus();
-
-    function focusable() {
-      if (!dialog) return [];
-      return Array.from(
-        dialog.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])',
-        ),
-      );
-    }
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onCloseRef.current();
-        return;
-      }
-      if (event.key !== "Tab") return;
-      const items = focusable();
-      const first = items[0];
-      const last = items[items.length - 1];
-      if (!first || !last) return;
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    }
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
-      previouslyFocused?.focus();
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (serverMode || !file || phase === "idle" || phase === "ready") return;
-    const timer = window.setInterval(() => {
-      if (phase === "uploading") {
-        setUploadPercent((current) => Math.min(100, current + 20));
-      } else {
-        setReadPercent((current) => Math.min(100, current + 15));
-      }
-    }, 160);
-    return () => window.clearInterval(timer);
-  }, [file, phase, serverMode]);
-
-  useEffect(() => {
-    if (phase === "uploading" && uploadPercent >= 100) {
-      setPhase("reading");
-    }
-    if (phase === "reading" && readPercent >= 100) {
-      setPhase("ready");
-    }
-  }, [phase, uploadPercent, readPercent]);
+    if (serverMode || phase !== "checking") return;
+    const timer = window.setTimeout(() => setPhase("ready"), 400);
+    return () => window.clearTimeout(timer);
+  }, [phase, serverMode]);
 
   function takeFile(next: File | undefined) {
     if (!next) return;
@@ -133,29 +73,61 @@ export function UploadDialog({
       return;
     }
     setError(null);
+    setFailedReadId(null);
     setFile(next);
-    setUploadPercent(0);
-    setReadPercent(0);
-    setPhase(serverMode ? "idle" : "uploading");
+    setPhase(serverMode ? "idle" : "checking");
     if (inputRef.current) inputRef.current.value = "";
+  }
+
+  async function sendFile() {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      if (failedReadId) {
+        const response = await fetch(`/api/documents/${failedReadId}`, { method: "POST" });
+        const payload: unknown = await response.json().catch(() => null);
+        if (!response.ok) {
+          const message =
+            payload &&
+            typeof payload === "object" &&
+            "error" in payload &&
+            typeof payload.error === "string"
+              ? payload.error
+              : "This document could not be read.";
+          setError(message);
+          return;
+        }
+        const id = failedReadId;
+        setFailedReadId(null);
+        onClose();
+        router.push(`/documents/${id}`);
+        router.refresh();
+        return;
+      }
+      if (!file || !onUpload) return;
+      await onUpload(file);
+    } catch (uploadError: unknown) {
+      setError(
+        uploadError instanceof Error ? uploadError.message : "Upload failed. Try again later.",
+      );
+      setFailedReadId(
+        uploadError instanceof DocumentUploadError ? (uploadError.documentId ?? null) : null,
+      );
+    } finally {
+      setBusy(false);
+    }
   }
 
   if (!open) return null;
 
   const ready = phase === "ready";
-  const statusLabel =
-    phase === "uploading"
-      ? "Uploading"
-      : phase === "reading"
-        ? "Reading the file"
-        : phase === "ready"
-          ? "Ready to open"
-          : "";
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/45 p-3 sm:items-center sm:p-6"
+      className={dialogBackdropClass}
       onMouseDown={(event) => {
+        if (busy) return;
         if (event.target === event.currentTarget) onClose();
       }}
     >
@@ -165,10 +137,10 @@ export function UploadDialog({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="max-h-[calc(100vh-1.5rem)] w-full max-w-lg overflow-auto rounded-2xl bg-white shadow-2xl outline-none"
+        className={`${dialogPanelClass} max-w-lg`}
       >
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <h2 id={titleId} className="text-lg font-semibold text-slate-950">
+        <div className="flex shrink-0 items-start justify-between gap-2 border-b border-slate-200 px-5 py-4">
+          <h2 id={titleId} className="min-w-0 break-words text-lg font-semibold text-slate-950">
             Upload a PDF or Markdown file
           </h2>
           <button
@@ -181,7 +153,7 @@ export function UploadDialog({
           </button>
         </div>
 
-        <div className="space-y-4 px-5 py-5">
+        <div className="min-h-0 space-y-4 overflow-y-auto px-5 py-5">
           {serverMode && !signedIn ? (
             <div className="rounded-xl border border-slate-200 bg-[#f8f9fb] px-4 py-8 text-center">
               <p className="text-sm text-slate-700">Sign in to upload a PDF or Markdown file.</p>
@@ -240,9 +212,14 @@ export function UploadDialog({
           )}
 
           {error ? (
-            <p id="upload-error" role="alert" className="text-sm text-red-700">
-              {error}
-            </p>
+            <div id="upload-error" role="alert" className="flex flex-col items-start gap-2">
+              <p className="text-sm text-red-700">{error}</p>
+              {serverMode && (file || failedReadId) ? (
+                <button type="button" className={secondaryButtonClass} onClick={() => void sendFile()} disabled={busy}>
+                  {failedReadId ? "Retry" : "Retry upload"}
+                </button>
+              ) : null}
+            </div>
           ) : null}
 
           {file ? (
@@ -266,68 +243,55 @@ export function UploadDialog({
                   onClick={() => {
                     setFile(null);
                     setPhase("idle");
-                    setUploadPercent(0);
-                    setReadPercent(0);
+                    setFailedReadId(null);
                   }}
                 >
                   <CloseGlyph className="h-4 w-4" />
                 </button>
               </div>
 
-              {serverMode ? (
-                <p className="mt-3 flex items-center gap-2 text-sm text-slate-600" aria-live="polite">
-                  {busy ? <RollingMark /> : null}
-                  {busy ? "Uploading" : "Ready to upload."}
-                </p>
-              ) : (
-              <div className="mt-3 space-y-2" aria-live="polite">
-                <ProgressRow
-                  done={uploadPercent >= 100}
-                  label={uploadPercent >= 100 ? "Uploading complete" : "Uploading"}
-                  percent={uploadPercent}
-                />
-                {phase !== "uploading" ? (
-                  <ProgressRow
-                    done={phase === "ready"}
-                    label="Reading the file"
-                    percent={readPercent}
-                  />
-                ) : null}
-                <p className="sr-only">{statusLabel}</p>
-              </div>
-              )}
+              <p className="mt-3 flex items-center gap-2 text-sm text-slate-600" aria-live="polite">
+                {serverMode ? (
+                  busy ? (
+                    <>
+                      <RollingMark />
+                      Uploading
+                    </>
+                  ) : (
+                    "Ready to upload."
+                  )
+                ) : phase === "checking" ? (
+                  <>
+                    <RollingMark />
+                    Checking the file
+                  </>
+                ) : (
+                  "Ready to open."
+                )}
+              </p>
             </div>
           ) : null}
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-slate-200 px-5 py-4">
-          <button type="button" className={secondaryButtonClass} onClick={onClose}>
+        <div className="flex shrink-0 flex-col gap-2 border-t border-slate-200 px-5 py-4 sm:flex-row sm:justify-end">
+          <button type="button" className={`${secondaryButtonClass} w-full sm:w-auto`} onClick={onClose} disabled={busy}>
             Cancel
           </button>
           <button
             type="button"
-            className={primaryButtonClass}
+            className={`${primaryButtonClass} w-full sm:w-auto`}
             disabled={serverMode ? !file || busy || !signedIn : !ready || !file}
+            aria-busy={busy || phase === "checking"}
             onClick={() => {
               if (serverMode) {
-                if (!file || !onUpload || busy) return;
-                setBusy(true);
-                setError(null);
-                void onUpload(file)
-                  .catch((uploadError: unknown) => {
-                    setError(
-                      uploadError instanceof Error
-                        ? uploadError.message
-                        : "Upload failed. Try again later.",
-                    );
-                  })
-                  .finally(() => setBusy(false));
+                void sendFile();
                 return;
               }
               if (file && ready) onOpenDocument(file);
             }}
           >
-            {serverMode ? "Upload" : "Open document"}
+            {busy ? <RollingMark /> : null}
+            {serverMode ? (busy ? "Uploading" : "Upload") : "Open document"}
           </button>
         </div>
       </div>
@@ -335,36 +299,3 @@ export function UploadDialog({
   );
 }
 
-function ProgressRow({
-  done,
-  label,
-  percent,
-}: {
-  done: boolean;
-  label: string;
-  percent: number;
-}) {
-  return (
-    <div>
-      <div className="flex items-center justify-between gap-3 text-sm">
-        <span className="inline-flex items-center gap-2 text-slate-700">
-          {done ? (
-            <CheckGlyph className="h-4 w-4 text-emerald-600" />
-          ) : (
-            <span className="h-2 w-2 rounded-full bg-[#4f46e5]" aria-hidden="true" />
-          )}
-          {label}
-        </span>
-        <span className="tabular-nums text-slate-500" aria-hidden="true">
-          {percent}%
-        </span>
-      </div>
-      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
-        <div
-          className="h-full rounded-full bg-[#4f46e5]"
-          style={{ width: `${percent}%` }}
-        />
-      </div>
-    </div>
-  );
-}

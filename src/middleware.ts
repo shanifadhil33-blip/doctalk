@@ -14,7 +14,7 @@ export default auth(async (req) => {
   const viewerUserId = userIdFromTokenSub(req.auth?.user?.id);
   const kind = classifyPath(req.nextUrl.pathname);
 
-  if (kind.kind === "public") {
+  if (kind.kind === "public" || kind.kind === "unknown") {
     return NextResponse.next();
   }
 
@@ -43,7 +43,8 @@ export default auth(async (req) => {
   if (decision === "sign-in") {
     return redirectToSignIn(req);
   }
-  return new NextResponse(null, { status: 404 });
+  // Missing or hidden documents render the in-app not-found page.
+  return NextResponse.next();
 });
 
 function redirectToSignIn(req: {

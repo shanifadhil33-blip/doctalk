@@ -39,7 +39,7 @@ describe("CopyTextButton", () => {
     expect(button).toHaveAccessibleName("Copy answer");
   });
 
-  it("stays on Copy when the clipboard rejects the text", async () => {
+  it("says it could not copy when the clipboard rejects the text", async () => {
     const user = userEvent.setup();
     const writeText = vi.fn().mockRejectedValue(new Error("denied"));
     installClipboard(writeText);
@@ -49,6 +49,13 @@ describe("CopyTextButton", () => {
     await user.click(screen.getByRole("button", { name: "Copy passage" }));
 
     expect(writeText).toHaveBeenCalledWith("passage");
-    expect(screen.getByRole("button", { name: "Copy passage" })).toHaveTextContent("Copy");
+    const button = screen.getByRole("button", { name: "Couldn't copy" });
+    expect(button).toHaveTextContent("Couldn't copy");
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, COPY_FEEDBACK_MS + 40);
+    });
+    expect(button).toHaveTextContent("Copy");
+    expect(button).toHaveAccessibleName("Copy passage");
   });
 });

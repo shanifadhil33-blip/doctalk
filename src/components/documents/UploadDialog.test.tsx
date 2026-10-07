@@ -6,6 +6,10 @@ import { describe, expect, it, vi } from "vitest";
 import { UploadDialog } from "@/components/documents/UploadDialog";
 import { MAX_PDF_BYTES } from "@/lib/upload-validation";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }),
+}));
+
 function renderDialog() {
   const onClose = vi.fn();
   const onOpenDocument = vi.fn();

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UploadGlyph } from "@/components/icons";
 import { RollingMark } from "@/components/RollingMark";
-import { primaryButtonClass, secondaryButtonClass } from "@/components/button-styles";
+import { secondaryButtonClass } from "@/components/button-styles";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
 import { TopBar } from "@/components/TopBar";
@@ -14,6 +14,7 @@ import { DeleteDocumentDialog } from "@/components/documents/DeleteDocumentDialo
 import { AssistantAnswer } from "@/components/workspace/AnswerBlock";
 import { DocumentHeading } from "@/components/workspace/DocumentHeading";
 import { MarkdownPane } from "@/components/workspace/MarkdownPane";
+import { QuestionField } from "@/components/workspace/QuestionField";
 import type { Citation } from "@/lib/document-types";
 import { answerMarkdownLocally } from "@/lib/markdown/local-answer";
 import { isMarkdownFileName } from "@/lib/markdown/sections";
@@ -34,7 +35,14 @@ const RealPdfViewer = dynamic(
 
 type ThreadMessage =
   | { id: string; role: "user"; text: string }
-  | { id: string; role: "assistant"; text: string; citations: Citation[] };
+  | {
+      id: string;
+      role: "assistant";
+      text: string;
+      citations: Citation[];
+      failed?: boolean;
+      retryQuestion?: string;
+    };
 
 type DocumentStatus = "processing" | "ready" | "failed";
 
@@ -75,6 +83,8 @@ export function LiveDocumentWorkspace({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deletePending, setDeletePending] = useState(false);
+  const [readRetrying, setReadRetrying] = useState(false);
+  const [readError, setReadError] = useState<string | null>(null);
   const [noteText, setNoteText] = useState<string | null>(null);
   const markdown = isMarkdownFileName(fileName);
   const ready = documentStatus === "ready" && (!localAnswers || !markdown || noteText !== null);
@@ -105,8 +115,18 @@ export function LiveDocumentWorkspace({
     const userId = `user-${messages.length + 1}`;
     const assistantId = `assistant-${messages.length + 1}`;
     setDraft("");
-    setPending(true);
     setMessages((current) => [...current, { id: userId, role: "user", text: question }]);
+    await answerQuestion(question, assistantId);
+  }
+
+  async function retryQuestion(question: string, assistantId: string) {
+    if (pending || !ready) return;
+    setMessages((current) => current.filter((message) => message.id !== assistantId));
+    await answerQuestion(question, assistantId);
+  }
+
+  async function answerQuestion(question: string, assistantId: string) {
+    setPending(true);
     setLiveStatus("Looking through the document.");
 
     if (localAnswers && markdown && noteText) {
@@ -136,10 +156,17 @@ export function LiveDocumentWorkspace({
       });
       const payload: unknown = await response.json().catch(() => null);
       if (!response.ok) {
-        const text = readError(payload) ?? "Could not answer that question. Try again later.";
+        const text = errorFromPayload(payload) ?? "Could not answer that question. Try again later.";
         setMessages((current) => [
           ...current,
-          { id: assistantId, role: "assistant", text, citations: [] },
+          {
+            id: assistantId,
+            role: "assistant",
+            text,
+            citations: [],
+            failed: true,
+            retryQuestion: question,
+          },
         ]);
         setLiveStatus(text);
         return;
@@ -157,11 +184,37 @@ export function LiveDocumentWorkspace({
       const text = "Could not answer that question. Try again later.";
       setMessages((current) => [
         ...current,
-        { id: assistantId, role: "assistant", text, citations: [] },
+        {
+          id: assistantId,
+          role: "assistant",
+          text,
+          citations: [],
+          failed: true,
+          retryQuestion: question,
+        },
       ]);
       setLiveStatus(text);
     } finally {
       setPending(false);
+    }
+  }
+
+  async function retryReading() {
+    if (readRetrying) return;
+    setReadRetrying(true);
+    setReadError(null);
+    try {
+      const response = await fetch(`/api/documents/${documentId}`, { method: "POST" });
+      const payload: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        setReadError(errorFromPayload(payload) ?? "This document could not be read.");
+        return;
+      }
+      router.refresh();
+    } catch {
+      setReadError("This document could not be read.");
+    } finally {
+      setReadRetrying(false);
     }
   }
 
@@ -188,7 +241,7 @@ export function LiveDocumentWorkspace({
     const response = await fetch(`/api/documents/${documentId}`, { method: "DELETE" });
     if (!response.ok) {
       const payload: unknown = await response.json().catch(() => null);
-      setDeleteError(readError(payload) ?? "Could not delete that document.");
+      setDeleteError(errorFromPayload(payload) ?? "Could not delete that document.");
       setDeletePending(false);
       return;
     }
@@ -199,7 +252,7 @@ export function LiveDocumentWorkspace({
   const pageCountLabel = markdown ? "Markdown" : pageCount > 0 ? `${pageCount} pages · PDF` : "PDF";
 
   return (
-    <div className="flex min-h-screen w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8] [overflow-anchor:none] lg:h-dvh lg:overflow-hidden">
+    <div className="flex min-h-dvh w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8] [overflow-anchor:none] lg:h-dvh lg:overflow-hidden">
       <div className="shrink-0">
         <SkipLink />
         <TopBar
@@ -211,7 +264,11 @@ export function LiveDocumentWorkspace({
                   Delete
                 </button>
               ) : null}
-              <Link href="/documents?upload=1" className={secondaryButtonClass}>
+              <Link
+                href="/documents?upload=1"
+                className={secondaryButtonClass}
+                aria-label="Upload PDF or Markdown"
+              >
                 <UploadGlyph />
                 <span className="hidden sm:inline">Upload PDF or Markdown</span>
               </Link>
@@ -259,11 +316,30 @@ export function LiveDocumentWorkspace({
               </p>
             ) : null}
             {!ready ? (
-              <p className="text-sm leading-relaxed text-slate-600">
-                {documentStatus === "processing"
-                  ? "This document is still processing."
-                  : "This document could not be processed."}
-              </p>
+              <div className="rounded-xl border border-slate-200 bg-[#f8f9fb] p-3" role="alert">
+                <p className="text-sm leading-relaxed text-slate-700">
+                  {documentStatus === "processing"
+                    ? "This document is still being read."
+                    : "This document could not be read."}
+                </p>
+                {readError ? <p className="mt-2 text-sm text-red-700">{readError}</p> : null}
+                <button
+                  type="button"
+                  className={`${secondaryButtonClass} mt-3`}
+                  onClick={() => {
+                    if (documentStatus === "failed") {
+                      void retryReading();
+                      return;
+                    }
+                    router.refresh();
+                  }}
+                  disabled={readRetrying}
+                  aria-busy={readRetrying}
+                >
+                  {readRetrying ? <RollingMark /> : null}
+                  {documentStatus === "failed" ? "Retry" : "Check again"}
+                </button>
+              </div>
             ) : null}
             {messages.length === 0 && ready ? (
               <p className="text-sm leading-relaxed text-slate-600">
@@ -288,6 +364,11 @@ export function LiveDocumentWorkspace({
                       citations={message.citations}
                       activePassageId={activePassageId}
                       onSelectCitation={revealCitation}
+                      onRetry={
+                        message.failed && message.retryQuestion
+                          ? () => void retryQuestion(message.retryQuestion ?? "", message.id)
+                          : undefined
+                      }
                     />
                   </li>
                 ),
@@ -305,30 +386,13 @@ export function LiveDocumentWorkspace({
               ) : null}
             </ol>
           </div>
-          <form onSubmit={(event) => void onSubmit(event)} className="min-w-0 border-t border-slate-200 p-4">
-            <label htmlFor="question" className="sr-only">
-              Ask a question about this document
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                id="question"
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-                placeholder="Ask a question about this document"
-                disabled={!ready || pending}
-                className="h-11 min-w-0 flex-1 rounded-lg border border-slate-200 px-3 text-sm text-slate-900 transition-colors duration-150 hover:border-slate-400 focus-visible:border-[#4f46e5] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:hover:border-slate-200"
-              />
-              <button
-                type="submit"
-                className={`${primaryButtonClass} outline-none`}
-                disabled={!ready || pending || !draft.trim()}
-                aria-busy={pending}
-              >
-                Send
-              </button>
-            </div>
-            <p className="mt-2 text-xs text-slate-500">Press Enter to send</p>
-          </form>
+          <QuestionField
+            value={draft}
+            onChange={setDraft}
+            onSubmit={(event) => void onSubmit(event)}
+            disabled={!ready}
+            pending={pending}
+          />
         </aside>
       </main>
       <div className="h-24 shrink-0 lg:hidden" aria-hidden="true" />
@@ -337,6 +401,7 @@ export function LiveDocumentWorkspace({
       </div>
       <DeleteDocumentDialog
         open={deleteOpen}
+        documentName={fileName}
         fileName={fileName}
         pending={deletePending}
         error={deleteError}
@@ -350,7 +415,7 @@ export function LiveDocumentWorkspace({
   );
 }
 
-function readError(payload: unknown): string | null {
+function errorFromPayload(payload: unknown): string | null {
   if (!payload || typeof payload !== "object" || !("error" in payload)) return null;
   return typeof payload.error === "string" ? payload.error : null;
 }

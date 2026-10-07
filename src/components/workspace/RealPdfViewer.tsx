@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { MinusGlyph, PlusGlyph } from "@/components/icons";
-import { iconButtonClass, toolbarButtonClass } from "@/components/button-styles";
+import { iconButtonClass, secondaryButtonClass, toolbarButtonClass } from "@/components/button-styles";
 import { fittedPageWidth } from "@/components/workspace/pdf-fit";
 import { useContainedScroll } from "@/components/workspace/scroll-contain";
 import { scrollPane } from "@/components/workspace/scroll-passage";
@@ -28,6 +28,7 @@ export function RealPdfViewer({
   const [zoom, setZoom] = useState(100);
   const [paneWidth, setPaneWidth] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const paneRef = useRef<HTMLDivElement>(null);
   useContainedScroll(paneRef);
   const scrolledPage = useRef<{ page: number; key: number } | null>(null);
@@ -100,11 +101,22 @@ export function RealPdfViewer({
         ].join(" ")}
       >
         {error ? (
-          <p className="mx-auto max-w-md rounded-xl bg-white p-6 text-sm text-slate-600" role="alert">
-            {error}
-          </p>
+          <div className="mx-auto max-w-md rounded-xl bg-white p-6" role="alert">
+            <p className="text-sm text-slate-700">{error}</p>
+            <button
+              type="button"
+              className={`${secondaryButtonClass} mt-3`}
+              onClick={() => {
+                setError(null);
+                setLoadAttempt((value) => value + 1);
+              }}
+            >
+              Retry
+            </button>
+          </div>
         ) : (
           <Document
+            key={loadAttempt}
             file={fileUrl}
             loading={<p className="text-sm text-slate-600">Loading PDF...</p>}
             onLoadSuccess={({ numPages }) => {

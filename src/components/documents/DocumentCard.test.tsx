@@ -111,8 +111,8 @@ describe("DocumentCard", () => {
 
     await user.click(actions);
     await user.click(screen.getByRole("menuitem", { name: "Delete" }));
-    const confirmDialog = screen.getByRole("dialog", { name: "Delete this document?" });
-    expect(confirmDialog).toHaveTextContent("This document will be deleted.");
+    const confirmDialog = screen.getByRole("dialog", { name: 'Delete "Desk note"?' });
+    expect(confirmDialog).toHaveTextContent("This can't be undone.");
     expect(confirm).not.toHaveBeenCalled();
     await user.click(within(confirmDialog).getByRole("button", { name: "Cancel" }));
     expect(onDelete).not.toHaveBeenCalled();
@@ -120,8 +120,8 @@ describe("DocumentCard", () => {
     await user.click(actions);
     await user.click(screen.getByRole("menuitem", { name: "Delete" }));
     await user.click(
-      within(screen.getByRole("dialog", { name: "Delete this document?" })).getByRole("button", {
-        name: "Delete",
+      within(screen.getByRole("dialog", { name: 'Delete "Desk note"?' })).getByRole("button", {
+        name: "Delete document",
       }),
     );
     expect(onDelete).toHaveBeenCalledWith("owned-note");

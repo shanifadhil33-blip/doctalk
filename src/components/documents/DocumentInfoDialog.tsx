@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useId, useRef } from "react";
-import { secondaryButtonClass } from "@/components/button-styles";
+import { useId, useRef } from "react";
+import { dialogBackdropClass, dialogPanelClass, secondaryButtonClass } from "@/components/button-styles";
+import { useDialog } from "@/components/useDialog";
 
 export type DocumentInfo = {
   name: string;
@@ -22,37 +23,8 @@ export function DocumentInfoDialog({
   onClose: () => void;
 }) {
   const titleId = useId();
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const onCloseRef = useRef(onClose);
-
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-
-  useEffect(() => {
-    if (!open) return;
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    const previouslyFocused =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    dialog.focus();
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onCloseRef.current();
-      }
-    }
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
-      previouslyFocused?.focus();
-    };
-  }, [open]);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useDialog(open, onClose, { initialFocusRef: closeRef });
 
   if (!open || !info) return null;
 
@@ -69,7 +41,7 @@ export function DocumentInfoDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/45 p-3 sm:items-center sm:p-6"
+      className={dialogBackdropClass}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -80,9 +52,9 @@ export function DocumentInfoDialog({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="w-full max-w-md rounded-2xl bg-white shadow-2xl outline-none"
+        className={dialogPanelClass}
       >
-        <div className="px-5 py-5">
+        <div className="min-h-0 overflow-y-auto px-5 py-5">
           <h2 id={titleId} className="text-lg font-semibold text-slate-950">
             Document info
           </h2>
@@ -95,8 +67,8 @@ export function DocumentInfoDialog({
             ))}
           </dl>
         </div>
-        <div className="flex justify-end border-t border-slate-200 px-5 py-4">
-          <button type="button" className={secondaryButtonClass} onClick={onClose}>
+        <div className="flex shrink-0 justify-end border-t border-slate-200 px-5 py-4">
+          <button ref={closeRef} type="button" className={`${secondaryButtonClass} w-full sm:w-auto`} onClick={onClose}>
             Close
           </button>
         </div>

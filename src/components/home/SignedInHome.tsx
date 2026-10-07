@@ -5,20 +5,22 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UploadGlyph } from "@/components/icons";
 import { RollingMark } from "@/components/RollingMark";
-import { controlFocusClass, primaryButtonClass } from "@/components/button-styles";
+import { controlFocusClass, primaryButtonClass, secondaryButtonClass } from "@/components/button-styles";
+import { rememberListScroll, useRestoreListScroll } from "@/components/list-scroll";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
 import { TopBar } from "@/components/TopBar";
 import { DocumentCard } from "@/components/documents/DocumentCard";
 import { documentPreviewSrc } from "@/lib/documents/preview";
 import type { ListedDocument } from "@/lib/document-types";
-import { uploadDocumentFromBrowser } from "@/lib/documents/client-upload";
+import { DocumentUploadError, uploadDocumentFromBrowser } from "@/lib/documents/client-upload";
 import { isMarkdownFileName } from "@/lib/markdown/sections";
 import type { AskedQuestion } from "@/lib/questions/history";
 import {
   readSessionUploads,
   recallUploadFile,
   rememberUploadFile,
+  removeSessionUpload,
   saveSessionUpload,
   stampUpload,
   type SessionUpload,
@@ -46,6 +48,10 @@ export function SignedInHome({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState("");
+  const [failedFile, setFailedFile] = useState<File | null>(null);
+  const [failedReadId, setFailedReadId] = useState<string | null>(null);
+  const [phaseLabel, setPhaseLabel] = useState("Uploading");
+  useRestoreListScroll("home");
 
   useEffect(() => {
     if (source !== "demo") return;
@@ -105,20 +111,88 @@ export function SignedInHome({
   async function uploadToServer(file: File) {
     setBusy(true);
     setError(null);
+    setFailedFile(null);
+    setFailedReadId(null);
+    setPhaseLabel("Uploading");
     setStatus("Uploading.");
     try {
-      const { id } = await uploadDocumentFromBrowser(file);
+      const { id } = await uploadDocumentFromBrowser(file, (phase) => {
+        const label = phase === "reading" ? "Reading the file" : "Uploading";
+        setPhaseLabel(label);
+        setStatus(label);
+      });
       setStatus("Opening the document.");
       router.push(`/documents/${id}`);
       router.refresh();
     } catch (uploadError: unknown) {
       const message =
         uploadError instanceof Error ? uploadError.message : "Upload failed. Try again later.";
+      const documentId = uploadError instanceof DocumentUploadError ? uploadError.documentId : undefined;
       setError(message);
       setStatus(message);
+      if (documentId) {
+        setFailedReadId(documentId);
+        router.refresh();
+      } else {
+        setFailedFile(file);
+      }
     } finally {
       setBusy(false);
     }
+  }
+
+  async function retryReading(documentId: string) {
+    setBusy(true);
+    setError(null);
+    setPhaseLabel("Reading the file");
+    setStatus("Reading the file.");
+    try {
+      const response = await fetch(`/api/documents/${documentId}`, { method: "POST" });
+      const payload: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        const message =
+          payload &&
+          typeof payload === "object" &&
+          "error" in payload &&
+          typeof payload.error === "string"
+            ? payload.error
+            : "This document could not be read.";
+        setError(message);
+        setStatus(message);
+        setFailedReadId(documentId);
+        return;
+      }
+      setFailedReadId(null);
+      router.push(`/documents/${documentId}`);
+      router.refresh();
+    } catch {
+      setError("This document could not be read.");
+      setStatus("This document could not be read.");
+      setFailedReadId(documentId);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function deleteDocument(id: string) {
+    if (id.startsWith("local-") || source === "demo") {
+      removeSessionUpload(id);
+      setUploads((current) => current.filter((item) => item.id !== id));
+      return;
+    }
+    const response = await fetch(`/api/documents/${id}`, { method: "DELETE" });
+    if (!response.ok) {
+      const payload: unknown = await response.json().catch(() => null);
+      const message =
+        payload &&
+        typeof payload === "object" &&
+        "error" in payload &&
+        typeof payload.error === "string"
+          ? payload.error
+          : "Could not delete that document.";
+      throw new Error(message);
+    }
+    router.refresh();
   }
 
   function takeFile(file: File | undefined) {
@@ -126,11 +200,15 @@ export function SignedInHome({
     if (inputRef.current) inputRef.current.value = "";
     const result = validateDocumentFile(file);
     if (!result.ok) {
+      setFailedFile(null);
+      setFailedReadId(null);
       setError(result.message);
       setStatus(result.message);
       return;
     }
     setError(null);
+    setFailedFile(null);
+    setFailedReadId(null);
     if (source === "library") {
       void uploadToServer(file);
       return;
@@ -139,7 +217,7 @@ export function SignedInHome({
   }
 
   return (
-    <div className="flex min-h-screen min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8]">
+    <div className="flex min-h-dvh min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8]">
       <SkipLink />
       <TopBar
         actions={
@@ -196,7 +274,7 @@ export function SignedInHome({
               {busy ? <RollingMark className="h-5 w-5" /> : <UploadGlyph className="h-5 w-5" />}
             </span>
             <span className="mt-3 text-base font-semibold text-slate-950">
-              {busy ? "Uploading" : "Upload a PDF or Markdown file"}
+              {busy ? phaseLabel : "Upload a PDF or Markdown file"}
             </span>
             <span className="mt-1 max-w-md text-sm text-slate-600">
               {busy ? "Keep this page open until the file is ready to open." : "Drop a PDF or Markdown file here, or choose a file."}
@@ -223,14 +301,29 @@ export function SignedInHome({
             {status}
           </p>
           {error ? (
-            <p id="home-upload-error" role="alert" className="mt-3 text-sm text-red-700">
-              {error}
-            </p>
+            <div id="home-upload-error" role="alert" className="mt-3 flex flex-col items-start gap-2">
+              <p className="text-sm text-red-700">{error}</p>
+              {failedFile ? (
+                <button type="button" className={secondaryButtonClass} onClick={() => takeFile(failedFile)}>
+                  Retry upload
+                </button>
+              ) : null}
+              {failedReadId ? (
+                <button
+                  type="button"
+                  className={secondaryButtonClass}
+                  onClick={() => void retryReading(failedReadId)}
+                  disabled={busy}
+                >
+                  Retry
+                </button>
+              ) : null}
+            </div>
           ) : null}
           {busy ? (
             <p className="mt-3 flex items-center gap-2 text-sm text-slate-600" role="status">
               <RollingMark />
-              Uploading
+              {phaseLabel}
             </p>
           ) : null}
         </div>
@@ -248,6 +341,9 @@ export function SignedInHome({
                   <DocumentCard
                     item={item}
                     layout="grid"
+                    menu
+                    listKey="home"
+                    onDelete={item.status === "Sample" ? undefined : deleteDocument}
                     fileSrc={
                       localPreviewUrls[item.id] ??
                       documentPreviewSrc(item.id, item.fileName, item.status)
@@ -265,7 +361,7 @@ export function SignedInHome({
           </h2>
           {questions.length === 0 ? (
             <p className="mt-3 max-w-xl text-sm text-slate-600">
-              Questions you ask will show up here.
+              Questions you ask will show up here. Open a document and ask a question.
             </p>
           ) : (
             <ul className="mt-4 flex flex-col gap-3">
@@ -291,6 +387,7 @@ export function SignedInHome({
                 <li key={item.id} className="min-w-0">
                   <Link
                     href={`/documents/${item.id}`}
+                    onClick={() => rememberListScroll("home")}
                     className={[
                       "flex min-w-0 items-center justify-between gap-3 px-4 py-3",
                       "transition-colors duration-150 ease-out motion-reduce:transition-none",
@@ -337,6 +434,7 @@ function QuestionRow({ item }: { item: AskedQuestion }) {
   return (
     <Link
       href={`/documents/${item.documentId}`}
+      onClick={() => rememberListScroll("home")}
       className={[
         "block min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3",
         "transition-colors duration-150 ease-out motion-reduce:transition-none",

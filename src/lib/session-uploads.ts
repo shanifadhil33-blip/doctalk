@@ -42,6 +42,12 @@ export function saveSessionUpload(upload: SessionUpload): void {
   );
 }
 
+export function removeSessionUpload(id: string): void {
+  const existing = readSessionUploads().filter((item) => item.id !== id);
+  window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+  memoryFiles.delete(id);
+}
+
 export function rememberUploadFile(id: string, file: File): void {
   memoryFiles.set(id, file);
 }

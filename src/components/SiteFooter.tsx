@@ -3,7 +3,7 @@ import { GitHubGlyph } from "@/components/icons";
 
 export function SiteFooter() {
   return (
-    <footer className="flex flex-col gap-3 border-t border-slate-200 px-4 py-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+    <footer className="flex flex-col gap-2 border-t border-slate-200 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6">
       <p>Built by Adhil Shanif</p>
       <a
         href="https://github.com/shanifadhil33-blip/doctalk"
