@@ -14,7 +14,7 @@ export default auth(async (req) => {
   const viewerUserId = userIdFromTokenSub(req.auth?.user?.id);
   const kind = classifyPath(req.nextUrl.pathname);
 
-  if (kind.kind === "public") {
+  if (kind.kind === "public" || kind.kind === "unknown") {
     return NextResponse.next();
   }
 

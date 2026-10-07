@@ -33,7 +33,7 @@ function middlewareRuns(pathname: string): boolean {
 function signedOutRedirectsToSignIn(pathname: string): boolean {
   if (!middlewareRuns(pathname)) return false;
   const kind = classifyPath(pathname);
-  if (kind.kind === "public") return false;
+  if (kind.kind === "public" || kind.kind === "unknown") return false;
   if (kind.kind === "protected") {
     return decideProtectedAccess(null) === "sign-in";
   }
@@ -51,6 +51,11 @@ describe("signed-out PDF assets", () => {
       expect(middlewareRuns(demo.fileUrl)).toBe(false);
       expect(signedOutRedirectsToSignIn(demo.fileUrl)).toBe(false);
     }
+  });
+
+  it("does not send an unknown address to sign-in", () => {
+    expect(middlewareRuns("/missing-page")).toBe(true);
+    expect(signedOutRedirectsToSignIn("/missing-page")).toBe(false);
   });
 
   it("still sends a signed-out visitor of a protected page to sign-in", () => {

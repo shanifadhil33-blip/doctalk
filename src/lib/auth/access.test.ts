@@ -36,6 +36,11 @@ describe("classifyPath", () => {
     expect(classifyPath("/settings/")).toEqual({ kind: "protected" });
   });
 
+  it("lets an unknown address render the not-found page", () => {
+    expect(classifyPath("/missing-page")).toEqual({ kind: "unknown" });
+    expect(classifyPath("/settings/extra")).toEqual({ kind: "unknown" });
+  });
+
   it("leaves the PDF.js worker and demo PDFs public", () => {
     expect(classifyPath("/pdf.worker.min.mjs")).toEqual({ kind: "public" });
     expect(classifyPath("/demo/sample-invoice.pdf")).toEqual({ kind: "public" });
