@@ -76,28 +76,26 @@ async function checkHeader(page) {
   await page.setViewportSize({ width: 320, height: 700 });
   await page.goto(`${base}/`, { waitUntil: "load" });
   const signIn = page.getByRole("button", { name: "Sign in", exact: true });
-  const signUp = page.getByRole("button", { name: "Sign up", exact: true });
   const demos = page.getByRole("link", { name: "Try the demo" });
   await demos.first().waitFor();
   if ((await demos.count()) !== 1) fail(`expected one Try the demo link, saw ${await demos.count()}`);
+  if ((await page.getByRole("button", { name: "Sign up" }).count()) !== 0) fail("Sign up is still in the header");
+  if ((await page.getByRole("link", { name: "Sign up" }).count()) !== 0) fail("Sign up link is still on the page");
   const demoBox = await demos.first().boundingBox();
   const hero = page.getByRole("heading", { name: /Ask a PDF a question/ });
   const heroBox = await hero.boundingBox();
   if (!demoBox || !heroBox || demoBox.y < heroBox.y) fail("Try the demo is not the hero control");
 
   const inBox = await signIn.boundingBox();
-  const upBox = await signUp.boundingBox();
   const logo = await page.getByRole("link", { name: "DocTalk" }).boundingBox();
-  if (!inBox || !upBox || !logo) fail("header controls are missing");
+  if (!inBox || !logo) fail("header controls are missing");
   const sameRow = (a, b) => Math.abs(a.y - b.y) < 12 && a.y < b.y + b.height && b.y < a.y + a.height;
-  if (!sameRow(inBox, upBox)) fail(`Sign in and Sign up wrapped (${JSON.stringify({ inBox, upBox })})`);
-  if (!sameRow(logo, upBox)) fail(`header row wrapped away from the logo (${JSON.stringify({ logo, upBox })})`);
-  if (upBox.x <= inBox.x) fail("Sign up is not after Sign in");
-  if (inBox.x < 0 || upBox.x + upBox.width > 320.5) {
-    fail(`header overflows 320px (${JSON.stringify({ inBox, upBox })})`);
+  if (!sameRow(logo, inBox)) fail(`header row wrapped away from the logo (${JSON.stringify({ logo, inBox })})`);
+  if (inBox.x < 0 || inBox.x + inBox.width > 320.5) {
+    fail(`header overflows 320px (${JSON.stringify({ inBox })})`);
   }
-  const signUpColor = await signUp.evaluate((node) => getComputedStyle(node).backgroundColor);
-  if (signUpColor !== "rgb(79, 70, 229)") fail(`Sign up is not indigo (${signUpColor})`);
+  const signInColor = await signIn.evaluate((node) => getComputedStyle(node).backgroundColor);
+  if (signInColor !== "rgb(79, 70, 229)") fail(`Sign in is not indigo (${signInColor})`);
   const footer = await page.getByText("Built by Adhil Shanif").textContent();
   if (footer !== "Built by Adhil Shanif") fail(`footer changed (${footer})`);
 }
