@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { SignOutButton } from "@/components/SignOutButton";
-import { signInWithGoogle, signOutToHome } from "@/lib/auth/actions";
+import { signInWithGoogle } from "@/lib/auth/actions";
 import { userIdFromTokenSub } from "@/lib/auth/user-id";
 
 export default async function AppHeader() {
@@ -34,7 +34,7 @@ export default async function AppHeader() {
               ) : (
                 <span className="text-sm text-slate-600">Signed in</span>
               )}
-              <SignOutButton action={signOutToHome} />
+              <SignOutButton />
             </div>
           ) : (
             <form action={signInWithGoogle}>

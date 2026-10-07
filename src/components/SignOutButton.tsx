@@ -11,6 +11,8 @@ import {
 import { OverlayPortal } from "@/components/OverlayPortal";
 import { RollingMark } from "@/components/RollingMark";
 import { useDialog } from "@/components/useDialog";
+import { isNextRedirect } from "@/lib/auth/redirect-error";
+import { signOutToLanding } from "@/lib/auth/sign-out-client";
 
 function motionMs(): number {
   if (typeof window.matchMedia !== "function") return 0;
@@ -18,12 +20,12 @@ function motionMs(): number {
 }
 
 export function SignOutButton({
-  action,
+  action = signOutToLanding,
   variant = "text",
   hideTrigger = false,
   opener,
 }: {
-  action: () => void | Promise<void>;
+  action?: () => void | Promise<void>;
   variant?: "text" | "button";
   hideTrigger?: boolean;
   opener?: { current: (() => void) | null };
@@ -91,7 +93,13 @@ function SignOutDialog({
     setError(null);
     try {
       await action();
-    } catch {
+    } catch (error: unknown) {
+      // A redirect means the session clear already ran. Keep "Signing out"
+      // up and leave with a full page load. Re-enabling here is the flash.
+      if (isNextRedirect(error)) {
+        window.location.replace("/");
+        return;
+      }
       setPending(false);
       setError("Couldn't sign out. Try again.");
     }

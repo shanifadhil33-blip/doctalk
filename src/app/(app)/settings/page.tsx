@@ -7,7 +7,6 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
 import { TopBar } from "@/components/TopBar";
 import { AccountSettings } from "@/components/settings/AccountSettings";
-import { signOutToHome } from "@/lib/auth/actions";
 import { userIdFromTokenSub } from "@/lib/auth/user-id";
 
 export const metadata: Metadata = {
@@ -32,7 +31,7 @@ export default async function SettingsPage() {
         actions={<AccountMenu variant="text" redirectTo="/settings" showSettings={false} />}
       />
       <main id="main" className="mx-auto w-full min-w-0 max-w-3xl flex-1 px-4 py-8 sm:px-6">
-        <AccountSettings name={name} email={email} signOutAction={signOutToHome} />
+        <AccountSettings name={name} email={email} />
       </main>
       <SiteFooter />
     </div>

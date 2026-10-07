@@ -19,9 +19,6 @@ function previewAccount(showSettings = true) {
       name={previewName}
       email={previewEmail}
       showSettings={showSettings}
-      signOutAction={async () => {
-        await new Promise<void>(() => undefined);
-      }}
     />
   );
 }
@@ -46,7 +43,7 @@ export function SignedInPreview({ view }: { view: "home" | "documents" | "demo" 
         <SkipLink />
         <TopBar back={<SettingsBack />} actions={previewAccount(false)} />
         <main id="main" className="mx-auto w-full min-w-0 max-w-3xl flex-1 px-4 py-8 sm:px-6">
-          <AccountSettings name={previewName} email={previewEmail} signOutAction={async () => undefined} />
+          <AccountSettings name={previewName} email={previewEmail} />
         </main>
         <SiteFooter />
       </div>

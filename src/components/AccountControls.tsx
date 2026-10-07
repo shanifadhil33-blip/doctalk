@@ -8,6 +8,7 @@ import { controlFocusClass, overlayZ, textButtonClass } from "@/components/butto
 import { ownDocumentsHref } from "@/lib/documents/list-destination";
 import { rememberListScroll } from "@/components/list-scroll";
 import { SignOutButton } from "@/components/SignOutButton";
+import { signOutToLanding } from "@/lib/auth/sign-out-client";
 
 function motionMs(): number {
   if (typeof window.matchMedia !== "function") return 0;
@@ -39,12 +40,12 @@ export function AccountControls({
   name,
   email,
   showSettings = true,
-  signOutAction,
+  signOutAction = signOutToLanding,
 }: {
   name: string;
   email: string | null;
   showSettings?: boolean;
-  signOutAction: () => void | Promise<void>;
+  signOutAction?: () => void | Promise<void>;
 }) {
   const narrow = useNarrowScreen();
   const pathname = usePathname();
