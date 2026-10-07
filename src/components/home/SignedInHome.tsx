@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UploadGlyph } from "@/components/icons";
 import { RollingMark } from "@/components/RollingMark";
-import { controlFocusClass, secondaryButtonClass } from "@/components/button-styles";
+import { controlFocusClass, dropZoneFocusClass, secondaryButtonClass } from "@/components/button-styles";
+import { blurFileInputIfPointer, useBlurFileInputOnCancel } from "@/components/useFileInputFocus";
 import { rememberListScroll, useRestoreListScroll } from "@/components/list-scroll";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
@@ -41,6 +42,7 @@ export function SignedInHome({
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  useBlurFileInputOnCancel(inputRef);
   const [uploads, setUploads] = useState<SessionUpload[]>([]);
   const [localPreviewUrls, setLocalPreviewUrls] = useState<Record<string, string>>({});
   const [dragOver, setDragOver] = useState(false);
@@ -245,7 +247,7 @@ export function SignedInHome({
             aria-busy={busy}
             className={[
               "flex min-w-0 cursor-pointer flex-col items-center rounded-2xl border border-dashed px-4 py-10 text-center transition-colors duration-150",
-              "focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#4f46e5]",
+              dropZoneFocusClass,
               busy ? "cursor-wait border-slate-200 bg-slate-50" : "",
               !busy && dragOver
                 ? "border-[#4f46e5] bg-[#f5f4ff]"
@@ -278,7 +280,10 @@ export function SignedInHome({
               aria-describedby={error ? "home-upload-error" : "home-upload-hint"}
               aria-invalid={error ? true : undefined}
               disabled={busy}
-              onChange={(event) => takeFile(event.target.files?.[0])}
+              onChange={(event) => {
+                takeFile(event.target.files?.[0]);
+                blurFileInputIfPointer(event.currentTarget);
+              }}
             />
           </label>
           <p className="sr-only" aria-live="polite">

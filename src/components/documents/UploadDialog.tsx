@@ -6,10 +6,12 @@ import { useRouter } from "next/navigation";
 import {
   dialogBackdropClass,
   dialogPanelClass,
+  dropZoneFocusClass,
   ghostIconButtonClass,
   primaryButtonClass,
   secondaryButtonClass,
 } from "@/components/button-styles";
+import { blurFileInputIfPointer, useBlurFileInputOnCancel } from "@/components/useFileInputFocus";
 import { OverlayPortal } from "@/components/OverlayPortal";
 import { RollingMark } from "@/components/RollingMark";
 import { CloseGlyph, UploadGlyph } from "@/components/icons";
@@ -38,6 +40,7 @@ export function UploadDialog({
   const router = useRouter();
   const titleId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
+  useBlurFileInputOnCancel(inputRef, open);
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -181,7 +184,7 @@ export function UploadDialog({
               takeFile(event.dataTransfer.files[0]);
             }}
             className={[
-              "flex cursor-pointer flex-col items-center rounded-xl border border-dashed px-4 py-8 text-center transition-colors duration-150 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#4f46e5]",
+              `flex cursor-pointer flex-col items-center rounded-xl border border-dashed px-4 py-8 text-center transition-colors duration-150 ${dropZoneFocusClass}`,
               dragOver
                 ? "border-[#4f46e5] bg-[#f5f4ff]"
                 : "border-slate-300 bg-[#f8f9fb] hover:border-slate-400 hover:bg-white active:bg-slate-100",
@@ -208,7 +211,10 @@ export function UploadDialog({
               aria-label="Choose a PDF or Markdown file"
               aria-describedby={error ? "upload-error" : "upload-hint"}
               aria-invalid={error ? true : undefined}
-              onChange={(event) => takeFile(event.target.files?.[0])}
+              onChange={(event) => {
+                takeFile(event.target.files?.[0]);
+                blurFileInputIfPointer(event.currentTarget);
+              }}
             />
           </label>
           )}

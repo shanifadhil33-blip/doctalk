@@ -4,6 +4,12 @@ const motion =
 export const controlFocusClass =
   "focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5]";
 
+/** Ring a wrapper only while a child has keyboard focus, not after a click opens a file picker. */
+export const dropZoneFocusClass = [
+  "has-[:focus-visible]:outline has-[:focus-visible]:outline-2",
+  "has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[#4f46e5]",
+].join(" ");
+
 const pointer = "cursor-pointer";
 
 export const primaryButtonClass = [

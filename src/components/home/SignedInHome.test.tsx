@@ -89,7 +89,8 @@ describe("SignedInHome", () => {
     expect(screen.queryByRole("button", { name: "Upload PDF or Markdown" })).not.toBeInTheDocument();
     const uploadBox = screen.getByText("Upload a PDF or Markdown file").closest("label");
     expect(uploadBox).not.toBeNull();
-    expect(uploadBox?.className).toContain("focus-within:outline");
+    expect(uploadBox?.className).toContain("has-[:focus-visible]:outline");
+    expect(uploadBox?.className).not.toContain("focus-within:");
     expect(screen.getByText("Drop a PDF or Markdown file here, or choose a file.")).toBeInTheDocument();
     expect(screen.getByText("PDF or Markdown, up to 10 MB. 5 documents per account.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open Warehouse lease" })).toHaveAttribute(
@@ -182,5 +183,22 @@ describe("SignedInHome", () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Sample documents" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Try the demo" })).not.toBeInTheDocument();
+  });
+
+  it("blurs the file input after a click cancels the picker", () => {
+    document.documentElement.dataset.input = "pointer";
+    render(
+      <SignedInHome
+        source="library"
+        owned={[sample]}
+        questions={[]}
+        headerAccount={<span>Ada</span>}
+      />,
+    );
+
+    const input = screen.getByLabelText("Choose a PDF or Markdown file");
+    input.focus();
+    input.dispatchEvent(new Event("cancel"));
+    expect(document.activeElement).not.toBe(input);
   });
 });

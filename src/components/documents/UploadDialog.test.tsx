@@ -23,13 +23,14 @@ describe("UploadDialog", () => {
   it("rejects a file that is not a PDF", () => {
     renderDialog();
     const input = screen.getByLabelText("Choose a PDF or Markdown file");
+    expect(input.closest("label")?.className).toContain("has-[:focus-visible]:outline");
+    expect(input.closest("label")?.className).not.toContain("focus-within:");
 
     fireEvent.change(input, {
       target: {
         files: [new File(["hello"], "notes.txt", { type: "text/plain" })],
       },
     });
-
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Only PDF and Markdown files can be uploaded.",
     );
