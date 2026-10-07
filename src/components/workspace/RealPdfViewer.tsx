@@ -140,7 +140,7 @@ export function RealPdfViewer({
                       key={pageNumber}
                       id={`pdf-page-${pageNumber}`}
                       aria-label={`Page ${pageNumber}`}
-                      className="bg-white shadow-sm ring-1 ring-slate-200 outline-none focus:outline-none focus-visible:outline-none"
+                      className="bg-white shadow-sm ring-1 ring-slate-200 outline-none"
                     >
                       <Page
                         pageNumber={pageNumber}
@@ -148,7 +148,7 @@ export function RealPdfViewer({
                         renderTextLayer={false}
                         renderAnnotationLayer={false}
                         loading={<p className="p-6 text-sm text-slate-600">Loading page...</p>}
-                        className="outline-none focus:outline-none focus-visible:outline-none [&_canvas]:outline-none [&_canvas]:focus:outline-none [&_canvas]:focus-visible:outline-none"
+                        className="outline-none [&_canvas]:outline-none"
                       />
                     </article>
                   );
