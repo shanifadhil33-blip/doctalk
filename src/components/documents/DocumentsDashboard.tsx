@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GridGlyph, ListGlyph, SearchGlyph, UploadGlyph } from "@/components/icons";
@@ -20,6 +20,7 @@ import { uploadDocumentFromBrowser } from "@/lib/documents/client-upload";
 import { isMarkdownFileName } from "@/lib/markdown/sections";
 import { isListedDocumentList } from "@/lib/documents/list";
 import { ownDocumentsHref } from "@/lib/documents/list-destination";
+import { hrefWithSort, sortDocuments, type SortKey } from "@/lib/documents/sort";
 import {
   readSessionUploads,
   recallUploadFile,
@@ -29,8 +30,6 @@ import {
   type SessionUpload,
 } from "@/lib/session-uploads";
 
-type SortKey = "recent" | "name" | "pages";
-
 export function DocumentsDashboard({
   documents,
   source,
@@ -38,6 +37,7 @@ export function DocumentsDashboard({
   headerAccount,
   bannerAccount,
   initialUploadOpen = false,
+  initialSort = "recent",
 }: {
   documents: ListedDocument[];
   source: "demo" | "library";
@@ -45,10 +45,14 @@ export function DocumentsDashboard({
   headerAccount: ReactNode;
   bannerAccount?: ReactNode;
   initialUploadOpen?: boolean;
+  initialSort?: SortKey;
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<SortKey>("recent");
+  const [sort, setSort] = useState<SortKey>(initialSort);
+  const [measuredPages, setMeasuredPages] = useState<Record<string, number>>({});
+  const listRef = useRef<HTMLUListElement>(null);
+  const cardPositions = useRef<Map<string, DOMRect>>(new Map());
   const [layout, setLayout] = useState<"grid" | "list">("grid");
   const [uploadOpen, setUploadOpen] = useState(initialUploadOpen);
   const [uploads, setUploads] = useState<SessionUpload[]>([]);
@@ -59,6 +63,16 @@ export function DocumentsDashboard({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [listError, setListError] = useState<string | null>(null);
   useRestoreListScroll("documents");
+
+  const reportPages = useCallback((id: string, count: number) => {
+    setMeasuredPages((current) => (current[id] === count ? current : { ...current, [id]: count }));
+  }, []);
+
+  function selectSort(next: SortKey) {
+    setSort(next);
+    const href = hrefWithSort(window.location.pathname, window.location.search, next);
+    router.replace(href, { scroll: false });
+  }
 
   useEffect(() => {
     setUploads(readSessionUploads());
@@ -139,14 +153,40 @@ export function DocumentsDashboard({
       );
     });
 
-    filtered.sort((a, b) => {
-      if (sort === "name") return a.title.localeCompare(b.title);
-      if (sort === "pages") return b.pageCount - a.pageCount || a.title.localeCompare(b.title);
-      return b.addedOn.localeCompare(a.addedOn) || a.title.localeCompare(b.title);
-    });
+    return sortDocuments(
+      filtered.map((item) => ({
+        ...item,
+        pageCount: measuredPages[item.id] ?? item.pageCount,
+      })),
+      sort,
+    );
+  }, [documents, remoteDocuments, source, signedIn, uploads, query, sort, hiddenIds, measuredPages]);
 
-    return filtered;
-  }, [documents, remoteDocuments, source, signedIn, uploads, query, sort, hiddenIds]);
+  const orderKey = cards.map((item) => item.id).join("\n");
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const next = new Map<string, DOMRect>();
+    const reduced =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    list.querySelectorAll<HTMLElement>("[data-doc-id]").forEach((node) => {
+      const id = node.dataset.docId;
+      if (!id) return;
+      const rect = node.getBoundingClientRect();
+      const previous = cardPositions.current.get(id);
+      next.set(id, rect);
+      if (!previous || reduced) return;
+      const dx = previous.left - rect.left;
+      const dy = previous.top - rect.top;
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+      node.animate(
+        [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "translate(0px, 0px)" }],
+        { duration: 180, easing: "ease-out" },
+      );
+    });
+    cardPositions.current = next;
+  }, [orderKey, layout]);
 
   async function deleteOwnedDocument(id: string) {
     const response = await fetch(`/api/documents/${id}`, { method: "DELETE" });
@@ -282,13 +322,12 @@ export function DocumentsDashboard({
               id="document-sort"
               labelledBy="document-sort-label"
               value={sort}
-              onChange={setSort}
+              onChange={selectSort}
               options={[
                 { value: "recent", label: "Recently added" },
                 { value: "name", label: "Name" },
                 { value: "pages", label: "Page count" },
               ]}
-              className="min-w-0 flex-1 sm:w-44 sm:flex-none"
             />
             </div>
             <div className="flex w-fit gap-2 rounded-lg border border-slate-200 bg-white p-1" role="group" aria-label="Layout">
@@ -364,6 +403,7 @@ export function DocumentsDashboard({
           </div>
         ) : (
           <ul
+            ref={listRef}
             className={
               layout === "grid"
                 ? "mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
@@ -371,12 +411,13 @@ export function DocumentsDashboard({
             }
           >
             {cards.map((item) => (
-              <li key={item.id}>
+              <li key={item.id} data-doc-id={item.id} className="min-w-0">
                 <DocumentCard
                   item={item}
                   layout={layout}
                   menu={source === "library" && signedIn}
                   listKey="documents"
+                  onPagesLoaded={reportPages}
                   onDelete={
                     source === "library" && signedIn && item.status !== "Sample"
                       ? deleteOwnedDocument

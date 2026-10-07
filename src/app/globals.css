@@ -25,10 +25,6 @@ body {
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
-[data-pressed="true"] {
-  transform: scale(0.98);
-}
-
 .route-fade {
   animation: route-fade 180ms ease-out;
 }
@@ -156,23 +152,50 @@ summary,
 @keyframes option-menu-in {
   from {
     opacity: 0;
-    transform: translateY(-4px);
   }
   to {
     opacity: 1;
-    transform: none;
   }
 }
 
 @keyframes option-menu-out {
   from {
     opacity: 1;
-    transform: none;
   }
   to {
     opacity: 0;
-    transform: translateY(-4px);
   }
+}
+
+.card-link,
+.list-link,
+.menu-trigger {
+  touch-action: manipulation;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card-link:hover {
+    border-color: #94a3b8;
+    background-color: #f8f9fb;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+
+  .list-link:hover {
+    border-color: #cbd5e1;
+    background-color: #f8f9fb;
+  }
+
+  .menu-trigger:hover {
+    background-color: #f8fafc;
+  }
+}
+
+.menu-trigger[data-open="true"] {
+  background-color: #f8fafc;
+}
+
+.menu-trigger:active {
+  background-color: #f1f5f9;
 }
 
 button:not(:disabled),
@@ -203,10 +226,6 @@ textarea:disabled {
   *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
-  }
-
-  [data-pressed="true"] {
-    transform: none;
   }
 
   ::view-transition-old(*),

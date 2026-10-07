@@ -11,6 +11,7 @@ import {
 import { isPublicSample } from "@/lib/documents/samples";
 import { ownedDocumentsWhere, visibleDocumentsWhere } from "@/lib/documents/visibility";
 import { isMarkdownFileName } from "@/lib/markdown/sections";
+import { withSampleSortFacts } from "@/lib/documents/sample-sort";
 
 function libraryStatusLabel(status: string): string {
   if (status === "processing") return "Processing";
@@ -58,7 +59,7 @@ function formatAdded(date: Date): { addedOn: string; addedLabel: string } {
   };
 }
 
-function listedFromRow(row: {
+export function listedFromRow(row: {
   id: string;
   fileName: string;
   isDemo: boolean;
@@ -66,7 +67,7 @@ function listedFromRow(row: {
   createdAt: Date;
 }): ListedDocument {
   const { addedOn, addedLabel } = formatAdded(row.createdAt);
-  return {
+  return withSampleSortFacts({
     id: row.id,
     title: titleFromFileName(row.fileName),
     counterparty: row.isDemo ? "Sample" : "Your document",
@@ -77,7 +78,7 @@ function listedFromRow(row: {
     fileName: row.fileName,
     addedOn,
     pageCount: 0,
-  };
+  });
 }
 
 /** The signed-in account sees its own uploads, never public samples. */
