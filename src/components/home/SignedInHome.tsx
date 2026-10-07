@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UploadGlyph } from "@/components/icons";
 import { RollingMark } from "@/components/RollingMark";
-import { controlFocusClass, primaryButtonClass, secondaryButtonClass } from "@/components/button-styles";
+import { controlFocusClass, secondaryButtonClass } from "@/components/button-styles";
 import { rememberListScroll, useRestoreListScroll } from "@/components/list-scroll";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
@@ -218,23 +218,7 @@ export function SignedInHome({
   return (
     <div className="flex min-h-dvh min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8]">
       <SkipLink />
-      <TopBar
-        actions={
-          <>
-            <button
-              type="button"
-              className={primaryButtonClass}
-              aria-label="Upload PDF or Markdown"
-              onClick={() => inputRef.current?.click()}
-              disabled={busy}
-            >
-              <UploadGlyph />
-              <span className="hidden sm:inline">Upload PDF or Markdown</span>
-            </button>
-            {headerAccount}
-          </>
-        }
-      />
+      <TopBar actions={headerAccount} />
       <main id="main" className="mx-auto w-full min-w-0 max-w-6xl flex-1 px-4 py-8 sm:px-6">
         <h1 className="text-3xl font-semibold tracking-tight text-slate-950">Your documents</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
@@ -333,20 +317,11 @@ export function SignedInHome({
             Documents
           </h2>
           {yourDocuments.length === 0 ? (
-            <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center">
               <h3 className="text-base font-semibold text-slate-950">No documents yet</h3>
               <p className="mx-auto mt-2 max-w-sm text-sm text-slate-600">
-                Upload a PDF or Markdown file to ask a question about it.
+                Use the upload box above to add a PDF or Markdown file.
               </p>
-              <button
-                type="button"
-                className={`${primaryButtonClass} mt-5`}
-                onClick={() => inputRef.current?.click()}
-                disabled={busy}
-              >
-                <UploadGlyph />
-                Upload your first document
-              </button>
             </div>
           ) : (
             <ul className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

@@ -105,14 +105,7 @@ export function HomeLoading({ signedIn }: { signedIn: boolean }) {
   return (
     <div className="flex min-h-dvh min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8]" aria-busy="true">
       <SkipLink />
-      <TopBar
-        actions={
-          <>
-            <Bone className="h-11 w-44" />
-            <Bone className="h-11 w-24" />
-          </>
-        }
-      />
+      <TopBar actions={<Bone className="h-11 w-24" />} />
       <main id="main" className="site-main mx-auto w-full min-w-0 max-w-6xl flex-1 px-4 py-8 sm:px-6">
         <h1 className="text-3xl font-semibold tracking-tight text-slate-950">Your documents</h1>
         <Bone className="mt-6 h-40 w-full" />

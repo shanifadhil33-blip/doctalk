@@ -107,16 +107,25 @@ body {
 }
 
 html[data-input="pointer"] :focus,
-html[data-input="pointer"] :focus-visible {
+html[data-input="pointer"] :focus-visible,
+html[data-input="pointer"] :focus-within {
   outline: none !important;
 }
 
+html,
 button,
 input,
 select,
 textarea,
 a,
-[role="option"] {
+label,
+summary,
+[role="button"],
+[role="link"],
+[role="option"],
+[role="menuitem"],
+[role="tab"],
+[tabindex] {
   -webkit-tap-highlight-color: transparent;
 }
 
