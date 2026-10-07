@@ -40,14 +40,9 @@ export function LandingPage({
     <div className="min-h-dvh overflow-x-hidden bg-[#eceef2] sm:p-4 md:p-6">
       <SkipLink />
       <div className="mx-auto flex min-h-dvh max-w-[1180px] flex-col overflow-x-hidden bg-white sm:min-h-[calc(100dvh-3rem)] sm:rounded-[28px] sm:shadow-[0_16px_50px_rgba(15,23,42,0.08)] sm:ring-1 sm:ring-slate-200">
-        <header className="site-header flex flex-wrap items-center justify-between gap-2 px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-8">
+        <header className="site-header flex flex-nowrap items-center justify-between gap-2 px-3 py-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-8">
           <Logo />
-          <div className="flex items-center gap-2">
-            {headerAccount}
-            <Link href={demoHref} prefetch={true} className={primaryButtonClass}>
-              Try the demo
-            </Link>
-          </div>
+          <div className="flex shrink-0 flex-nowrap items-center">{headerAccount}</div>
         </header>
 
         <main id="main" className="flex-1 px-4 pb-8 sm:px-8">

@@ -2,8 +2,18 @@
 import "@/test/setup";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SignOutButton } from "@/components/SignOutButton";
+
+const replace = vi.fn();
+
+beforeEach(() => {
+  replace.mockReset();
+  Object.defineProperty(window, "location", {
+    configurable: true,
+    value: { replace, href: "http://localhost/" },
+  });
+});
 
 describe("Sign out confirmation", () => {
   it("asks before signing out, and Cancel, Esc, and an outside tap stay signed in", async () => {
@@ -74,5 +84,50 @@ describe("Sign out confirmation", () => {
     await waitFor(() => {
       expect(action).toHaveBeenCalledOnce();
     });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(within(screen.getByRole("dialog")).getByRole("button", { name: "Signing out" })).toBeDisabled();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("keeps Signing out and never shows an error when sign-out redirects", async () => {
+    const user = userEvent.setup();
+    const action = vi.fn(async () => {
+      const error = new Error("NEXT_REDIRECT");
+      Object.assign(error, { digest: "NEXT_REDIRECT;replace;/;307;" });
+      throw error;
+    });
+    render(<SignOutButton action={action} />);
+
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Sign out" }));
+
+    await waitFor(() => {
+      expect(replace).toHaveBeenCalledWith("/");
+    });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryByText("Couldn't sign out. Try again.")).not.toBeInTheDocument();
+    const busy = within(screen.getByRole("dialog")).getByRole("button", { name: "Signing out" });
+    expect(busy).toBeDisabled();
+    expect(busy).toHaveAttribute("aria-busy", "true");
+    expect(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" })).toBeDisabled();
+  });
+
+  it("shows the error and re-enables the buttons when sign-out fails", async () => {
+    const user = userEvent.setup();
+    const action = vi.fn(async () => {
+      throw new Error("network down");
+    });
+    render(<SignOutButton action={action} />);
+
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Sign out" }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("Couldn't sign out. Try again.");
+    const retry = within(dialog).getByRole("button", { name: "Sign out" });
+    expect(retry).toBeEnabled();
+    expect(retry).not.toHaveAttribute("aria-busy", "true");
+    expect(within(dialog).getByRole("button", { name: "Cancel" })).toBeEnabled();
+    expect(replace).not.toHaveBeenCalled();
   });
 });

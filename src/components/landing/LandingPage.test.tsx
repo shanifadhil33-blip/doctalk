@@ -32,8 +32,9 @@ describe("LandingPage", () => {
       screen.getByText(/DocTalk answers questions about your documents/),
     ).toBeInTheDocument();
     const demoLinks = screen.getAllByRole("link", { name: "Try the demo" });
-    expect(demoLinks).toHaveLength(2);
+    expect(demoLinks).toHaveLength(1);
     expect(demoLinks[0]).toHaveAttribute("href", "/documents");
     expect(screen.getByRole("button", { name: "Sign in with Google" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Sign up" })).not.toBeInTheDocument();
   });
 });

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { AccountMenu } from "@/components/AccountMenu";
 import { SignedInHome } from "@/components/home/SignedInHome";
+import { LandingHeaderAuth } from "@/components/landing/LandingHeaderAuth";
 import { LandingPage } from "@/components/landing/LandingPage";
 import { userIdFromTokenSub } from "@/lib/auth/user-id";
 import { loadAccountHome } from "@/lib/documents/list";
@@ -39,7 +40,7 @@ export default async function HomePage() {
     <LandingPage
       demoHref="/documents"
       sourceHref={sourceHref}
-      headerAccount={<AccountMenu variant="text" redirectTo="/" />}
+      headerAccount={<LandingHeaderAuth />}
       heroAccount={<AccountMenu variant="google" redirectTo="/" />}
     />
   );

@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { AccountControls } from "@/components/AccountControls";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { safeCallbackPath } from "@/lib/auth/access";
-import { signInWithGoogle, signOutToHome } from "@/lib/auth/actions";
+import { signInWithGoogle } from "@/lib/auth/actions";
 import { userIdFromTokenSub } from "@/lib/auth/user-id";
 
 export async function AccountMenu({
@@ -30,7 +30,6 @@ export async function AccountMenu({
         name={name}
         email={session?.user?.email?.trim() || null}
         showSettings={showSettings}
-        signOutAction={signOutToHome}
       />
     );
   }

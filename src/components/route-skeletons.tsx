@@ -86,7 +86,7 @@ export function HomeLoading({ signedIn }: { signedIn: boolean }) {
       <div className="min-h-dvh overflow-x-hidden bg-[#eceef2] sm:p-4 md:p-6" aria-busy="true">
         <SkipLink />
         <div className="mx-auto flex min-h-dvh max-w-[1180px] flex-col overflow-x-hidden bg-white sm:min-h-[calc(100dvh-3rem)] sm:rounded-[28px] sm:shadow-[0_16px_50px_rgba(15,23,42,0.08)] sm:ring-1 sm:ring-slate-200">
-          <header className="site-header flex flex-wrap items-center justify-between gap-2 px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-8">
+          <header className="site-header flex flex-nowrap items-center justify-between gap-2 px-3 py-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-8">
             <Logo />
             <Bone className="h-11 w-32" />
           </header>

@@ -7,7 +7,7 @@ export function AccountSettings({
 }: {
   name: string;
   email: string | null;
-  signOutAction: () => void | Promise<void>;
+  signOutAction?: () => void | Promise<void>;
 }) {
   return (
     <div className="min-w-0">
