@@ -9,19 +9,20 @@ vi.mock("@/lib/auth/actions", () => ({
 }));
 
 describe("Landing header auth", () => {
-  it("puts a quiet Sign in next to a filled Sign up, both on the Google form", () => {
+  it("shows one filled Sign in button and no Sign up", () => {
     render(<LandingHeaderAuth />);
 
-    const form = screen.getByRole("button", { name: "Sign up" }).closest("form");
-    if (!form) throw new Error("Missing sign-up form");
-    expect(form.className).toContain("flex-nowrap");
-    expect(form).toContainElement(screen.getByRole("button", { name: "Sign in" }));
-
     const signIn = screen.getByRole("button", { name: "Sign in" });
-    const signUp = screen.getByRole("button", { name: "Sign up" });
-    expect(signIn.className).not.toContain("bg-[#4f46e5]");
-    expect(signUp.className).toContain("bg-[#4f46e5]");
-    expect(signUp.className).toContain("whitespace-nowrap");
+    expect(screen.queryByRole("button", { name: "Sign up" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Sign up" })).not.toBeInTheDocument();
+    expect(signIn.className).toContain("bg-[#4f46e5]");
+    expect(signIn.className).toContain("whitespace-nowrap");
+    expect(signIn.className).toContain("focus-visible:outline");
+    expect(signIn.className).not.toMatch(/(?:^|\s)focus-within:|(?:^|\s)focus:(?:outline|ring)/);
+
+    const form = signIn.closest("form");
+    if (!form) throw new Error("Missing sign-in form");
+    expect(form.querySelectorAll("button")).toHaveLength(1);
     expect(form.querySelector("input[name='redirectTo']")).toHaveAttribute("value", "/");
   });
 });

@@ -36,5 +36,6 @@ describe("LandingPage", () => {
     expect(demoLinks[0]).toHaveAttribute("href", "/documents");
     expect(screen.getByRole("button", { name: "Sign in with Google" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Sign up" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Sign up" })).not.toBeInTheDocument();
   });
 });
