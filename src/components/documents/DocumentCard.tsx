@@ -1,10 +1,19 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type RefObject } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+  type RefObject,
+} from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { cardLinkClass, controlFocusClass } from "@/components/button-styles";
 import { rememberListScroll } from "@/components/list-scroll";
+import { blockScrollClick } from "@/components/press-intent";
 import { MoreGlyph } from "@/components/icons";
 import { DeleteDocumentDialog } from "@/components/documents/DeleteDocumentDialog";
 import {
@@ -43,6 +52,7 @@ export function DocumentCard({
   menu = false,
   onDelete,
   listKey,
+  onPagesLoaded,
 }: {
   item: DocumentCardModel;
   layout: "grid" | "list";
@@ -51,6 +61,7 @@ export function DocumentCard({
   menu?: boolean;
   onDelete?: (id: string) => Promise<void>;
   listKey?: string;
+  onPagesLoaded?: (id: string, pageCount: number) => void;
 }) {
   const markdown = isMarkdownFileName(item.fileName);
   const lines = documentPreviewLines(item.id, item.fileName, item.status);
@@ -67,7 +78,23 @@ export function DocumentCard({
   const [deletePending, setDeletePending] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const pressOrigin = useRef<{ x: number; y: number } | null>(null);
   const canDelete = Boolean(onDelete) && item.status !== "Sample";
+
+  useEffect(() => {
+    if (loadedPages === null || loadedPages <= 0) return;
+    onPagesLoaded?.(item.id, loadedPages);
+  }, [item.id, loadedPages, onPagesLoaded]);
+
+  function onCardPointerDown(event: ReactPointerEvent<HTMLAnchorElement>) {
+    if (event.button !== 0) return;
+    pressOrigin.current = { x: event.clientX, y: event.clientY };
+  }
+
+  function onCardClick(event: ReactMouseEvent<HTMLAnchorElement>) {
+    if (blockScrollClick(pressOrigin.current, event)) return;
+    if (listKey) rememberListScroll(listKey);
+  }
   const preview = (
     <DocumentPreview
       fileSrc={markdown ? null : fileSrc}
@@ -148,9 +175,8 @@ export function DocumentCard({
           href={`/documents/${item.id}`}
           prefetch={true}
           aria-label={`Open ${item.title}`}
-          onClick={() => {
-            if (listKey) rememberListScroll(listKey);
-          }}
+          onPointerDown={onCardPointerDown}
+          onClick={onCardClick}
           className={`${cardLinkClass} flex flex-col gap-3 rounded-xl p-4 sm:flex-row sm:items-center ${menu ? "pr-14" : ""}`}
         >
           <span className="flex min-w-0 items-start gap-3">
@@ -177,9 +203,8 @@ export function DocumentCard({
         href={`/documents/${item.id}`}
         prefetch={true}
         aria-label={`Open ${item.title}`}
-        onClick={() => {
-          if (listKey) rememberListScroll(listKey);
-        }}
+        onPointerDown={onCardPointerDown}
+        onClick={onCardClick}
         className={`${cardLinkClass} flex h-full flex-col overflow-hidden rounded-2xl`}
       >
         {preview}

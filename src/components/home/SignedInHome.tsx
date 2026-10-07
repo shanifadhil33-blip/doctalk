@@ -8,6 +8,7 @@ import { RollingMark } from "@/components/RollingMark";
 import { controlFocusClass, dropZoneFocusClass, secondaryButtonClass } from "@/components/button-styles";
 import { blurFileInputIfPointer, useBlurFileInputOnCancel } from "@/components/useFileInputFocus";
 import { rememberListScroll, useRestoreListScroll } from "@/components/list-scroll";
+import { blockScrollClick } from "@/components/press-intent";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
 import { TopBar } from "@/components/TopBar";
@@ -384,6 +385,7 @@ export function SignedInHome({
 }
 
 function QuestionRow({ item }: { item: AskedQuestion }) {
+  const pressOrigin = useRef<{ x: number; y: number } | null>(null);
   const body = (
     <>
       <span className="block break-words text-sm font-medium text-slate-950">{item.question}</span>
@@ -402,11 +404,17 @@ function QuestionRow({ item }: { item: AskedQuestion }) {
     <Link
       href={`/documents/${item.documentId}`}
       prefetch={true}
-      onClick={() => rememberListScroll("home")}
+      onPointerDown={(event) => {
+        if (event.button !== 0) return;
+        pressOrigin.current = { x: event.clientX, y: event.clientY };
+      }}
+      onClick={(event) => {
+        if (blockScrollClick(pressOrigin.current, event)) return;
+        rememberListScroll("home");
+      }}
       className={[
-        "block min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3",
+        "list-link touch-manipulation block min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3",
         "transition-colors duration-150 ease-out motion-reduce:transition-none",
-        "hover:border-slate-300 hover:bg-[#f8f9fb] active:bg-slate-100",
         controlFocusClass,
       ].join(" ")}
     >

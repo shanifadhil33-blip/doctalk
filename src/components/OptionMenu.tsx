@@ -4,6 +4,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent
 import { createPortal } from "react-dom";
 import { controlFocusClass, overlayZ } from "@/components/button-styles";
 import { CheckGlyph, ChevronDownGlyph } from "@/components/icons";
+import { pointerMoved } from "@/components/press-intent";
 
 export type MenuOption<T extends string> = {
   value: T;
@@ -22,7 +23,7 @@ export function placeOptionMenu(
   itemCount: number,
 ): Box {
   const natural = itemCount * rowHeight + 8;
-  const width = Math.min(Math.max(trigger.width, 200), Math.max(rowHeight, viewport.width - edge * 2));
+  const width = Math.min(Math.max(trigger.width, 176), Math.max(rowHeight, viewport.width - edge * 2));
   let left = trigger.left;
   if (left + width > viewport.width - edge) {
     left = Math.max(edge, viewport.width - edge - width);
@@ -62,6 +63,13 @@ export function OptionMenu<T extends string>({
   const currentId = `${menuId}-current`;
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const onChangeRef = useRef(onChange);
+  const gesture = useRef<{ value: T; x: number; y: number } | null>(null);
+  const handled = useRef(false);
+  const moved = useRef(false);
+  const ignoreTriggerClick = useRef(false);
+  const chooseRef = useRef<(next: T) => void>(() => undefined);
+  onChangeRef.current = onChange;
   const [phase, setPhase] = useState<"closed" | "open" | "closing">("closed");
   const [active, setActive] = useState(0);
   const [box, setBox] = useState<Box | null>(null);
@@ -81,10 +89,17 @@ export function OptionMenu<T extends string>({
   }
 
   function choose(next: T) {
-    onChange(next);
+    if (handled.current) return;
+    handled.current = true;
+    ignoreTriggerClick.current = true;
+    onChangeRef.current(next);
     close();
-    triggerRef.current?.focus();
+    triggerRef.current?.focus({ preventScroll: true });
+    window.setTimeout(() => {
+      ignoreTriggerClick.current = false;
+    }, 0);
   }
+  chooseRef.current = choose;
 
   useEffect(() => {
     if (phase !== "closing") return;
@@ -118,6 +133,20 @@ export function OptionMenu<T extends string>({
       window.removeEventListener("scroll", update, true);
     };
   }, [phase, options.length]);
+
+  useEffect(() => {
+    if (phase !== "open") return;
+    function onPointerUp(event: PointerEvent) {
+      const start = gesture.current;
+      gesture.current = null;
+      if (!start) return;
+      moved.current = pointerMoved(start, event);
+      if (moved.current) return;
+      chooseRef.current(start.value);
+    }
+    window.addEventListener("pointerup", onPointerUp, true);
+    return () => window.removeEventListener("pointerup", onPointerUp, true);
+  }, [phase]);
 
   useEffect(() => {
     if (phase === "closed") return;
@@ -179,23 +208,25 @@ export function OptionMenu<T extends string>({
         ref={triggerRef}
         id={menuId}
         type="button"
-        className={`inline-flex h-11 min-h-11 min-w-0 cursor-pointer items-center justify-between gap-2 rounded-lg border bg-white py-0 pl-3 pr-3 text-left text-sm text-slate-800 transition-colors duration-150 hover:border-slate-400 hover:bg-slate-50 active:bg-slate-100 motion-reduce:transition-none ${phase === "closed" ? "border-slate-200" : "border-slate-400 bg-slate-50"} ${controlFocusClass} ${className}`}
+        data-open={phase === "closed" ? "false" : "true"}
+        className={`menu-trigger inline-flex h-11 min-h-11 w-48 shrink-0 cursor-pointer touch-manipulation items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white py-0 pl-3 pr-3 text-left text-sm text-slate-800 transition-colors duration-150 motion-reduce:transition-none ${controlFocusClass} ${className}`}
         aria-haspopup="listbox"
         aria-expanded={phase !== "closed"}
         aria-controls={listId}
         aria-activedescendant={phase === "open" ? `${menuId}-option-${active}` : undefined}
         aria-labelledby={labelledBy ? `${labelledBy} ${currentId}` : undefined}
         onClick={() => {
+          if (ignoreTriggerClick.current) return;
           if (phase === "open") close();
           else openAt(currentIndex);
         }}
         onKeyDown={onKeyDown}
       >
-        <span id={currentId} className="min-w-0 truncate">
+        <span id={currentId} className="whitespace-nowrap">
           {current?.label}
         </span>
         <ChevronDownGlyph
-          className={`h-4 w-4 shrink-0 text-slate-500 transition-transform duration-150 motion-reduce:transition-none ${phase === "open" ? "rotate-180" : ""}`}
+          className={`h-4 w-4 shrink-0 text-slate-500 ${phase === "open" ? "rotate-180" : ""}`}
         />
       </button>
       {shown
@@ -220,9 +251,25 @@ export function OptionMenu<T extends string>({
                         id={`${menuId}-option-${index}`}
                         role="option"
                         aria-selected={selected}
-                        className={`flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-md px-3 text-sm text-slate-800 active:bg-slate-200 ${index === active ? "bg-slate-100" : ""} ${selected ? "font-medium" : ""}`}
+                        className={`flex min-h-11 cursor-pointer touch-manipulation items-center justify-between gap-3 rounded-md px-3 text-sm text-slate-800 ${index === active ? "bg-slate-100" : ""} ${selected ? "font-medium" : ""}`}
                         onMouseEnter={() => setActive(index)}
-                        onClick={() => choose(option.value)}
+                        onPointerDown={(event) => {
+                          if (event.button !== 0) return;
+                          handled.current = false;
+                          moved.current = false;
+                          gesture.current = {
+                            value: option.value,
+                            x: event.clientX,
+                            y: event.clientY,
+                          };
+                        }}
+                        onClick={(event) => {
+                          if (handled.current || moved.current || pointerMoved(gesture.current, event)) {
+                            event.preventDefault();
+                            return;
+                          }
+                          choose(option.value);
+                        }}
                       >
                         <span className="min-w-0 truncate">{option.label}</span>
                         <span className="grid h-4 w-4 shrink-0 place-items-center text-[#4f46e5]" aria-hidden="true">

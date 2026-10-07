@@ -6,17 +6,18 @@ import { DocumentsDashboard } from "@/components/documents/DocumentsDashboard";
 import { userIdFromTokenSub } from "@/lib/auth/user-id";
 import { loadVisibleDocuments } from "@/lib/documents/list";
 import { ownDocumentsHref, shouldRedirectSignedInDocuments } from "@/lib/documents/list-destination";
+import { parseSortKey } from "@/lib/documents/sort";
 
 export const metadata: Metadata = {
   title: "Documents | DocTalk",
 };
 
 type DocumentsPageProps = {
-  searchParams: Promise<{ upload?: string; demo?: string }>;
+  searchParams: Promise<{ upload?: string; demo?: string; sort?: string }>;
 };
 
 export default async function DocumentsPage({ searchParams }: DocumentsPageProps) {
-  const { upload, demo } = await searchParams;
+  const { upload, demo, sort } = await searchParams;
   const session = await auth();
   const viewerUserId = userIdFromTokenSub(session?.user?.id);
   if (shouldRedirectSignedInDocuments(viewerUserId !== null, demo)) {
@@ -36,6 +37,7 @@ export default async function DocumentsPage({ searchParams }: DocumentsPageProps
         )
       }
       initialUploadOpen={upload === "1" && viewerUserId === null}
+      initialSort={parseSortKey(sort)}
     />
   );
 }

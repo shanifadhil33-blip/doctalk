@@ -80,10 +80,8 @@ export const copyButtonClass = [
 ].join(" ");
 
 export const cardLinkClass = [
-  "cursor-pointer border border-slate-200 bg-white",
+  "card-link touch-manipulation cursor-pointer border border-slate-200 bg-white",
   motion,
-  "hover:border-slate-400 hover:bg-[#f8f9fb] hover:shadow-md",
-  "active:border-slate-500 active:bg-slate-100",
   controlFocusClass,
 ].join(" ");
 

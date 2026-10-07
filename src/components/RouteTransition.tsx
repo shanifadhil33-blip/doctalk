@@ -54,22 +54,6 @@ export function RouteTransition({ children }: { children: ReactNode }) {
   }, [routeKey]);
 
   useEffect(() => {
-    function markPressed(event: Event) {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      const control = target.closest("a, button");
-      if (!(control instanceof HTMLElement)) return;
-      control.setAttribute("data-pressed", "true");
-    }
-
-    function releasePressed() {
-      window.setTimeout(() => {
-        document.querySelectorAll("[data-pressed='true']").forEach((node) => {
-          node.removeAttribute("data-pressed");
-        });
-      }, 160);
-    }
-
     function onClick(event: MouseEvent) {
       const anchor = internalAnchor(event);
       if (!anchor) return;
@@ -78,14 +62,8 @@ export function RouteTransition({ children }: { children: ReactNode }) {
       if (path === "/documents") rememberListScroll("documents");
     }
 
-    document.addEventListener("pointerdown", markPressed, true);
-    document.addEventListener("pointerup", releasePressed, true);
-    document.addEventListener("pointercancel", releasePressed, true);
     document.addEventListener("click", onClick, true);
     return () => {
-      document.removeEventListener("pointerdown", markPressed, true);
-      document.removeEventListener("pointerup", releasePressed, true);
-      document.removeEventListener("pointercancel", releasePressed, true);
       document.removeEventListener("click", onClick, true);
     };
   }, []);
