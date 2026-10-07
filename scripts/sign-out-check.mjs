@@ -78,6 +78,7 @@ async function checkHeader(page) {
   const signIn = page.getByRole("button", { name: "Sign in", exact: true });
   const signUp = page.getByRole("button", { name: "Sign up", exact: true });
   const demos = page.getByRole("link", { name: "Try the demo" });
+  await demos.first().waitFor();
   if ((await demos.count()) !== 1) fail(`expected one Try the demo link, saw ${await demos.count()}`);
   const demoBox = await demos.first().boundingBox();
   const hero = page.getByRole("heading", { name: /Ask a PDF a question/ });
