@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   filterVisibleDocuments,
   isDocumentVisible,
+  ownedDocumentsWhere,
   visibleDocumentsWhere,
   type DocumentVisibility,
 } from "./visibility";
@@ -131,6 +132,19 @@ describe("visibleDocumentsWhere", () => {
       '(("documents"."is_demo" = $1 or "documents"."user_id" is null) or "documents"."user_id" = $2)',
     );
     expect(query.params).toEqual([true, viewerUserId]);
+    expect(query.params).not.toContain(otherUserId);
+  });
+
+  it("limits a signed-in list to that account and leaves sample file names out", () => {
+    const query = new PgDialect().sqlToQuery(ownedDocumentsWhere(viewerUserId));
+
+    expect(query.sql).toContain('"documents"."user_id" = $1');
+    expect(query.sql).toContain('"documents"."is_demo" = $2');
+    expect(query.sql).toContain('"documents"."file_name" not in');
+    expect(query.params[0]).toBe(viewerUserId);
+    expect(query.params[1]).toBe(false);
+    expect(query.params).toContain("Sample_Services_Agreement.pdf");
+    expect(query.params).toContain("Sample_Visitor_Note.md");
     expect(query.params).not.toContain(otherUserId);
   });
 });

@@ -8,7 +8,8 @@ import {
   DEMO_MARKDOWN_ID,
   markdownSampleListing,
 } from "@/lib/demo/markdown-catalog";
-import { visibleDocumentsWhere } from "@/lib/documents/visibility";
+import { isPublicSample } from "@/lib/documents/samples";
+import { ownedDocumentsWhere, visibleDocumentsWhere } from "@/lib/documents/visibility";
 import { isMarkdownFileName } from "@/lib/markdown/sections";
 
 function libraryStatusLabel(status: string): string {
@@ -79,21 +80,11 @@ function listedFromRow(row: {
   };
 }
 
-/** Own uploads stay separate from public samples. */
-export function partitionLibraryRows<T extends { userId: string | null; isDemo: boolean }>(
-  rows: readonly T[],
-  viewerUserId: string,
-): { owned: T[]; samples: T[] } {
-  const owned: T[] = [];
-  const samples: T[] = [];
-  for (const row of rows) {
-    if (!row.isDemo && row.userId === viewerUserId) {
-      owned.push(row);
-    } else if (row.isDemo || row.userId === null) {
-      samples.push(row);
-    }
-  }
-  return { owned, samples };
+/** The signed-in account sees its own uploads, never public samples. */
+export function accountDocuments<
+  T extends { id: string; fileName: string; userId: string | null; isDemo: boolean },
+>(rows: readonly T[], viewerUserId: string): T[] {
+  return rows.filter((row) => row.userId === viewerUserId && !isPublicSample(row));
 }
 
 function titleFromFileName(fileName: string): string {
@@ -126,13 +117,11 @@ export function demoListedDocuments(): ListedDocument[] {
   })));
 }
 
-/**
- * With DATABASE_URL, return rows the viewer may see.
- * Without it, return the sample documents so the demo and the build still run.
- */
-export async function loadVisibleDocuments(
-  viewerUserId: string | null,
-): Promise<{ source: "demo" | "library"; documents: ListedDocument[] }> {
+/** Public demo only. Signed-out visitors and the separate demo link use this. */
+export async function loadPublicDemo(): Promise<{
+  source: "demo";
+  documents: ListedDocument[];
+}> {
   if (!process.env.DATABASE_URL) {
     return { source: "demo", documents: demoListedDocuments() };
   }
@@ -146,26 +135,22 @@ export async function loadVisibleDocuments(
       createdAt: documents.createdAt,
     })
     .from(documents)
-    .where(visibleDocumentsWhere(viewerUserId))
+    .where(visibleDocumentsWhere(null))
     .orderBy(desc(documents.createdAt));
 
   return {
-    source: "library",
+    source: "demo",
     documents: withMarkdownSample(rows.map((row) => listedFromRow(row))),
   };
 }
 
-/**
- * The signed-in home lists the viewer's own PDFs apart from public samples.
- * Without DATABASE_URL, own documents stay empty and the samples remain available.
- */
-export async function loadAccountHome(viewerUserId: string): Promise<{
-  source: "demo" | "library";
-  owned: ListedDocument[];
-  samples: ListedDocument[];
+/** This account's uploads. Sample rows stay in the database and are not listed. */
+export async function loadOwnedDocuments(viewerUserId: string): Promise<{
+  source: "library";
+  documents: ListedDocument[];
 }> {
   if (!process.env.DATABASE_URL) {
-    return { source: "demo", owned: [], samples: demoListedDocuments() };
+    return { source: "library", documents: [] };
   }
 
   const rows = await getDb()
@@ -178,13 +163,30 @@ export async function loadAccountHome(viewerUserId: string): Promise<{
       createdAt: documents.createdAt,
     })
     .from(documents)
-    .where(visibleDocumentsWhere(viewerUserId))
+    .where(ownedDocumentsWhere(viewerUserId))
     .orderBy(desc(documents.createdAt));
 
-  const { owned, samples } = partitionLibraryRows(rows, viewerUserId);
   return {
     source: "library",
-    owned: owned.map((row) => listedFromRow(row)),
-    samples: withMarkdownSample(samples.map((row) => listedFromRow(row))),
+    documents: accountDocuments(rows, viewerUserId).map((row) => listedFromRow(row)),
   };
+}
+
+/**
+ * Signed-out callers get the public demo. Signed-in callers get only their uploads.
+ */
+export async function loadVisibleDocuments(
+  viewerUserId: string | null,
+): Promise<{ source: "demo" | "library"; documents: ListedDocument[] }> {
+  if (!viewerUserId) return loadPublicDemo();
+  return loadOwnedDocuments(viewerUserId);
+}
+
+/** Signed-in home. Samples are not included; the public demo is a separate page. */
+export async function loadAccountHome(viewerUserId: string): Promise<{
+  source: "library";
+  owned: ListedDocument[];
+}> {
+  const library = await loadOwnedDocuments(viewerUserId);
+  return { source: "library", owned: library.documents };
 }

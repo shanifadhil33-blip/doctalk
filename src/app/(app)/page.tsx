@@ -27,7 +27,6 @@ export default async function HomePage() {
       <SignedInHome
         source={library.source}
         owned={library.owned}
-        samples={library.samples}
         questions={questions}
         headerAccount={<AccountMenu variant="text" redirectTo="/" />}
       />

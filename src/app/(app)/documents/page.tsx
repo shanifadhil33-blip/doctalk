@@ -10,14 +10,17 @@ export const metadata: Metadata = {
 };
 
 type DocumentsPageProps = {
-  searchParams: Promise<{ upload?: string }>;
+  searchParams: Promise<{ upload?: string; demo?: string }>;
 };
 
 export default async function DocumentsPage({ searchParams }: DocumentsPageProps) {
-  const { upload } = await searchParams;
+  const { upload, demo } = await searchParams;
   const session = await auth();
   const viewerUserId = userIdFromTokenSub(session?.user?.id);
-  const { source, documents } = await loadVisibleDocuments(viewerUserId);
+  const showPublicDemo = viewerUserId === null || demo === "1";
+  const { source, documents } = showPublicDemo
+    ? await loadVisibleDocuments(null)
+    : await loadVisibleDocuments(viewerUserId);
 
   return (
     <DocumentsDashboard

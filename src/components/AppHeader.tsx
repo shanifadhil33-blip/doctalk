@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { auth } from "@/auth";
+import { SignOutButton } from "@/components/SignOutButton";
 import { signInWithGoogle, signOutToHome } from "@/lib/auth/actions";
 import { userIdFromTokenSub } from "@/lib/auth/user-id";
 
@@ -27,19 +28,14 @@ export default async function AppHeader() {
             </Link>
           </nav>
           {signedIn ? (
-            <form action={signOutToHome} className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
               {name ? (
                 <span className="text-sm text-slate-600">{name}</span>
               ) : (
                 <span className="text-sm text-slate-600">Signed in</span>
               )}
-              <button
-                type="submit"
-                className="text-sm font-medium text-slate-900"
-              >
-                Sign out
-              </button>
-            </form>
+              <SignOutButton action={signOutToHome} />
+            </div>
           ) : (
             <form action={signInWithGoogle}>
               <input type="hidden" name="redirectTo" value="/" />
