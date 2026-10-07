@@ -13,6 +13,7 @@ import { AssistantAnswer } from "@/components/workspace/AnswerBlock";
 import { DocumentHeading } from "@/components/workspace/DocumentHeading";
 import { LiveDocumentWorkspace } from "@/components/workspace/LiveDocumentWorkspace";
 import { PdfPageViewer } from "@/components/workspace/PdfPageViewer";
+import { QuestionField } from "@/components/workspace/QuestionField";
 import { answerQuestion } from "@/lib/answer-question";
 import type { Citation, DemoDocument } from "@/lib/document-types";
 import { isMarkdownFileName } from "@/lib/markdown/sections";
@@ -203,10 +204,10 @@ function UnindexedWorkspace({
 
   if (upload === undefined) {
     return (
-      <div className="min-h-screen bg-[#f5f6f8] p-6" aria-busy="true" aria-live="polite">
+      <div className="min-h-dvh bg-[#f5f6f8] p-6" aria-busy="true" aria-live="polite">
         <p className="sr-only">Loading document</p>
         <div className="grid w-full gap-4 lg:grid-cols-[minmax(0,1fr)_420px]">
-          <div className="h-[70vh] animate-pulse rounded-xl bg-white" />
+          <div className="h-[50dvh] animate-pulse rounded-xl bg-white" />
           <div className="h-80 animate-pulse rounded-xl bg-white" />
         </div>
       </div>
@@ -229,7 +230,7 @@ function UnindexedWorkspace({
 
   if (!upload) {
     return (
-      <div className="flex min-h-screen flex-col bg-[#f5f6f8]">
+      <div className="flex min-h-dvh min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8]">
         <SkipLink />
         <TopBar actions={headerAccount} />
         <main id="main" className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-4 py-16 text-center">
@@ -252,9 +253,9 @@ function UnindexedWorkspace({
       pageCountLabel="PDF"
       headerAccount={headerAccount}
     >
-      <div className="flex min-h-[70vh] w-full min-w-0 flex-1 flex-col bg-[#eef0f3] lg:min-h-0">
+      <div className="flex h-[50dvh] max-h-[50dvh] w-full min-w-0 shrink-0 flex-col bg-[#eef0f3] lg:h-full lg:max-h-none lg:min-h-0 lg:flex-1">
         {fileUrl ? (
-          <iframe title={upload.fileName} src={fileUrl} className="min-h-[70vh] w-full flex-1 bg-white" />
+          <iframe title={upload.fileName} src={fileUrl} className="h-full min-h-0 w-full flex-1 bg-white" />
         ) : (
           <div className="m-6 rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
             <h2 className="text-base font-semibold text-slate-950">Preview unavailable</h2>
@@ -329,7 +330,7 @@ function StoredDocumentShell({
   return (
     <>
     <WorkspaceFrame title={fileName} pageCountLabel="PDF" headerAccount={headerAccount}>
-      <div className="flex min-h-[70vh] w-full min-w-0 flex-1 flex-col items-center justify-center bg-[#eef0f3] px-6 text-center lg:min-h-0">
+      <div className="flex h-[50dvh] max-h-[50dvh] w-full min-w-0 shrink-0 flex-col items-center justify-center bg-[#eef0f3] px-6 text-center lg:h-full lg:max-h-none lg:min-h-0 lg:flex-1">
         <h2 className="text-base font-semibold text-slate-950">{fileName}</h2>
         <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-600">{note}</p>
         {canDelete ? (
@@ -352,6 +353,7 @@ function StoredDocumentShell({
     </WorkspaceFrame>
     <DeleteDocumentDialog
       open={deleteOpen}
+      documentName={fileName}
       fileName={fileName}
       pending={deletePending}
       error={deleteError}
@@ -378,13 +380,17 @@ function WorkspaceFrame({
 }) {
   useStableDocumentScroll();
   return (
-    <div className="flex min-h-screen w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8] [overflow-anchor:none] lg:h-dvh">
+    <div className="flex min-h-dvh w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8] [overflow-anchor:none] lg:h-dvh">
       <SkipLink />
       <TopBar
         leading={<DocumentHeading title={title} meta={pageCountLabel} />}
         actions={
           <>
-            <Link href="/documents?upload=1" className={secondaryButtonClass}>
+            <Link
+              href="/documents?upload=1"
+              className={secondaryButtonClass}
+              aria-label="Upload PDF or Markdown"
+            >
               <UploadGlyph />
               <span className="hidden sm:inline">Upload PDF or Markdown</span>
             </Link>
@@ -395,6 +401,7 @@ function WorkspaceFrame({
       <main id="main" className="flex w-full min-w-0 max-w-full flex-1 flex-col overflow-x-hidden lg:min-h-0 lg:flex-row">
         {children}
       </main>
+      <div className="h-24 shrink-0 lg:hidden" aria-hidden="true" />
       <SiteFooter />
     </div>
   );
@@ -422,7 +429,7 @@ function ChatColumn({
   const answerScrollRef = useRef<HTMLDivElement>(null);
   useContainedScroll(answerScrollRef);
   return (
-    <aside className="flex min-h-[28rem] w-full min-w-0 max-w-full shrink-0 flex-col border-t border-slate-200 bg-white lg:min-h-0 lg:w-[420px] lg:border-l lg:border-t-0">
+    <aside className="flex h-[85dvh] max-h-[85dvh] w-full min-w-0 max-w-full shrink-0 flex-col overflow-hidden border-t border-slate-200 bg-white lg:h-full lg:max-h-none lg:min-h-0 lg:w-[420px] lg:border-l lg:border-t-0">
       <div className="border-b border-slate-200 px-5 py-4">
         <h2 className="text-base font-semibold text-slate-950">Ask this document</h2>
         <p className="mt-1 text-sm text-slate-500">{pageCount} pages</p>
@@ -457,24 +464,7 @@ function ChatColumn({
           )}
         </ol>
       </div>
-      <form onSubmit={onSubmit} className="min-w-0 border-t border-slate-200 p-4">
-        <label htmlFor="question" className="sr-only">
-          Ask a question about this document
-        </label>
-        <div className="flex items-center gap-2">
-          <input
-            id="question"
-            value={draft}
-            onChange={(event) => onDraft(event.target.value)}
-            placeholder="Ask a question about this document"
-            className="h-11 min-w-0 flex-1 rounded-lg border border-slate-200 px-3 text-sm text-slate-900 transition-colors duration-150 hover:border-slate-400 focus-visible:border-[#4f46e5]"
-          />
-          <button type="submit" className={primaryButtonClass} disabled={!draft.trim()}>
-            Send
-          </button>
-        </div>
-        <p className="mt-2 text-xs text-slate-500">Press Enter to send</p>
-      </form>
+      <QuestionField value={draft} onChange={onDraft} onSubmit={onSubmit} />
     </aside>
   );
 }

@@ -18,7 +18,7 @@ export function DocumentHeading({
       <span className="text-slate-300" aria-hidden="true">
         /
       </span>
-      <h1 className="min-w-0 truncate font-medium text-slate-950">{title}</h1>
+      <h1 className="min-w-0 break-words font-medium text-slate-950 sm:truncate">{title}</h1>
       {meta ? (
         <span className="hidden shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 sm:inline">
           {meta}

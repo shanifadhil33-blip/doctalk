@@ -94,6 +94,8 @@ describe("SignedInHome", () => {
       "href",
       "/documents/owned-1",
     );
+    const actions = screen.getByRole("button", { name: "Actions for Warehouse lease" });
+    expect(screen.getByRole("link", { name: "Open Warehouse lease" }).contains(actions)).toBe(false);
     expect(screen.getByRole("heading", { name: "Questions" })).toBeInTheDocument();
     expect(screen.getByText("What is the notice period?")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /What is the notice period/ })).toHaveAttribute(
@@ -168,7 +170,9 @@ describe("SignedInHome", () => {
     );
 
     expect(screen.getByText("You have no documents yet.")).toBeInTheDocument();
-    expect(screen.getByText("Questions you ask will show up here.")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Questions you ask will show up here\. Open a document and ask a question\./),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Sample documents" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Try the demo" })).not.toBeInTheDocument();
   });

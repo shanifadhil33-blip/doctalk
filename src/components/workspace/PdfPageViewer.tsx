@@ -98,7 +98,7 @@ export function PdfPageViewer({
   }
 
   return (
-    <div className="flex h-full min-h-[70vh] w-full min-w-0 max-w-full flex-1 flex-col overflow-x-hidden lg:min-h-0">
+    <div className="flex h-[50dvh] max-h-[50dvh] w-full min-w-0 max-w-full shrink-0 flex-col overflow-hidden lg:h-full lg:max-h-none lg:min-h-0 lg:flex-1">
       <div className="flex w-full min-w-0 max-w-full flex-wrap items-center gap-2 border-b border-slate-200 bg-white px-3 py-2">
         <button
           type="button"
@@ -158,7 +158,9 @@ export function PdfPageViewer({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Find in document"
-              className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2 text-sm transition-colors duration-150 hover:border-slate-400 focus-visible:border-[#4f46e5]"
+              inputMode="search"
+              enterKeyHint="search"
+              className="h-11 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2 text-sm transition-colors duration-150 hover:border-slate-400 focus-visible:border-[#4f46e5]"
             />
           </span>
         </form>
@@ -221,7 +223,8 @@ function BlockView({ block, active }: { block: PageBlock; active: boolean }) {
     return (
       <div id={block.id} className={active ? highlightClass : undefined}>
         {active ? <CitedLabel /> : null}
-        <table className="w-full border-collapse text-[0.86em]">
+        <div className="max-w-full overflow-x-auto">
+        <table className="w-full min-w-0 border-collapse text-[0.86em]">
           <thead>
             <tr className="border-b border-slate-200 text-left text-slate-500">
               {block.columns.map((column) => (
@@ -243,6 +246,7 @@ function BlockView({ block, active }: { block: PageBlock; active: boolean }) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     );
   }

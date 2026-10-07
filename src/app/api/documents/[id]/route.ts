@@ -1,12 +1,42 @@
 import { auth } from "@/auth";
 import { userIdFromTokenSub } from "@/lib/auth/user-id";
-import { removeOwnedDocument } from "@/lib/documents/store-upload";
+import { removeOwnedDocument, retryFailedDocument } from "@/lib/documents/store-upload";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
+
+export async function POST(_req: Request, context: RouteContext) {
+  const { id } = await context.params;
+  const session = await auth();
+  const userId = userIdFromTokenSub(session?.user?.id);
+  if (!userId) {
+    return Response.json({ error: "Sign in required" }, { status: 401 });
+  }
+  if (!process.env.DATABASE_URL) {
+    return Response.json({ error: "Database is not configured" }, { status: 503 });
+  }
+
+  try {
+    const result = await retryFailedDocument(userId, id);
+    if (!result.ok) {
+      return Response.json(
+        {
+          error: result.error,
+          ...(result.documentId ? { document: { id: result.documentId } } : {}),
+        },
+        { status: result.status },
+      );
+    }
+    return Response.json({ document: result.document });
+  } catch {
+    console.error("Retry failed");
+    return Response.json({ error: "This document could not be processed." }, { status: 500 });
+  }
+}
 
 export async function DELETE(_req: Request, context: RouteContext) {
   const { id } = await context.params;

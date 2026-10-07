@@ -37,12 +37,12 @@ export function LandingPage({
   heroAccount?: ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#eceef2] sm:p-4 md:p-6">
+    <div className="min-h-dvh overflow-x-hidden bg-[#eceef2] sm:p-4 md:p-6">
       <SkipLink />
-      <div className="mx-auto flex min-h-screen max-w-[1180px] flex-col bg-white sm:min-h-[calc(100vh-3rem)] sm:rounded-[28px] sm:shadow-[0_16px_50px_rgba(15,23,42,0.08)] sm:ring-1 sm:ring-slate-200">
-        <header className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-8">
+      <div className="mx-auto flex min-h-dvh max-w-[1180px] flex-col overflow-x-hidden bg-white sm:min-h-[calc(100dvh-3rem)] sm:rounded-[28px] sm:shadow-[0_16px_50px_rgba(15,23,42,0.08)] sm:ring-1 sm:ring-slate-200">
+        <header className="flex flex-wrap items-center justify-between gap-2 px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-8">
           <Logo />
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex items-center gap-2">
             {headerAccount}
             <Link href={demoHref} className={primaryButtonClass}>
               Try the demo
@@ -59,7 +59,7 @@ export function LandingPage({
               <p className="mt-4 max-w-md text-base leading-relaxed text-slate-600">
                 DocTalk answers questions about your documents and highlights the exact passage behind every answer.
               </p>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-6 flex flex-col gap-2 sm:flex-row">
                 <Link href={demoHref} className={primaryButtonClass}>
                   Try the demo
                 </Link>
@@ -73,7 +73,7 @@ export function LandingPage({
             {features.map((feature) => (
               <li
                 key={feature.title}
-                className="rounded-2xl border border-slate-200 bg-[#f8f9fb] p-5 transition-colors duration-150 hover:border-slate-300 hover:bg-white"
+                className="rounded-2xl border border-slate-200 bg-[#f8f9fb] p-5"
               >
                 <span className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-700">
                   <feature.icon className="h-5 w-5" />
@@ -103,7 +103,7 @@ function ProductPreview({ sourceHref }: { sourceHref: string }) {
           <span className="h-2.5 w-2.5 rounded-full bg-slate-200" />
           <span className="h-2.5 w-2.5 rounded-full bg-slate-200" />
         </span>
-        <p className="truncate text-sm font-medium text-slate-700">
+        <p className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700">
           Master-Services-Agreement.pdf
         </p>
         <p className="ml-auto shrink-0 text-xs text-slate-500">Page 3 of 11</p>

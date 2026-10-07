@@ -3,7 +3,20 @@ import { isMarkdownFileName, markdownExtension } from "@/lib/markdown/sections";
 
 const HANDLE_UPLOAD_URL = "/api/documents/upload";
 
-export async function uploadDocumentFromBrowser(file: File): Promise<{ id: string }> {
+export class DocumentUploadError extends Error {
+  readonly documentId?: string;
+
+  constructor(message: string, documentId?: string) {
+    super(message);
+    this.name = "DocumentUploadError";
+    this.documentId = documentId;
+  }
+}
+
+export async function uploadDocumentFromBrowser(
+  file: File,
+  onPhase?: (phase: "uploading" | "reading") => void,
+): Promise<{ id: string }> {
   const uploadId = crypto.randomUUID();
   const markdown = isMarkdownFileName(file.name);
   const extension = markdown ? (markdownExtension(file.name) ?? "md") : "pdf";
@@ -16,6 +29,7 @@ export async function uploadDocumentFromBrowser(file: File): Promise<{ id: strin
     type: file.type || contentType,
   });
 
+  onPhase?.("uploading");
   const tokenResponse = await fetch(HANDLE_UPLOAD_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -27,7 +41,7 @@ export async function uploadDocumentFromBrowser(file: File): Promise<{ id: strin
   const tokenBody: unknown = await tokenResponse.json().catch(() => null);
   if (!tokenResponse.ok || !hasClientToken(tokenBody)) {
     await releasePending(uploadId);
-    throw new Error(readError(tokenBody) ?? "Upload failed. Try again later.");
+    throw new DocumentUploadError(readError(tokenBody) ?? "Upload failed. Try again later.");
   }
 
   let blob: { url: string; pathname: string };
@@ -42,11 +56,16 @@ export async function uploadDocumentFromBrowser(file: File): Promise<{ id: strin
     await releasePending(uploadId);
     const message = error instanceof Error ? error.message : "";
     if (message.includes("client token")) {
-      throw new Error("Upload failed. Try again later.");
+      throw new DocumentUploadError("Upload failed. Try again later.");
     }
-    throw error instanceof Error ? error : new Error("Upload failed. Try again later.");
+    throw error instanceof DocumentUploadError
+      ? error
+      : new DocumentUploadError(
+          error instanceof Error ? error.message : "Upload failed. Try again later.",
+        );
   }
 
+  onPhase?.("reading");
   const response = await fetch("/api/documents", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -59,10 +78,13 @@ export async function uploadDocumentFromBrowser(file: File): Promise<{ id: strin
   const payload: unknown = await response.json().catch(() => null);
   const id = readUploadedId(payload);
   if (!response.ok) {
-    throw new Error(readError(payload) ?? "Upload failed. Try again later.");
+    throw new DocumentUploadError(
+      readError(payload) ?? "Upload failed. Try again later.",
+      readFailedDocumentId(payload),
+    );
   }
   if (!id) {
-    throw new Error("Upload failed. Try again later.");
+    throw new DocumentUploadError("Upload failed. Try again later.");
   }
   return { id };
 }
@@ -91,6 +113,11 @@ function hasClientToken(payload: unknown): boolean {
 function readError(payload: unknown): string | null {
   if (!payload || typeof payload !== "object" || !("error" in payload)) return null;
   return typeof payload.error === "string" ? payload.error : null;
+}
+
+function readFailedDocumentId(payload: unknown): string | undefined {
+  const id = readUploadedId(payload);
+  return id ?? undefined;
 }
 
 function readUploadedId(payload: unknown): string | null {

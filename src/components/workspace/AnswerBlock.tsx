@@ -1,6 +1,7 @@
 "use client";
 
 import { CopyTextButton } from "@/components/CopyTextButton";
+import { secondaryButtonClass } from "@/components/button-styles";
 import { CitationChip } from "@/components/workspace/CitationChip";
 import type { Citation } from "@/lib/document-types";
 
@@ -23,11 +24,13 @@ export function AssistantAnswer({
   citations,
   activePassageId,
   onSelectCitation,
+  onRetry,
 }: {
   text: string;
   citations: Citation[];
   activePassageId: string | null;
   onSelectCitation: (citation: Citation) => void;
+  onRetry?: () => void;
 }) {
   const excerpt =
     citations.find((citation) => citation.passageId === activePassageId) ??
@@ -36,6 +39,11 @@ export function AssistantAnswer({
   return (
     <article className="rounded-xl border border-slate-200 p-3 text-sm leading-relaxed text-slate-800">
       <AnswerBlock text={text} />
+      {onRetry ? (
+        <button type="button" className={`${secondaryButtonClass} mt-3`} onClick={onRetry}>
+          Retry
+        </button>
+      ) : null}
       {excerpt ? (
         <div className="mt-3 border-t border-slate-100 pt-3">
           <p className="text-xs text-slate-500">Sources</p>

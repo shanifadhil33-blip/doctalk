@@ -1,7 +1,7 @@
 import { controlFocusClass } from "@/components/button-styles";
 
 const chipBase = [
-  "inline-flex cursor-pointer items-center rounded-full border px-2.5 py-1 text-xs font-medium",
+  "inline-flex min-h-11 cursor-pointer items-center rounded-full border px-3 text-xs font-medium",
   "transition-colors duration-150 ease-out motion-reduce:transition-none",
   controlFocusClass,
 ].join(" ");

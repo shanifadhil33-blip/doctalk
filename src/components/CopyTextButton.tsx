@@ -13,6 +13,7 @@ export function CopyTextButton({
   label: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const [failed, setFailed] = useState(false);
   const resetTimer = useRef<number | null>(null);
 
   useEffect(() => {
@@ -26,20 +27,21 @@ export function CopyTextButton({
       type="button"
       className={copyButtonClass}
       aria-live="polite"
-      aria-label={copied ? "Copied" : label}
+      aria-label={copied ? "Copied" : failed ? "Couldn't copy" : label}
       onClick={() => {
         void copyText(text).then((ok) => {
-          if (!ok) return;
-          setCopied(true);
+          setCopied(ok);
+          setFailed(!ok);
           if (resetTimer.current !== null) window.clearTimeout(resetTimer.current);
           resetTimer.current = window.setTimeout(() => {
             setCopied(false);
+            setFailed(false);
             resetTimer.current = null;
           }, COPY_FEEDBACK_MS);
         });
       }}
     >
-      {copied ? "Copied" : "Copy"}
+      {copied ? "Copied" : failed ? "Couldn't copy" : "Copy"}
     </button>
   );
 }

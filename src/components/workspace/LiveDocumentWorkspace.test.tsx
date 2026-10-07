@@ -51,7 +51,7 @@ describe("LiveDocumentWorkspace question column", () => {
     const heading = screen.getByRole("heading", { name: "Ask this document" });
     const shell = document.getElementById("main")?.parentElement;
     expect(shell).toHaveClass(
-      "min-h-screen",
+      "min-h-dvh",
       "overflow-x-hidden",
       "[overflow-anchor:none]",
       "lg:h-dvh",
@@ -153,6 +153,38 @@ describe("LiveDocumentWorkspace question column", () => {
     expect(screen.getAllByText("The uploading account owns it.")).toHaveLength(2);
   });
 
+  it("sends on Enter and keeps Shift+Enter as a new line", async () => {
+    const fetchMock = vi.fn(
+      () =>
+        new Promise<Response>(() => {
+          /* leave the request pending */
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+
+    render(
+      <LiveDocumentWorkspace
+        documentId="sample-data-policy"
+        fileName="Sample_Data_Policy.pdf"
+        pdfSrc="/demo/sample-data-policy.pdf"
+        headerAccount={<a href="/sign-in">Sign in</a>}
+        documentStatus="ready"
+        canDelete={false}
+      />,
+    );
+
+    const field = screen.getByRole("textbox", { name: "Ask a question about this document" });
+    await user.type(field, "Line one{Shift>}{Enter}{/Shift}line two");
+    expect(field).toHaveValue("Line one\nline two");
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    await user.type(field, "{Enter}");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("status", { name: "Waiting for an answer" })).toBeInTheDocument();
+    expect(screen.queryByText("Sending")).not.toBeInTheDocument();
+  });
+
   it("clears the spinner when the request fails", async () => {
     let finish: (response: Response) => void = () => {};
     const pending = new Promise<Response>((resolve) => {
@@ -218,8 +250,8 @@ describe("LiveDocumentWorkspace question column", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Delete" }));
-    const dialog = screen.getByRole("dialog", { name: "Delete this document?" });
-    expect(dialog).toHaveTextContent("This document will be deleted.");
+    const dialog = screen.getByRole("dialog", { name: 'Delete "desk-note.pdf"?' });
+    expect(dialog).toHaveTextContent("This can't be undone.");
     expect(dialog).toHaveTextContent("desk-note.pdf");
     expect(confirm).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
@@ -229,8 +261,8 @@ describe("LiveDocumentWorkspace question column", () => {
 
     await user.click(screen.getByRole("button", { name: "Delete" }));
     await user.click(
-      within(screen.getByRole("dialog", { name: "Delete this document?" })).getByRole("button", {
-        name: "Delete",
+      within(screen.getByRole("dialog", { name: 'Delete "desk-note.pdf"?' })).getByRole("button", {
+        name: "Delete document",
       }),
     );
     expect(fetchMock).toHaveBeenCalledWith("/api/documents/owned-note", { method: "DELETE" });

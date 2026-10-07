@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { GridGlyph, ListGlyph, SearchGlyph, UploadGlyph } from "@/components/icons";
-import { controlFocusClass, primaryButtonClass } from "@/components/button-styles";
+import { controlFocusClass, fieldClass, primaryButtonClass } from "@/components/button-styles";
+import { useRestoreListScroll } from "@/components/list-scroll";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SkipLink } from "@/components/SkipLink";
 import { TopBar } from "@/components/TopBar";
@@ -51,6 +52,8 @@ export function DocumentsDashboard({
   const [reloadToken, setReloadToken] = useState(0);
   const [hiddenIds, setHiddenIds] = useState<string[]>([]);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [listError, setListError] = useState<string | null>(null);
+  useRestoreListScroll("documents");
 
   useEffect(() => {
     setUploads(readSessionUploads());
@@ -77,12 +80,22 @@ export function DocumentsDashboard({
     const controller = new AbortController();
     void fetch("/api/documents", { signal: controller.signal })
       .then(async (response) => {
-        if (!response.ok) return;
+        if (!response.ok) {
+          setListError("Couldn't refresh documents.");
+          return;
+        }
         const payload: unknown = await response.json();
-        if (!isListedDocumentList(payload)) return;
+        if (!isListedDocumentList(payload)) {
+          setListError("Couldn't refresh documents.");
+          return;
+        }
+        setListError(null);
         setRemoteDocuments(payload.documents);
       })
-      .catch(() => {});
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setListError("Couldn't refresh documents.");
+      });
     return () => controller.abort();
   }, [source, reloadToken]);
 
@@ -177,7 +190,7 @@ export function DocumentsDashboard({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f5f6f8]">
+    <div className="flex min-h-dvh min-w-0 max-w-full flex-col overflow-x-hidden bg-[#f5f6f8]">
       <SkipLink />
       <TopBar
         actions={
@@ -195,10 +208,10 @@ export function DocumentsDashboard({
         }
       />
       {source === "demo" || !signedIn ? (
-        <div className="border-b border-[#f0e2b4] bg-[#fff8e6] px-4 py-3 text-sm text-[#5c4816] sm:px-6">
+        <div className="border-b border-[#d9dcf7] bg-[#f5f4ff] px-4 py-3 text-sm text-slate-700 sm:px-6">
           <div className="mx-auto flex max-w-6xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p>
-              <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-[#d6a326]" aria-hidden="true" />
+              <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-[#4f46e5]" aria-hidden="true" />
               {source === "demo"
                 ? signedIn
                   ? "You're viewing demo documents."
@@ -227,10 +240,15 @@ export function DocumentsDashboard({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search by document name or counterparty..."
-              className="h-11 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-3 text-sm text-slate-900 transition-colors duration-150 hover:border-slate-400 focus-visible:border-[#4f46e5]"
+              type="search"
+              inputMode="search"
+              enterKeyHint="search"
+              autoComplete="off"
+              className={`${fieldClass} pl-10!`}
             />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="flex min-w-0 items-center gap-2">
             <label htmlFor="document-sort" className="shrink-0 text-sm text-slate-500">
               Sort by
             </label>
@@ -238,13 +256,14 @@ export function DocumentsDashboard({
               id="document-sort"
               value={sort}
               onChange={(event) => setSort(event.target.value as SortKey)}
-              className={`h-11 cursor-pointer rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 transition-colors duration-150 hover:border-slate-400 hover:bg-slate-50 active:bg-slate-100 ${controlFocusClass}`}
+              className={`h-11 min-w-0 flex-1 cursor-pointer rounded-lg border border-slate-200 bg-white py-0 pl-3 text-sm text-slate-800 transition-colors duration-150 hover:border-slate-400 hover:bg-slate-50 active:bg-slate-100 sm:w-44 sm:flex-none ${controlFocusClass}`}
             >
               <option value="recent">Recently added</option>
               <option value="name">Name</option>
               <option value="pages">Page count</option>
             </select>
-            <div className="flex rounded-lg border border-slate-200 bg-white p-1" role="group" aria-label="Layout">
+            </div>
+            <div className="flex w-fit gap-2 rounded-lg border border-slate-200 bg-white p-1" role="group" aria-label="Layout">
               <button
                 type="button"
                 aria-pressed={layout === "grid"}
@@ -271,6 +290,18 @@ export function DocumentsDashboard({
           <p role="alert" className="mt-4 text-sm text-red-700">
             {deleteError}
           </p>
+        ) : null}
+        {listError ? (
+          <div role="alert" className="mt-4 flex flex-col items-start gap-2 sm:flex-row sm:items-center">
+            <p className="text-sm text-red-700">{listError}</p>
+            <button
+              type="button"
+              className={primaryButtonClass}
+              onClick={() => setReloadToken((value) => value + 1)}
+            >
+              Retry
+            </button>
+          </div>
         ) : null}
 
         <p className="sr-only" aria-live="polite">
@@ -323,6 +354,7 @@ export function DocumentsDashboard({
                   item={item}
                   layout={layout}
                   menu={source === "library" && signedIn}
+                  listKey="documents"
                   onDelete={
                     source === "library" && signedIn && item.status !== "Sample"
                       ? deleteOwnedDocument
@@ -353,7 +385,7 @@ export function DocumentsDashboard({
 
 function layoutButtonClass(active: boolean): string {
   return [
-    "grid h-9 w-9 cursor-pointer place-items-center rounded-md transition-colors duration-150 ease-out motion-reduce:transition-none",
+    "grid h-11 w-11 min-h-11 min-w-11 cursor-pointer place-items-center rounded-md transition-colors duration-150 ease-out motion-reduce:transition-none",
     controlFocusClass,
     "active:bg-slate-200",
     active

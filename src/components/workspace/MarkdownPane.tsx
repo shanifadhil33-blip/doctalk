@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { secondaryButtonClass } from "@/components/button-styles";
 import { parseMarkdownSections } from "@/lib/markdown/sections";
 import { useContainedScroll } from "@/components/workspace/scroll-contain";
 import {
@@ -28,6 +29,7 @@ export function MarkdownPane({
 }) {
   const [text, setText] = useState<string | null>(source ?? null);
   const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const paneRef = useRef<HTMLDivElement>(null);
   useContainedScroll(paneRef);
   const scrolledSection = useRef<string | null>(null);
@@ -53,7 +55,7 @@ export function MarkdownPane({
         setError("This note could not be displayed.");
       });
     return () => controller.abort();
-  }, [fileUrl, source]);
+  }, [fileUrl, source, attempt]);
 
   const sections = text ? parseMarkdownSections(text) : [];
   const active = sections.some((item) => item.index === section) ? section : sections[0]?.index ?? 1;
@@ -87,9 +89,20 @@ export function MarkdownPane({
         className="h-0 min-h-0 w-full min-w-0 max-w-full flex-1 contain-paint touch-pan-y overflow-x-hidden overflow-y-auto bg-[#eef0f3] px-3 py-3 [overflow-anchor:none] sm:px-6 sm:py-4"
       >
         {error ? (
-          <p className="mx-auto max-w-md rounded-xl bg-white p-6 text-sm text-slate-600" role="alert">
-            {error}
-          </p>
+          <div className="mx-auto max-w-md rounded-xl bg-white p-6" role="alert">
+            <p className="text-sm text-slate-700">{error}</p>
+            <button
+              type="button"
+              className={`${secondaryButtonClass} mt-3`}
+              onClick={() => {
+                setError(null);
+                setText(null);
+                setAttempt((value) => value + 1);
+              }}
+            >
+              Retry
+            </button>
+          </div>
         ) : sections.length === 0 ? (
           <p className="text-sm text-slate-600">Loading document...</p>
         ) : (

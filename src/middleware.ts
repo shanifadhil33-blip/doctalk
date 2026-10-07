@@ -43,7 +43,8 @@ export default auth(async (req) => {
   if (decision === "sign-in") {
     return redirectToSignIn(req);
   }
-  return new NextResponse(null, { status: 404 });
+  // Missing or hidden documents render the in-app not-found page.
+  return NextResponse.next();
 });
 
 function redirectToSignIn(req: {

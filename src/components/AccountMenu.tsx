@@ -27,8 +27,8 @@ export async function AccountMenu({
     const name = session?.user?.name?.trim() || "Signed in";
 
     return (
-      <div className="flex max-w-full flex-wrap items-center justify-end gap-1">
-        <span className="max-w-[10rem] min-w-0 truncate px-2 text-sm text-slate-600" title={name}>
+      <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
+        <span className="max-w-[10rem] min-w-0 truncate px-2 text-sm text-slate-600" aria-label={name}>
           {name}
         </span>
         {showSettings ? (
