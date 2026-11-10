@@ -171,7 +171,7 @@ export async function finishUploadedPdf(input: {
         return {
           ok: false,
           status: 429,
-          error: "Demo limit reached, try again later",
+          error: "Demo limit reached, try again later.",
         };
       }
       return {

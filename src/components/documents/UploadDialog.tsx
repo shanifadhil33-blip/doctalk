@@ -161,7 +161,8 @@ export function UploadDialog({
         <div className="min-h-0 space-y-4 overflow-y-auto px-5 py-5">
           {serverMode && !signedIn ? (
             <div className="rounded-xl border border-slate-200 bg-[#f8f9fb] px-4 py-8 text-center">
-              <p className="text-sm text-slate-700">Sign in to upload a PDF or Markdown file.</p>
+              <p className="text-sm text-slate-700">Sign in with Google to upload your own PDF or Markdown file.</p>
+              <p className="mt-1 text-sm text-slate-600">The sample documents work without an account.</p>
               <Link href="/sign-in?callbackUrl=%2Fdocuments" className={`${primaryButtonClass} mt-4`}>
                 Sign in
               </Link>
@@ -285,6 +286,7 @@ export function UploadDialog({
           <button type="button" className={`${secondaryButtonClass} w-full sm:w-auto`} onClick={onClose} disabled={busy}>
             Cancel
           </button>
+          {serverMode && !signedIn ? null : (
           <button
             type="button"
             className={`${primaryButtonClass} w-full sm:w-auto`}
@@ -301,6 +303,7 @@ export function UploadDialog({
             {busy ? <RollingMark /> : null}
             {serverMode ? (busy ? "Uploading" : "Upload") : "Open document"}
           </button>
+          )}
         </div>
       </div>
     </div>

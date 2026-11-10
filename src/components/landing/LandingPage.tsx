@@ -105,7 +105,7 @@ function ProductPreview({ sourceHref }: { sourceHref: string }) {
       </div>
       <div className="grid gap-3 p-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(220px,0.85fr)]">
         <article className="rounded-xl border border-slate-200 bg-white p-4 text-[13px] leading-relaxed text-slate-800">
-          <p className="flex justify-between gap-3 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+          <p className="flex justify-between gap-3 text-[10px] font-medium uppercase tracking-wide text-slate-500">
             <span>Master Services Agreement</span>
             <span>Page 3</span>
           </p>
@@ -129,15 +129,15 @@ function ProductPreview({ sourceHref }: { sourceHref: string }) {
           </p>
         </article>
         <aside className="flex flex-col rounded-xl border border-slate-200 bg-white p-3">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
             Inquiry
           </p>
           <div className="mt-3 self-end rounded-2xl rounded-br-md bg-slate-100 px-3 py-2 text-sm text-slate-800">
-            <p className="text-[11px] text-slate-500">Question</p>
+            <p className="text-[11px] text-slate-600">Question</p>
             What is the notice period for termination?
           </div>
           <div className="mt-3 rounded-xl border border-slate-200 p-3 text-sm text-slate-800">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
               Answer
             </p>
             <p className="mt-1">Either party can terminate with 60 days written notice.</p>
@@ -148,7 +148,7 @@ function ProductPreview({ sourceHref }: { sourceHref: string }) {
               </Link>
             </div>
           </div>
-          <div className="mt-3 flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-400">
+          <div className="mt-3 flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-500">
             <span className="flex-1">Ask a question...</span>
             <span className="grid h-7 w-7 place-items-center rounded-md bg-[#4f46e5] text-white" aria-hidden="true">
               <Chevron />

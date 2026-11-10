@@ -2,6 +2,7 @@
 
 import { CopyTextButton } from "@/components/CopyTextButton";
 import { secondaryButtonClass } from "@/components/button-styles";
+import { AnswerText, answerPlainText } from "@/components/workspace/AnswerText";
 import { CitationChip } from "@/components/workspace/CitationChip";
 import type { Citation } from "@/lib/document-types";
 
@@ -9,12 +10,12 @@ export function AnswerBlock({ text }: { text: string }) {
   return (
     <>
       <div className="flex items-start justify-between gap-3">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
           Answer
         </p>
-        <CopyTextButton text={text} label="Copy answer" />
+        <CopyTextButton text={answerPlainText(text)} label="Copy answer" />
       </div>
-      <p className="mt-1 select-text">{text}</p>
+      <AnswerText text={text} />
     </>
   );
 }

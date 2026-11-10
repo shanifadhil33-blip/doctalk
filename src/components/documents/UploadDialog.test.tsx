@@ -20,6 +20,18 @@ function renderDialog() {
 }
 
 describe("UploadDialog", () => {
+  it("sends a signed-out visitor to sign in when uploads are stored on the server", () => {
+    render(
+      <UploadDialog open onClose={vi.fn()} onOpenDocument={vi.fn()} uploadMode="server" signedIn={false} />,
+    );
+    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+      "href",
+      "/sign-in?callbackUrl=%2Fdocuments",
+    );
+    expect(screen.queryByLabelText("Choose a PDF or Markdown file")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^(upload|uploading|open document)$/i })).not.toBeInTheDocument();
+  });
+
   it("rejects a file that is not a PDF", () => {
     renderDialog();
     const input = screen.getByLabelText("Choose a PDF or Markdown file");
