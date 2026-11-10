@@ -1,6 +1,6 @@
 import { APICallError } from "ai";
 
-export const DEMO_LIMIT_MESSAGE = "Demo limit reached, try again later";
+export const DEMO_LIMIT_MESSAGE = "Demo limit reached, try again later.";
 
 export function providerStatus(error: unknown): number | undefined {
   if (APICallError.isInstance(error) && typeof error.statusCode === "number") {

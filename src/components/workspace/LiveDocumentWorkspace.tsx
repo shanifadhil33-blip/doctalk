@@ -10,6 +10,7 @@ import { SkipLink } from "@/components/SkipLink";
 import { BackLink } from "@/components/BackLink";
 import { TopBar } from "@/components/TopBar";
 import { DeleteDocumentDialog } from "@/components/documents/DeleteDocumentDialog";
+import { documentDisplayName } from "@/lib/documents/display-name";
 import { AssistantAnswer } from "@/components/workspace/AnswerBlock";
 import { MarkdownPane } from "@/components/workspace/MarkdownPane";
 import { QuestionField } from "@/components/workspace/QuestionField";
@@ -257,7 +258,7 @@ export function LiveDocumentWorkspace({
         <SkipLink />
         <TopBar
           back={<BackLink href={listHref}>Documents</BackLink>}
-          title={fileName}
+          title={documentDisplayName(fileName)}
           meta={pageCountLabel}
           actions={
             <>
@@ -357,7 +358,10 @@ export function LiveDocumentWorkspace({
                       text={message.text}
                       citations={message.citations}
                       activePassageId={activePassageId}
-                      onSelectCitation={revealCitation}
+                      onSelectCitation={(citation) => {
+                        revealCitation(citation);
+                        showViewerOnSmallScreens();
+                      }}
                       onRetry={
                         message.failed && message.retryQuestion
                           ? () => void retryQuestion(message.retryQuestion ?? "", message.id)
@@ -407,6 +411,21 @@ export function LiveDocumentWorkspace({
       />
     </div>
   );
+}
+
+/**
+ * On a phone the viewer sits above the answers, so a tapped source chip would
+ * move a page the visitor cannot see. Bring the viewer on screen first.
+ */
+function showViewerOnSmallScreens() {
+  if (typeof window.matchMedia !== "function") return;
+  if (!window.matchMedia("(max-width: 1023px)").matches) return;
+  const viewer = document.getElementById("document-viewer");
+  if (!viewer) return;
+  const rect = viewer.getBoundingClientRect();
+  if (rect.top >= 0 && rect.bottom <= window.innerHeight) return;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  viewer.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
 }
 
 function errorFromPayload(payload: unknown): string | null {

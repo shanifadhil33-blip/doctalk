@@ -38,6 +38,7 @@ export default async function DocumentsPage({ searchParams }: DocumentsPageProps
       }
       initialUploadOpen={upload === "1" && viewerUserId === null}
       initialSort={parseSortKey(sort)}
+      serverUploads={Boolean(process.env.DATABASE_URL)}
     />
   );
 }

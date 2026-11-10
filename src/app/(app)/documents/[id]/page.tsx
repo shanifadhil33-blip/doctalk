@@ -12,6 +12,7 @@ import {
   DEMO_MARKDOWN_URL,
   isDemoMarkdownId,
 } from "@/lib/demo/markdown-catalog";
+import { documentDisplayName } from "@/lib/documents/display-name";
 import { lookupDocument } from "@/lib/documents/lookup";
 import { backToDocumentsHref } from "@/lib/documents/list-destination";
 import { pdfSrcFor } from "@/lib/documents/upload-policy";
@@ -37,9 +38,11 @@ export async function generateMetadata({
     return { title: "Document | DocTalk" };
   }
 
-  const lookup = await lookupDocument(id);
-  if (lookup.status === "found") {
-    return { title: `${lookup.document.fileName} | DocTalk` };
+  // The tab title must not name a document the viewer is not allowed to open.
+  const [lookup, session] = await Promise.all([lookupDocument(id), auth()]);
+  const viewerUserId = userIdFromTokenSub(session?.user?.id);
+  if (lookup.status === "found" && decideDocumentAccess(viewerUserId, lookup) === "allow") {
+    return { title: `${documentDisplayName(lookup.document.fileName)} | DocTalk` };
   }
 
   return { title: "Document | DocTalk" };

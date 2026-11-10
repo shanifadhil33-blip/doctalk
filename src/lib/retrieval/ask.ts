@@ -69,7 +69,7 @@ export async function askDocument(input: {
   if (!input.viewerUserId) {
     const allowed = await takeDemoQuestionSlot(input.ip, input.now);
     if (!allowed) {
-      return { status: 429, body: { error: "Demo limit reached, try again later" } };
+      return { status: 429, body: { error: "Demo limit reached, try again later." } };
     }
   }
 
@@ -110,7 +110,7 @@ export async function askDocument(input: {
       return { status: 503, body: { error: error.message } };
     }
     if (demoLimitMessage(error)) {
-      return { status: 429, body: { error: "Demo limit reached, try again later" } };
+      return { status: 429, body: { error: "Demo limit reached, try again later." } };
     }
     console.error("Chat request failed");
     return { status: 500, body: { error: "Chat failed. Try again later." } };
@@ -130,7 +130,7 @@ async function answerDemoMarkdown(
   if (!input.viewerUserId) {
     const allowed = await takeDemoQuestionSlot(input.ip, input.now);
     if (!allowed) {
-      return { status: 429, body: { error: "Demo limit reached, try again later" } };
+      return { status: 429, body: { error: "Demo limit reached, try again later." } };
     }
   }
 
@@ -159,7 +159,7 @@ async function answerDemoMarkdown(
       return { status: 503, body: { error: error.message } };
     }
     if (demoLimitMessage(error)) {
-      return { status: 429, body: { error: "Demo limit reached, try again later" } };
+      return { status: 429, body: { error: "Demo limit reached, try again later." } };
     }
     console.error("Chat request failed");
     return { status: 500, body: { error: "Chat failed. Try again later." } };

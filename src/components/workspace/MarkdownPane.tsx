@@ -82,9 +82,12 @@ export function MarkdownPane({
   }, [text, active, focusKey, heading, excerpt]);
 
   return (
-    <div className="flex h-[50dvh] max-h-[50dvh] w-full min-w-0 max-w-full shrink-0 flex-col overflow-hidden lg:h-full lg:max-h-none lg:min-h-0 lg:flex-1">
+    <div id="document-viewer" className="flex h-[50dvh] max-h-[50dvh] w-full min-w-0 max-w-full shrink-0 flex-col overflow-hidden lg:h-full lg:max-h-none lg:min-h-0 lg:flex-1">
       <div
         id="pdf-scroll"
+        tabIndex={0}
+        role="region"
+        aria-label={"Document text"}
         ref={paneRef}
         className="h-0 min-h-0 w-full min-w-0 max-w-full flex-1 contain-paint touch-pan-y overflow-x-hidden overflow-y-auto bg-[#eef0f3] px-3 py-3 [overflow-anchor:none] sm:px-6 sm:py-4"
       >

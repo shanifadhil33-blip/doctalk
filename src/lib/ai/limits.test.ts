@@ -86,7 +86,7 @@ describe("sendChatWithFallback", () => {
 
     expect(response.status).toBe(429);
     await expect(response.json()).resolves.toEqual({
-      error: "Demo limit reached, try again later",
+      error: "Demo limit reached, try again later.",
     });
   });
 

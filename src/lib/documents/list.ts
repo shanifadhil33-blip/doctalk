@@ -8,6 +8,7 @@ import {
   DEMO_MARKDOWN_ID,
   markdownSampleListing,
 } from "@/lib/demo/markdown-catalog";
+import { documentDisplayName } from "@/lib/documents/display-name";
 import { isPublicSample } from "@/lib/documents/samples";
 import { ownedDocumentsWhere, visibleDocumentsWhere } from "@/lib/documents/visibility";
 import { isMarkdownFileName } from "@/lib/markdown/sections";
@@ -69,7 +70,7 @@ export function listedFromRow(row: {
   const { addedOn, addedLabel } = formatAdded(row.createdAt);
   return withSampleSortFacts({
     id: row.id,
-    title: titleFromFileName(row.fileName),
+    title: documentDisplayName(row.fileName),
     counterparty: row.isDemo ? "Sample" : "Your document",
     kindLabel: isMarkdownFileName(row.fileName) ? "Markdown" : "PDF",
     meta: `Added ${addedLabel}`,
@@ -88,9 +89,6 @@ export function accountDocuments<
   return rows.filter((row) => row.userId === viewerUserId && !isPublicSample(row));
 }
 
-function titleFromFileName(fileName: string): string {
-  return fileName.replace(/\.(pdf|markdown|md)$/i, "");
-}
 
 function withMarkdownSample(documents: ListedDocument[]): ListedDocument[] {
   if (

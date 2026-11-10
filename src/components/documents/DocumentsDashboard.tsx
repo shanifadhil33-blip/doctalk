@@ -38,6 +38,7 @@ export function DocumentsDashboard({
   bannerAccount,
   initialUploadOpen = false,
   initialSort = "recent",
+  serverUploads = false,
 }: {
   documents: ListedDocument[];
   source: "demo" | "library";
@@ -46,6 +47,8 @@ export function DocumentsDashboard({
   bannerAccount?: ReactNode;
   initialUploadOpen?: boolean;
   initialSort?: SortKey;
+  /** Uploads go to the server (a database is configured), so signed-out visitors must sign in first. */
+  serverUploads?: boolean;
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -281,7 +284,7 @@ export function DocumentsDashboard({
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
           {signedIn && source === "library"
             ? "PDF and Markdown files in your account."
-            : "Inspect contracts, billing statements, and medical invoices."}
+            : "Open a sample and ask it a question. Each answer links to the page it came from."}
         </p>
         {signedIn && source === "demo" ? (
           <p className="mt-3">
@@ -315,7 +318,7 @@ export function DocumentsDashboard({
           </div>
           <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
             <div className="flex min-w-0 items-center gap-2">
-            <span id="document-sort-label" className="shrink-0 text-sm text-slate-500">
+            <span id="document-sort-label" className="shrink-0 text-sm text-slate-600">
               Sort by
             </span>
             <OptionMenu
@@ -438,7 +441,7 @@ export function DocumentsDashboard({
         open={uploadOpen}
         onClose={closeUpload}
         onOpenDocument={openUploadedFile}
-        uploadMode={source === "library" ? "server" : "local"}
+        uploadMode={source === "library" || serverUploads ? "server" : "local"}
         signedIn={signedIn}
         onUpload={source === "library" ? uploadToServer : undefined}
       />

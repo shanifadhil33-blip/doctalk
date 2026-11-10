@@ -145,7 +145,7 @@ describe("DocumentsDashboard", () => {
     expect(screen.queryByText("Sample_Services_Agreement")).not.toBeInTheDocument();
     expect(screen.queryByText("You're viewing demo documents.")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Try the public demo" })).not.toBeInTheDocument();
-    expect(screen.queryByText("Inspect contracts, billing statements, and medical invoices.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Open a sample and ask it a question. Each answer links to the page it came from.")).not.toBeInTheDocument();
     expect(screen.getByText("PDF and Markdown files in your account.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Upload PDF or Markdown" })).not.toBeInTheDocument();
 

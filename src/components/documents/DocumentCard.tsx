@@ -420,7 +420,7 @@ function TextSheet({
 }) {
   return (
     <span className={compact ? "block h-full bg-white px-1.5 py-1.5" : "block h-full bg-white px-4 py-4"}>
-      <span className="block text-[9px] font-semibold uppercase tracking-wide text-slate-400">
+      <span className="block text-[9px] font-semibold uppercase tracking-wide text-slate-500">
         {kicker}
       </span>
       {lines.slice(0, compact ? 4 : 6).map((line, index) => (
