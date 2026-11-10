@@ -89,4 +89,4 @@ Uploads go from the browser to Blob. They do not pass through the 4.5 MB functio
 - [ ] Ask that PDF a question and get a page citation.
 - [ ] Delete that document.
 - [ ] A sixth document on the same account shows `You can keep up to 5 documents. Delete one to upload another.`
-- [ ] Sign out. On a demo document, the 21st question in the same UTC day returns `Demo limit reached, try again later`.
+- [ ] Sign out. On a demo document, the 21st question in the same UTC day returns `Demo limit reached, try again later.`
