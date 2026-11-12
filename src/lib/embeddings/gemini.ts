@@ -3,11 +3,16 @@ import type { EmbeddingClient } from "@/lib/embeddings/embed";
 const GEMINI_EMBED_URL =
   "https://generativelanguage.googleapis.com/v1beta/models";
 
+/** One embedding call should take well under a second. Never let it hold a request open. */
+export const EMBED_TIMEOUT_MS = 15_000;
+
 export function createGeminiEmbeddingClient(options: {
   apiKey: string;
   fetchImpl?: typeof fetch;
+  timeoutMs?: number;
 }): EmbeddingClient {
   const fetchImpl = options.fetchImpl ?? fetch;
+  const timeoutMs = options.timeoutMs ?? EMBED_TIMEOUT_MS;
 
   return {
     async embedContent({ model, text, outputDimensionality }) {
@@ -23,6 +28,7 @@ export function createGeminiEmbeddingClient(options: {
             content: { parts: [{ text }] },
             output_dimensionality: outputDimensionality,
           }),
+          signal: AbortSignal.timeout(timeoutMs),
         },
       );
 

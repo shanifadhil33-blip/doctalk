@@ -45,7 +45,12 @@ export function chunkPages(
       }
 
       if (end >= text.length) break;
-      const next = end - overlap;
+      let next = end - overlap;
+      // Start the overlap on a whole word, not partway through one.
+      if (next > 0 && text[next - 1] !== " ") {
+        const space = text.indexOf(" ", next);
+        next = space > 0 && space < end ? space + 1 : next;
+      }
       start = next > start ? next : end;
     }
   }
