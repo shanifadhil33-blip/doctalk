@@ -45,6 +45,8 @@ type ThreadMessage =
 
 type DocumentStatus = "processing" | "ready" | "failed";
 
+const ANSWER_TIMEOUT_MS = 65_000;
+
 export function LiveDocumentWorkspace({
   documentId,
   fileName,
@@ -149,11 +151,15 @@ export function LiveDocumentWorkspace({
       return;
     }
 
+    // The server gives up after about 45 seconds. Never leave the spinner running past that.
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), ANSWER_TIMEOUT_MS);
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ documentId, question }),
+        signal: controller.signal,
       });
       const payload: unknown = await response.json().catch(() => null);
       if (!response.ok) {
@@ -182,7 +188,9 @@ export function LiveDocumentWorkspace({
       const first = citations[0];
       if (first) revealCitation(first);
     } catch {
-      const text = "Could not answer that question. Try again later.";
+      const text = controller.signal.aborted
+        ? "That took too long. Try again."
+        : "Could not answer that question. Try again later.";
       setMessages((current) => [
         ...current,
         {
@@ -196,6 +204,7 @@ export function LiveDocumentWorkspace({
       ]);
       setLiveStatus(text);
     } finally {
+      window.clearTimeout(timeout);
       setPending(false);
     }
   }
@@ -288,6 +297,7 @@ export function LiveDocumentWorkspace({
             fileName={fileName}
             page={page}
             focusKey={focus.key}
+            excerpt={focus.excerpt}
             onPageCount={setPageCount}
           />
         )}

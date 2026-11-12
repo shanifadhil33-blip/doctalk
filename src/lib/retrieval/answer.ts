@@ -121,7 +121,7 @@ export function finalizeAnswer(
     return { answer: NOT_IN_DOCUMENT_ANSWER, citations: [] };
   }
 
-  return { answer, citations: citationsForUsed(passages, used) };
+  return { answer, citations: citationsForUsed(passages, used, answer) };
 }
 
 export async function answerFromPassages(
@@ -286,6 +286,7 @@ function stripPassageMarkers(text: string): string {
 function citationsForUsed(
   passages: readonly Passage[],
   used: readonly number[],
+  answer = "",
 ): RetrievalCitation[] {
   const seen = new Set<string>();
   const citations: RetrievalCitation[] = [];
@@ -297,16 +298,16 @@ function citationsForUsed(
     const key = passage.label ? `label:${passage.label}` : `page:${passage.page}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    citations.push(citationFor(passage));
+    citations.push(citationFor(passage, answer));
   }
 
   return citations;
 }
 
-function citationFor(passage: Passage): RetrievalCitation {
+function citationFor(passage: Passage, answer = ""): RetrievalCitation {
   const citation: RetrievalCitation = {
     page: passage.page,
-    excerpt: excerpt(passage.content),
+    excerpt: focusedExcerpt(passage.content, answer),
   };
   if (passage.label) citation.label = passage.label;
   return citation;
@@ -341,8 +342,73 @@ function openingSentences(content: string): string {
   return trimmed.slice(0, end).trim();
 }
 
-function excerpt(content: string): string {
-  const trimmed = content.trim();
-  if (trimmed.length <= EXCERPT_CHARS) return trimmed;
-  return `${trimmed.slice(0, EXCERPT_CHARS).trim()}...`;
+/** Symbol-font bullets from Word land in the private use area and render as boxes. */
+export function cleanPassageText(content: string): string {
+  return content
+    .replace(/[\uE000-\uF8FF]/g, "•")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const EXCERPT_STOP = new Set(
+  "the and for with that this from are was were has have had its their into your you not but can will all any per".split(" "),
+);
+
+function excerptTokens(text: string): string[] {
+  return (text.toLowerCase().match(/[a-z0-9][a-z0-9.+#-]*[a-z0-9+#]|[a-z0-9]/g) ?? []).filter(
+    (word) => word.length > 2 && !EXCERPT_STOP.has(word),
+  );
+}
+
+/** A word that starts a sentence, a bullet, or a heading is a clean place to begin. */
+function isCleanStart(words: readonly string[], index: number): boolean {
+  const word = words[index] ?? "";
+  if (index === 0) return /^[A-Z0-9•●▪■◦"(]/.test(word);
+  const previous = words[index - 1] ?? "";
+  if (/[.!?:;]["')]?$/.test(previous)) return true;
+  if (/^[•●▪■◦]/.test(word) || /^[•●▪■◦-]$/.test(previous)) return true;
+  return /^[A-Z][A-Z&/-]{2,}$/.test(word) && !/^[A-Z][A-Z&/-]{2,}$/.test(previous);
+}
+
+/**
+ * The part of a passage that the answer draws on, starting at a clean boundary.
+ * The viewer searches the page for this text, so it should match what the
+ * answer is about rather than wherever the stored chunk happened to start.
+ */
+export function focusedExcerpt(content: string, answer = ""): string {
+  const text = cleanPassageText(content);
+  if (text.length <= EXCERPT_CHARS) return text;
+  const words = text.split(" ");
+  const wanted = new Set(excerptTokens(answer));
+
+  let bestStart = -1;
+  let bestScore = -1;
+  for (let index = 0; index < words.length; index += 1) {
+    if (!isCleanStart(words, index)) continue;
+    let length = 0;
+    let firstMatchAt = EXCERPT_CHARS;
+    const seen = new Set<string>();
+    for (let end = index; end < words.length && length < EXCERPT_CHARS; end += 1) {
+      const word = words[end] ?? "";
+      for (const token of excerptTokens(word)) {
+        if (!wanted.has(token)) continue;
+        seen.add(token);
+        firstMatchAt = Math.min(firstMatchAt, length);
+      }
+      length += word.length + 1;
+    }
+    // More answer words wins. On a tie, prefer the window whose match starts soonest.
+    const score = seen.size * (EXCERPT_CHARS + 1) - (seen.size > 0 ? firstMatchAt : 0);
+    if (score > bestScore) {
+      bestScore = score;
+      bestStart = index;
+    }
+  }
+
+  const start = bestStart < 0 ? 0 : bestStart;
+  const rest = words.slice(start).join(" ");
+  if (rest.length <= EXCERPT_CHARS) return rest;
+  const cut = rest.slice(0, EXCERPT_CHARS);
+  const space = cut.lastIndexOf(" ");
+  return `${(space > EXCERPT_CHARS / 2 ? cut.slice(0, space) : cut).trim()}...`;
 }

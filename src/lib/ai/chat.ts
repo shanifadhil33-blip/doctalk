@@ -79,6 +79,18 @@ export class DemoLimitError extends Error {
   }
 }
 
+/** One budget for every model attempt, so the route answers before the 60 second function limit. */
+export const CHAT_TIMEOUT_MS = 40_000;
+
+export class ChatTimeoutError extends Error {
+  readonly statusCode = 504;
+
+  constructor() {
+    super("That took too long. Try again.");
+    this.name = "ChatTimeoutError";
+  }
+}
+
 export class ChatConfigError extends Error {
   readonly statusCode = 503;
 
@@ -96,6 +108,7 @@ type TextAttempt = {
 export function createTextAttempts(
   env: NodeJS.ProcessEnv,
   prompt: string,
+  abortSignal?: AbortSignal,
 ): TextAttempt[] {
   const messages: ModelMessage[] = [{ role: "user", content: prompt }];
   const attempts: TextAttempt[] = [];
@@ -111,6 +124,7 @@ export function createTextAttempts(
           model: google(modelId),
           messages,
           maxRetries: 0,
+          abortSignal,
         });
         return result.text;
       },
@@ -132,6 +146,7 @@ export function createTextAttempts(
           model: openRouter.chat(openRouterModel),
           messages,
           maxRetries: 0,
+          abortSignal,
         });
         return result.text;
       },
@@ -144,17 +159,21 @@ export function createTextAttempts(
 export async function completePrompt(
   env: NodeJS.ProcessEnv,
   prompt: string,
+  timeoutMs = CHAT_TIMEOUT_MS,
 ): Promise<string> {
-  const attempts = createTextAttempts(env, prompt);
+  const deadline = AbortSignal.timeout(timeoutMs);
+  const attempts = createTextAttempts(env, prompt, deadline);
   if (attempts.length === 0) {
     throw new ChatConfigError();
   }
 
   let sawLimit = false;
   for (const attempt of attempts) {
+    if (deadline.aborted) throw new ChatTimeoutError();
     try {
       return await attempt.send();
     } catch (error) {
+      if (deadline.aborted) throw new ChatTimeoutError();
       if (demoLimitMessage(error)) {
         sawLimit = true;
         continue;

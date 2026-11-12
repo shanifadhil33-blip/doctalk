@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { MinusGlyph, PlusGlyph } from "@/components/icons";
 import { iconButtonClass, secondaryButtonClass, toolbarButtonClass } from "@/components/button-styles";
 import { fittedPageWidth } from "@/components/workspace/pdf-fit";
+import { locatePassage } from "@/components/workspace/pdf-locate";
 import { useContainedScroll } from "@/components/workspace/scroll-contain";
 import { scrollPane } from "@/components/workspace/scroll-passage";
 
@@ -16,6 +17,7 @@ export function RealPdfViewer({
   page,
   onPageCount,
   focusKey = 0,
+  excerpt,
 }: {
   fileUrl: string;
   fileName: string;
@@ -23,6 +25,8 @@ export function RealPdfViewer({
   onPageCount?: (count: number) => void;
   /** Changes when a citation should move the pane, even if the page number did not. */
   focusKey?: number;
+  /** Cited text. When it is found on the page, the pane scrolls to it and highlights it. */
+  excerpt?: string;
 }) {
   const [pageCount, setPageCount] = useState(0);
   const [zoom, setZoom] = useState(100);
@@ -32,6 +36,10 @@ export function RealPdfViewer({
   const paneRef = useRef<HTMLDivElement>(null);
   useContainedScroll(paneRef);
   const scrolledPage = useRef<{ page: number; key: number } | null>(null);
+  const locatedKey = useRef<number | null>(null);
+  const [textLayers, setTextLayers] = useState(0);
+  // react-pdf redraws a text layer whenever this callback changes, so it must stay the same function.
+  const onTextLayerReady = useCallback(() => setTextLayers((value) => value + 1), []);
   const pageWidth = fittedPageWidth(paneWidth, zoom);
   const safePage = pageCount > 0 ? Math.min(Math.max(page, 1), pageCount) : Math.max(page, 1);
 
@@ -67,6 +75,38 @@ export function RealPdfViewer({
     const top = node.getBoundingClientRect().top - pane.getBoundingClientRect().top + pane.scrollTop;
     scrollPane(pane, top, reduce ? "auto" : "smooth");
   }, [safePage, pageCount, pageWidth, focusKey]);
+
+  // Once the cited page's text layer exists, move from the top of the page to
+  // the cited passage itself and mark it. Runs once per citation.
+  useEffect(() => {
+    if (!excerpt || focusKey === 0 || locatedKey.current === focusKey) return;
+    const pane = paneRef.current;
+    const pageNode = document.getElementById(`pdf-page-${safePage}`);
+    if (!pane || !pageNode) return;
+    const spans = Array.from(
+      pageNode.querySelectorAll<HTMLElement>(".react-pdf__Page__textContent span"),
+    );
+    if (spans.length === 0) return;
+    locatedKey.current = focusKey;
+    for (const marked of pane.querySelectorAll("[data-cited]")) marked.removeAttribute("data-cited");
+    const found = locatePassage(
+      spans.map((span) => span.textContent ?? ""),
+      excerpt,
+    );
+    if (!found) return;
+    const last = Math.min(found.last, found.first + 80);
+    for (let index = found.first; index <= last; index += 1) {
+      spans[index]?.setAttribute("data-cited", "");
+    }
+    const target = spans[found.first];
+    if (!target) return;
+    const reduce =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const top =
+      target.getBoundingClientRect().top - pane.getBoundingClientRect().top + pane.scrollTop - 48;
+    scrollPane(pane, Math.max(0, top), reduce ? "auto" : "smooth");
+  }, [excerpt, focusKey, safePage, textLayers, pageWidth]);
 
   return (
     <div id="document-viewer" className="flex h-[50dvh] max-h-[50dvh] w-full min-w-0 max-w-full shrink-0 flex-col overflow-hidden lg:h-full lg:max-h-none lg:min-h-0 lg:flex-1">
@@ -148,7 +188,8 @@ export function RealPdfViewer({
                       <Page
                         pageNumber={pageNumber}
                         width={pageWidth}
-                        renderTextLayer={false}
+                        renderTextLayer
+                        onRenderTextLayerSuccess={onTextLayerReady}
                         renderAnnotationLayer={false}
                         loading={<p className="p-6 text-sm text-slate-600">Loading page...</p>}
                         className="outline-none [&_canvas]:outline-none"
